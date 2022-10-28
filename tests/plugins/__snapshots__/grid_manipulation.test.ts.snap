@@ -1,63 +1,143 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Columns Correctly update references On addition 1`] = `
-Object {
-  "A1": Object {
+{
+  "A1": {
     "content": "=D1",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "A2": Object {
+  "A2": {
     "content": "=Sheet1!D1",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "A3": Object {
+  "A3": {
     "content": "=Sheet2!B1",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "A5": Object {
+  "A5": {
     "content": "=SUM(A1:F1)",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "A6": Object {
+  "A6": {
     "content": "=SUM(E1:F1)",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "A7": Object {
+  "A7": {
     "content": "=SUM(D1:D2)",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "F1": Object {
+  "F1": {
     "content": "=A1",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "F2": Object {
+  "F2": {
     "content": "=D1",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "F3": Object {
+  "F3": {
     "content": "=$G1",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "F4": Object {
+  "F4": {
     "content": "=F3",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
@@ -66,21 +146,45 @@ Object {
 `;
 
 exports[`Columns Correctly update references On addition 2`] = `
-Object {
-  "A1": Object {
+{
+  "A1": {
     "content": "=B1",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "A2": Object {
+  "A2": {
     "content": "=Sheet1!D1",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "A3": Object {
+  "A3": {
     "content": "=Sheet2!B1",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
@@ -89,63 +193,143 @@ Object {
 `;
 
 exports[`Columns Correctly update references On deletion 1`] = `
-Object {
-  "A1": Object {
+{
+  "A1": {
     "content": "=#REF",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "error": [Error: Invalid reference],
+      "type": "error",
+      "value": "#REF",
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": "#REF",
   },
-  "A2": Object {
+  "A2": {
     "content": "=#REF",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "error": [Error: Invalid reference],
+      "type": "error",
+      "value": "#REF",
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": "#REF",
   },
-  "A3": Object {
+  "A3": {
     "content": "=Sheet2!B1",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "A5": Object {
+  "A5": {
     "content": "=SUM(A1:B1)",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "error": [Error: Invalid reference],
+      "type": "error",
+      "value": "#REF",
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": "#REF",
   },
-  "A6": Object {
+  "A6": {
     "content": "=SUM(B1)",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "error": [Error: Invalid reference],
+      "type": "error",
+      "value": "#REF",
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": "#REF",
   },
-  "A7": Object {
+  "A7": {
     "content": "=SUM(#REF)",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "error": [Error: Invalid reference],
+      "type": "error",
+      "value": "#REF",
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": "#REF",
   },
-  "B1": Object {
+  "B1": {
     "content": "=A1",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "error": [Error: Invalid reference],
+      "type": "error",
+      "value": "#REF",
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": "#REF",
   },
-  "B2": Object {
+  "B2": {
     "content": "=#REF",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "error": [Error: Invalid reference],
+      "type": "error",
+      "value": "#REF",
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": "#REF",
   },
-  "B3": Object {
+  "B3": {
     "content": "=$C1",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "B4": Object {
+  "B4": {
     "content": "=B3",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
@@ -154,21 +338,45 @@ Object {
 `;
 
 exports[`Columns Correctly update references On deletion 2`] = `
-Object {
-  "A1": Object {
+{
+  "A1": {
     "content": "=B1",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "A2": Object {
+  "A2": {
     "content": "=#REF",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "error": [Error: Invalid reference],
+      "type": "error",
+      "value": "#REF",
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": "#REF",
   },
-  "A3": Object {
+  "A3": {
     "content": "=Sheet2!B1",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
@@ -177,63 +385,143 @@ Object {
 `;
 
 exports[`Rows Correctly update references On addition 1`] = `
-Object {
-  "A1": Object {
+{
+  "A1": {
     "content": "=A4",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "A6": Object {
+  "A6": {
     "content": "=A1",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "B1": Object {
+  "B1": {
     "content": "=Sheet1!A4",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "B6": Object {
+  "B6": {
     "content": "=B1",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "C1": Object {
+  "C1": {
     "content": "=Sheet2!A2",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "C6": Object {
+  "C6": {
     "content": "=A$7",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "D6": Object {
+  "D6": {
     "content": "=C6",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "E1": Object {
+  "E1": {
     "content": "=SUM(A1:A6)",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "F1": Object {
+  "F1": {
     "content": "=SUM(A5:A6)",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "G1": Object {
+  "G1": {
     "content": "=SUM(B4:C4)",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
@@ -242,21 +530,45 @@ Object {
 `;
 
 exports[`Rows Correctly update references On addition 2`] = `
-Object {
-  "A1": Object {
+{
+  "A1": {
     "content": "=A2",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "B1": Object {
+  "B1": {
     "content": "=Sheet1!A4",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "C1": Object {
+  "C1": {
     "content": "=Sheet2!A2",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
@@ -265,63 +577,143 @@ Object {
 `;
 
 exports[`Rows Correctly update references On deletion 1`] = `
-Object {
-  "A1": Object {
+{
+  "A1": {
     "content": "=#REF",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "error": [Error: Invalid reference],
+      "type": "error",
+      "value": "#REF",
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": "#REF",
   },
-  "A2": Object {
+  "A2": {
     "content": "=A1",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "error": [Error: Invalid reference],
+      "type": "error",
+      "value": "#REF",
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": "#REF",
   },
-  "B1": Object {
+  "B1": {
     "content": "=#REF",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "error": [Error: Invalid reference],
+      "type": "error",
+      "value": "#REF",
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": "#REF",
   },
-  "B2": Object {
+  "B2": {
     "content": "=B1",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "error": [Error: Invalid reference],
+      "type": "error",
+      "value": "#REF",
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": "#REF",
   },
-  "C1": Object {
+  "C1": {
     "content": "=Sheet2!A2",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "C2": Object {
+  "C2": {
     "content": "=A$3",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "D2": Object {
+  "D2": {
     "content": "=C2",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "E1": Object {
+  "E1": {
     "content": "=SUM(A1:A2)",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "error": [Error: Invalid reference],
+      "type": "error",
+      "value": "#REF",
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": "#REF",
   },
-  "F1": Object {
+  "F1": {
     "content": "=SUM(A2)",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "error": [Error: Invalid reference],
+      "type": "error",
+      "value": "#REF",
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": "#REF",
   },
-  "G1": Object {
+  "G1": {
     "content": "=SUM(#REF)",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "error": [Error: Invalid reference],
+      "type": "error",
+      "value": "#REF",
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": "#REF",
@@ -330,21 +722,45 @@ Object {
 `;
 
 exports[`Rows Correctly update references On deletion 2`] = `
-Object {
-  "A1": Object {
+{
+  "A1": {
     "content": "=A2",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "B1": Object {
+  "B1": {
     "content": "=#REF",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "error": [Error: Invalid reference],
+      "type": "error",
+      "value": "#REF",
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": "#REF",
   },
-  "C1": Object {
+  "C1": {
     "content": "=Sheet2!A2",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
@@ -353,15 +769,31 @@ Object {
 `;
 
 exports[`Rows Correctly update references delete row on inactive sheet 1`] = `
-Object {
-  "B2": Object {
+{
+  "B2": {
     "content": "=Sheet1!A2",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "C1": Object {
+  "C1": {
     "content": "=Sheet2!A1",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
@@ -370,21 +802,45 @@ Object {
 `;
 
 exports[`Rows Correctly update references delete row on inactive sheet 2`] = `
-Object {
-  "A1": Object {
+{
+  "A1": {
     "content": "=B1",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "B1": Object {
+  "B1": {
     "content": "=Sheet1!A2",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,
   },
-  "C1": Object {
+  "C1": {
     "content": "=Sheet2!A1",
+<<<<<<< HEAD
+=======
+    "evaluated": {
+      "format": undefined,
+      "type": "number",
+      "value": 0,
+    },
+>>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
     "format": undefined,
     "style": undefined,
     "value": 0,

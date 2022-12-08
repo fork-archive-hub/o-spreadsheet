@@ -1142,6 +1142,7 @@ export const enum CommandResult {
   InvalidSelectionStep,
   DuplicatedChartId,
   ChartDoesNotExist,
+  WrongEditionMode,
 }
 
 export interface CommandHandler<T> {

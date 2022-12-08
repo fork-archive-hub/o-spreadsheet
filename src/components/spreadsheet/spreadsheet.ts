@@ -136,7 +136,7 @@ interface SidePanelState {
 }
 
 interface ComposerState {
-  topBarFocus: Exclude<ComposerFocusType, "cellFocus">;
+  topBarFocus: ComposerFocusType;
   gridFocusMode: ComposerFocusType;
 }
 

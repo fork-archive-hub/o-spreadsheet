@@ -414,7 +414,6 @@ describe("TopBar component", () => {
     const model = new Model();
     setCellContent(model, "B2", "b2");
     await mountParent(model);
-
     expect(fixture.querySelectorAll(".o-dropdown-content").length).toBe(0);
     await click(fixture, '.o-tool[title="Borders"]');
     expect(fixture.querySelectorAll(".o-dropdown-content").length).toBe(1);

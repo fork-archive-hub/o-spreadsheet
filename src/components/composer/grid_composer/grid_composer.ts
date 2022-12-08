@@ -102,7 +102,7 @@ export class GridComposer extends Component<Props, SpreadsheetChildEnv> {
       const rect = this.env.model.getters.getVisibleRect(zone);
       if (
         !deepEquals(rect, this.rect) ||
-        sheetId !== this.env.model.getters.getCurrentEditedCell().sheetId
+        sheetId !== this.env.model.getters.getCurrentEditedCell()!.sheetId
       ) {
         this.isCellReferenceVisible = true;
       }
@@ -114,7 +114,7 @@ export class GridComposer extends Component<Props, SpreadsheetChildEnv> {
   }
 
   get cellReference(): string {
-    const { col, row, sheetId } = this.env.model.getters.getCurrentEditedCell();
+    const { col, row, sheetId } = this.env.model.getters.getCurrentEditedCell()!;
     const prefixSheet = sheetId !== this.env.model.getters.getActiveSheetId();
     return `${
       prefixSheet ? getComposerSheetName(this.env.model.getters.getSheetName(sheetId)) + "!" : ""

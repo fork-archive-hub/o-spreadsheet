@@ -971,4 +971,21 @@ describe("sheets", () => {
     expect(freezeColumns(model, 11)).toBeCancelledBecause(CommandResult.InvalidFreezeQuantity);
     expect(freezeRows(model, 12)).toBeCancelledBecause(CommandResult.InvalidFreezeQuantity);
   });
+
+  test("GetUnboundedZone works as expected", () => {
+    const model = new Model({ sheets: [{ colNumber: 10, rowNumber: 10 }] });
+    const sheetId = model.getters.getActiveSheetId();
+
+    // Case 1: Range without any full col/row
+    let zone = toZone("A1:E5");
+    expect(model.getters.getUnboundedZone(sheetId, zone)).toEqual(zone);
+
+    // Case 2: Range with full row
+    zone = toZone("A1:A10");
+    expect(model.getters.getUnboundedZone(sheetId, zone)).toEqual({ ...zone, bottom: undefined });
+
+    // Case 3: Range with full col
+    zone = toZone("A1:J1");
+    expect(model.getters.getUnboundedZone(sheetId, zone)).toEqual({ ...zone, right: undefined });
+  });
 });

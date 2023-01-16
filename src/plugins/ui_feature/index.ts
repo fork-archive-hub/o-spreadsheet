@@ -5,6 +5,7 @@ export * from "./find_and_replace";
 export * from "./format";
 export * from "./header_visibility_ui";
 export * from "./highlight";
+export * from "./remove_duplicates";
 export * from "./renderer";
 export * from "./selection_input";
 export * from "./selection_inputs_manager";

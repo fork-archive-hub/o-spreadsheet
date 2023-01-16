@@ -72,29 +72,6 @@ topbarMenuRegistry
     sequence: 20,
     action: ACTIONS.PASTE_FORMAT_ACTION,
   })
-  .addChild("sort_range", ["data"], {
-    name: _lt("Sort range"),
-    sequence: 20,
-    isVisible: ACTIONS.IS_ONLY_ONE_RANGE,
-    separator: true,
-  })
-  .addChild("split_to_columns", ["data"], {
-    name: _lt("Split text to columns"),
-    sequence: 1,
-    action: ACTIONS.OPEN_SPLIT_INTO_COLUMNS_SIDEPANEL_ACTION,
-    isEnabled: (env: SpreadsheetChildEnv) => env.model.getters.isSingleColSelected(),
-    separator: true,
-  })
-  .addChild("sort_ascending", ["data", "sort_range"], {
-    name: _lt("Ascending (A ⟶ Z)"),
-    sequence: 10,
-    action: ACTIONS.SORT_CELLS_ASCENDING,
-  })
-  .addChild("sort_descending", ["data", "sort_range"], {
-    name: _lt("Descending (Z ⟶ A)"),
-    sequence: 20,
-    action: ACTIONS.SORT_CELLS_DESCENDING,
-  })
   .addChild("find_and_replace", ["edit"], {
     name: _lt("Find and replace"),
     description: "Ctrl+H",
@@ -521,6 +498,22 @@ topbarMenuRegistry
     action: ACTIONS.FORMAT_CLEARFORMAT_ACTION,
     separator: true,
   })
+  .addChild("sort_range", ["data"], {
+    name: _lt("Sort range"),
+    sequence: 20,
+    isVisible: ACTIONS.IS_ONLY_ONE_RANGE,
+    separator: true,
+  })
+  .addChild("sort_ascending", ["data", "sort_range"], {
+    name: _lt("Ascending (A ⟶ Z)"),
+    sequence: 10,
+    action: ACTIONS.SORT_CELLS_ASCENDING,
+  })
+  .addChild("sort_descending", ["data", "sort_range"], {
+    name: _lt("Descending (Z ⟶ A)"),
+    sequence: 20,
+    action: ACTIONS.SORT_CELLS_DESCENDING,
+  })
   .addChild("add_data_filter", ["data"], {
     name: _lt("Create filter"),
     sequence: 10,
@@ -530,9 +523,26 @@ topbarMenuRegistry
   })
   .addChild("remove_data_filter", ["data"], {
     name: _lt("Remove filter"),
-    sequence: 10,
+    sequence: 20,
     action: ACTIONS.FILTERS_REMOVE_FILTER_TABLE,
     isVisible: ACTIONS.SELECTION_CONTAINS_FILTER,
+    separator: true,
+  })
+  .addChild("data_cleanup", ["data"], {
+    name: _lt("Data cleanup"),
+    sequence: 30,
+  })
+  .addChild("remove_duplicates", ["data", "data_cleanup"], {
+    name: _lt("Remove duplicates"),
+    sequence: 10,
+    action: ACTIONS.OPEN_REMOVE_DUPLICATES_SIDEPANEL_ACTION,
+  })
+  .addChild("split_to_columns", ["data"], {
+    name: _lt("Split text to columns"),
+    sequence: 40,
+    action: ACTIONS.OPEN_SPLIT_INTO_COLUMNS_SIDEPANEL_ACTION,
+    isEnabled: (env: SpreadsheetChildEnv) => env.model.getters.isSingleColSelected(),
+    separator: true,
   });
 
 // Font-sizes

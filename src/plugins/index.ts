@@ -29,6 +29,7 @@ import {
   FormatPlugin,
   HeaderVisibilityUIPlugin,
   HighlightPlugin,
+  RemoveDuplicatesPlugin,
   RendererPlugin,
   SelectionInputsManagerPlugin,
   SelectionMultiUserPlugin,
@@ -68,7 +69,8 @@ export const featurePluginRegistry = new Registry<UIPluginConstructor>()
   .add("format", FormatPlugin)
   .add("cell_popovers", CellPopoverPlugin)
   .add("selection_multiuser", SelectionMultiUserPlugin)
-  .add("split_to_columns", SplitToColumnsPlugin);
+  .add("split_to_columns", SplitToColumnsPlugin)
+  .add("remove_duplicates", RemoveDuplicatesPlugin);
 
 // Plugins which have a state, but which should not be shared in collaborative
 export const statefulUIPluginRegistry = new Registry<UIPluginConstructor>()

@@ -105,3 +105,14 @@ export const SplitToColumnsTerms = {
     [CommandResult.SplitWillOverwriteContent]: _lt("Splitting will overwrite existing content"),
   },
 };
+
+export const RemoveDuplicateTerms = {
+  Errors: {
+    Unexpected: _lt("Cannot remove duplicates for an unknown reason"),
+    [CommandResult.MoreThanOneRangeSelected]: _lt("Please select only one range of cells"),
+    [CommandResult.NoValueSelected]: _lt("Please select a range of cells containing values."),
+    [CommandResult.WillRemoveExistingMerge]: _lt(
+      "This operation is not possible due to a merge. Please remove the merges first than try again."
+    ),
+  },
+};

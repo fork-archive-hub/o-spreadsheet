@@ -1,0 +1,66 @@
+<templates>
+  <t t-name="o-spreadsheet-RemoveDuplicatesPanel" owl="1">
+    <div class="o-remove-duplicates">
+      <div class="o-section">
+        <div class="o-section-subtitle" t-esc='selectionStatisticalInformation'/>
+        <div class="o-checkbox">
+          <label>
+            <input
+              type="checkbox"
+              t-att-checked="state.columnsHaveHeaderRow"
+              t-on-change="takeHeaderRowIntoAccount"
+            />
+            Data has header row
+          </label>
+        </div>
+      </div>
+
+      <div class="o-section">
+        <div class="o-section-title">Columns to analyze</div>
+        <div class="overflow-auto p-3 bg-light" style="height: 150px; overflow: scroll">
+          <div class="o-checkbox">
+            <label>
+              <input
+                t-att-checked="state.selectAll"
+                t-on-change="selectAllColumns"
+                type="checkbox"
+              />
+              Select all
+            </label>
+          </div>
+
+          <t t-foreach="Object.keys(state.columns)" t-as="colIndex" t-key="colIndex">
+            <div class="o-checkbox">
+              <label>
+                <input
+                  type="checkbox"
+                  t-att-checked="state.columns[colIndex].isSelected"
+                  t-on-change="() => this.selectColumn(colIndex)"
+                />
+                <t t-esc="state.columns[colIndex].label"/>
+              </label>
+            </div>
+          </t>
+        </div>
+      </div>
+
+      <div class="o-sidePanelButtons">
+        <button
+          class="o-sidePanelButton"
+          t-att-class="{'o-disabled': isRemoveDisabled}"
+          t-on-click="onRemoveDuplicates">
+          Remove duplicates
+        </button>
+      </div>
+
+      <div class="o-section">
+        <t t-foreach="errorMessages" t-as="error" t-key="error">
+          <div class="o-sidepanel-error d-flex align-items-center">
+            <t t-call="o-spreadsheet-Icon.ERROR_TRIANGLE"/>
+            <span t-esc="error"/>
+          </div>
+        </t>
+      </div>
+    </div>
+  </t>
+</templates>

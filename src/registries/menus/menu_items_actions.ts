@@ -670,6 +670,13 @@ export const OPEN_CUSTOM_CURRENCY_SIDEPANEL_ACTION = (env: SpreadsheetChildEnv) 
   env.openSidePanel("CustomCurrency", {});
 };
 
+export const OPEN_REMOVE_DUPLICATES_SIDEPANEL_ACTION = (env: SpreadsheetChildEnv) => {
+  if (getZoneArea(env.model.getters.getSelectedZone()) === 1) {
+    env.model.selection.selectTableAroundSelection();
+  }
+  env.openSidePanel("RemoveDuplicates", {});
+};
+
 export const INSERT_LINK = (env: SpreadsheetChildEnv) => {
   let { col, row } = env.model.getters.getActivePosition();
   env.model.dispatch("OPEN_CELL_POPOVER", { col, row, popoverType: "LinkEditor" });

@@ -482,6 +482,17 @@ export interface SetDecimalCommand extends TargetDependentCommand {
   type: "SET_DECIMAL";
   step: SetDecimalStep;
 }
+
+// ------------------------------------------------
+// DATA CLEANUP
+// ------------------------------------------------
+
+export interface RemoveDuplicatesCommand {
+  type: "REMOVE_DUPLICATES";
+  columnsToAnalyze: HeaderIndex[];
+  hasHeader: boolean;
+}
+
 //#endregion
 
 //#region Local Commands
@@ -1020,7 +1031,8 @@ export type LocalCommand =
   | ActivateNextSheetCommand
   | ActivatePreviousSheetCommand
   | UpdateFilterCommand
-  | SplitTextIntoColumnsCommand;
+  | SplitTextIntoColumnsCommand
+  | RemoveDuplicatesCommand;
 
 export type Command = CoreCommand | LocalCommand;
 
@@ -1154,6 +1166,8 @@ export const enum CommandResult {
   MoreThanOneColumnSelected,
   EmptySplitSeparator,
   SplitWillOverwriteContent,
+  MoreThanOneRangeSelected,
+  NoValueSelected,
 }
 
 export interface CommandHandler<T> {

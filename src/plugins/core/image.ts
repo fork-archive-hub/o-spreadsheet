@@ -20,7 +20,7 @@ interface ImageState {
 }
 
 export class ImagePlugin extends CorePlugin<ImageState> implements ImageState {
-  static getters = ["getImage", "getImagePath", "getImageSize"] as const;
+  static getters = ["getImage", "getImagePath"] as const;
   readonly fileStore?: FileStore;
   readonly images: Record<UID, Record<UID, Image | undefined> | undefined> = {};
   /**
@@ -113,10 +113,6 @@ export class ImagePlugin extends CorePlugin<ImageState> implements ImageState {
 
   getImagePath(figureId: UID): string {
     return this.getImage(figureId).path;
-  }
-
-  getImageSize(figureId: UID): FigureSize {
-    return this.getImage(figureId).size;
   }
 
   // ---------------------------------------------------------------------------

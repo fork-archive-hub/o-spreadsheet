@@ -2,6 +2,7 @@ import { isDefined } from "../../helpers";
 import { ChartDefinition, ExcelChartDefinition, FigureData } from "../../types";
 import { XLSXFigure, XLSXWorksheet } from "../../types/xlsx";
 import { convertEMUToDotValue, getColPosition, getRowPosition } from "../helpers/content_helpers";
+import { ExcelImage } from "./../../types/image";
 import { convertColor } from "./color_conversion";
 
 export function convertFigures(sheetData: XLSXWorksheet): FigureData<any>[] {
@@ -33,20 +34,44 @@ function convertFigure(
   const width = x2 - x1;
   const height = y2 - y1;
 
-  const chartData = convertChartData(figure.data);
-  if (!chartData) return undefined;
-  return {
-    id: id,
-    x: x1,
-    y: y1,
-    width: width,
-    height: height,
-    tag: "chart",
-    data: convertChartData(figure.data),
-  };
+  if (isChartData(figure.data)) {
+    return {
+      id: id,
+      x: x1,
+      y: y1,
+      width: width,
+      height: height,
+      tag: "chart",
+      data: convertChartData(figure.data),
+    };
+  } else if (isImageData(figure.data)) {
+    const imageData = figure.data;
+    if (!imageData.path) return undefined;
+    const imageHeight = width / imageData.aspectRatio;
+    return {
+      id,
+      x: x1,
+      y: y1,
+      width,
+      height: imageHeight,
+      tag: "image",
+      data: {
+        path: imageData.path,
+      },
+    };
+  }
+  return undefined;
 }
 
-function convertChartData(chartData: ExcelChartDefinition): ChartDefinition | undefined {
+function isChartData(data: ExcelChartDefinition | ExcelImage): data is ExcelChartDefinition {
+  return "dataSets" in data;
+}
+
+function isImageData(data: ExcelChartDefinition | ExcelImage): data is ExcelImage {
+  return "path" in data;
+}
+
+function convertChartData(chartData: ExcelChartDefinition): ChartDefinition {
   const labelRange = chartData.dataSets[0].label?.replace(/\$/g, "");
   let dataSets = chartData.dataSets.map((data) => data.range.replace(/\$/g, ""));
   // For doughnut charts, in chartJS first dataset = outer dataset, in excel first dataset = inner dataset

@@ -4,6 +4,7 @@ import { Border, CellIsRule, IconSetRule, Style } from "../src/types";
 import { BarChartDefinition } from "../src/types/chart/bar_chart";
 import { LineChartDefinition } from "../src/types/chart/line_chart";
 import { PieChartDefinition } from "../src/types/chart/pie_chart";
+import { Image } from "../src/types/image";
 import { XLSXCfOperatorType, XLSXSharedFormula } from "../src/types/xlsx";
 import { convertXlsxFormat } from "../src/xlsx/conversion";
 import { hexaToInt } from "../src/xlsx/conversion/color_conversion";
@@ -737,6 +738,14 @@ describe("Import xlsx data", () => {
     for (let i = 0; i < datasets.length; i++) {
       expect(chartData.dataSets[i]).toEqual(datasets[i]);
     }
+  });
+
+  test("Can import images", () => {
+    const testSheet = getWorkbookSheet("jestImages", convertedData)!;
+    const figure = testSheet.figures.find((figure) => figure.tag === "image")!;
+    const imageData = figure.data as Image;
+    expect(imageData.path).toEqual("relative path");
+    expect(figure.width / figure.height).toEqual(1); // keep aspect ratio
   });
 
   describe("Misc tests", () => {

@@ -1,6 +1,7 @@
 import { ExcelChartDefinition } from "../../types";
 import { XLSXFigure, XLSXFigureAnchor } from "../../types/xlsx";
 import { removeNamespaces } from "../helpers/xml_helpers";
+import { ExcelImage } from "./../../types/image";
 import { XlsxBaseExtractor } from "./base_extractor";
 import { XlsxChartExtractor } from "./chart_extractor";
 
@@ -15,8 +16,9 @@ export class XlsxFigureExtractor extends XlsxBaseExtractor {
         }
 
         const chartElement = this.querySelector(figureElement, "c:chart");
-        if (!chartElement) {
-          throw new Error("Only chart figures are currently supported.");
+        const imageElement = this.querySelector(figureElement, "a:blip");
+        if (!chartElement && !imageElement) {
+          throw new Error("Only chart and image figures are currently supported.");
         }
 
         return {
@@ -24,7 +26,7 @@ export class XlsxFigureExtractor extends XlsxBaseExtractor {
             this.extractFigureAnchor("xdr:from", figureElement),
             this.extractFigureAnchor("xdr:to", figureElement),
           ],
-          data: this.extractChart(chartElement),
+          data: chartElement ? this.extractChart(chartElement) : this.extractImage(imageElement!),
         };
       }
     );
@@ -58,5 +60,14 @@ export class XlsxFigureExtractor extends XlsxBaseExtractor {
       throw new Error("Unable to extract chart definition");
     }
     return chartDefinition;
+  }
+
+  private extractImage(imageElement: Element): ExcelImage {
+    const imageId = this.extractAttr(imageElement, "r:embed", { required: true }).asString();
+    const image = this.getTargetImageFile(this.relationships[imageId])!;
+    if (!image) {
+      throw new Error("Unable to extract image");
+    }
+    return { ...image };
   }
 }

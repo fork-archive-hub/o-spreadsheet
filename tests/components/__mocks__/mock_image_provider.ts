@@ -13,4 +13,8 @@ export class ImageProvider implements ImageProviderInterface {
   async requestImage(): Promise<{ path: string; size: FigureSize }> {
     return { path: this.path, size: this.size };
   }
+
+  async getImageSize(path: string): Promise<FigureSize> {
+    return this.size;
+  }
 }

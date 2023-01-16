@@ -598,7 +598,8 @@ export const CREATE_IMAGE = async (env: SpreadsheetChildEnv) => {
     if (!image) {
       throw new Error("No image provider was given to the environment");
     }
-    const size = getMaxFigureSize(env.model.getters, image.size);
+    const imageOriginalSize = await env.imageProvider.getImageOriginalSize(image.path);
+    const size = getMaxFigureSize(env.model.getters, imageOriginalSize);
     const position = centerFigurePosition(env.model.getters, size);
     env.model.dispatch("CREATE_IMAGE", {
       sheetId,

@@ -5,6 +5,7 @@ import { Align, BorderDescr, ConditionalFormatRule, Style } from "../src/types";
 import { isXLSXExportXMLFile } from "../src/xlsx/helpers/xlsx_helper";
 import {
   createChart,
+  createImage,
   createSheet,
   hideColumns,
   hideRows,
@@ -39,7 +40,14 @@ function exportToXlsxThenImport(model: Model) {
   const exported = model.exportXLSX();
   const dataToImport = {};
   for (let file of exported.files) {
-    dataToImport[file.path] = isXLSXExportXMLFile(file) ? file.content : file.imagePath;
+    if (isXLSXExportXMLFile(file)) {
+      dataToImport[file.path] = file.content;
+      continue;
+    }
+    dataToImport[file.path] = {
+      path: file.imagePath,
+      aspect_ratio: 0.75,
+    };
   }
   const imported = new Model(dataToImport, undefined, undefined, undefined, false);
   return imported;
@@ -279,5 +287,30 @@ describe("Export data to xlsx then import it", () => {
     const sheetLink2 = buildSheetLink(newSheetId!);
     expect(cell.link?.label).toBe("my label");
     expect(cell.link?.url).toBe(sheetLink2);
+  });
+
+  test("Image", () => {
+    createImage(model, {
+      position: {
+        x: 100,
+        y: 100,
+      },
+      figureId: "1",
+      definition: {
+        path: "relative path",
+      },
+      size: {
+        width: 300,
+        height: 400,
+      },
+    });
+    const imageDefinition = model.getters.getImage("1");
+    const importedModel = exportToXlsxThenImport(model);
+    const newFigure = importedModel.getters.getFigures(sheetId)[0];
+    const newImage = importedModel.getters.getImage(newFigure.id);
+    expect(newImage.path).toEqual(imageDefinition.path);
+    // image size is hard to calculate accurately
+    expect(newFigure.width).toBeBetween(299, 301);
+    expect(newFigure.height).toBeBetween(399, 401);
   });
 });

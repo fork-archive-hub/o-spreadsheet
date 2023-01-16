@@ -12,8 +12,7 @@ export class ImageProvider implements ImageProviderInterface {
   async requestImage(): Promise<Image> {
     const file = await this.getImageFromUser();
     const path = await this.fileStore.upload(file);
-    const size = await this.getImageSize(path);
-    return { path, size };
+    return { path };
   }
 
   private getImageFromUser(): Promise<File> {
@@ -32,7 +31,7 @@ export class ImageProvider implements ImageProviderInterface {
     });
   }
 
-  private getImageSize(path: string): Promise<FigureSize> {
+  getImageOriginalSize(path: string): Promise<FigureSize> {
     return new Promise((resolve, reject) => {
       const image = new Image();
       image.src = path;

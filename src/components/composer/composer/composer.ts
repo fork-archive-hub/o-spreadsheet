@@ -1,4 +1,4 @@
-import { Component, onMounted, onPatched, onWillUnmount, useRef, useState } from "@odoo/owl";
+import { Component, onMounted, onWillUnmount, useEffect, useRef, useState } from "@odoo/owl";
 import { NEWLINE } from "../../../constants";
 import { EnrichedToken } from "../../../formulas/index";
 import { functionRegistry } from "../../../functions/index";
@@ -18,7 +18,6 @@ import {
   SpreadsheetChildEnv,
 } from "../../../types/index";
 import { css, cssPropertiesToCss } from "../../helpers/css";
-import { getElementScrollTop, setElementScrollTop } from "../../helpers/dom_helpers";
 import { updateSelectionWithArrowKeys } from "../../helpers/selection_helpers";
 import { ComposerFocusType } from "../../spreadsheet/spreadsheet";
 import { TextValueProvider } from "../autocomplete_dropdown/autocomplete_dropdown";
@@ -154,7 +153,6 @@ export class Composer extends Component<ComposerProps, SpreadsheetChildEnv> {
     functionDescription: {} as FunctionDescription,
     argToFocus: 0,
   });
-  private isKeyStillDown: boolean = false;
   private compositionActive: boolean = false;
 
   get assistantStyle(): string {
@@ -192,25 +190,21 @@ export class Composer extends Component<ComposerProps, SpreadsheetChildEnv> {
     F2: () => console.warn("Not implemented"),
     F4: this.processF4Key,
     Tab: (ev: KeyboardEvent) => this.processTabKey(ev),
+    " ": (ev: KeyboardEvent) => this.processSpaceKey(ev),
   };
 
   setup() {
     onMounted(() => {
       const el = this.composerRef.el!;
-
       this.contentHelper.updateEl(el);
-      this.processContent();
-      this.contentHelper.scrollSelectionIntoView();
     });
 
     onWillUnmount(() => {
       this.props.onComposerUnmounted?.();
     });
 
-    onPatched(() => {
-      if (!this.isKeyStillDown) {
-        this.processContent();
-      }
+    useEffect(() => {
+      this.processContent();
     });
   }
 
@@ -268,11 +262,6 @@ export class Composer extends Component<ComposerProps, SpreadsheetChildEnv> {
         this.autoComplete(autoCompleteValue);
         return;
       }
-    } else {
-      // when completing with tab, if there is no value to complete, the active cell will be moved to the right.
-      // we can't let the model think that it is for a ref selection.
-      // todo: check if this can be removed someday
-      this.env.model.dispatch("STOP_COMPOSER_RANGE_SELECTION");
     }
 
     const direction = ev.shiftKey ? "left" : "right";
@@ -280,25 +269,25 @@ export class Composer extends Component<ComposerProps, SpreadsheetChildEnv> {
     this.env.model.selection.moveAnchorCell(direction, 1);
   }
 
+  processSpaceKey(ev: KeyboardEvent) {
+    if (ev.ctrlKey) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      this.showAutocomplete("");
+      this.env.model.dispatch("STOP_COMPOSER_RANGE_SELECTION");
+    }
+  }
+
   private processEnterKey(ev: KeyboardEvent) {
     ev.preventDefault();
     ev.stopPropagation();
     if (ev.altKey || ev.ctrlKey) {
-      const selection = this.contentHelper.getCurrentSelection();
-      const currentContent = this.env.model.getters.getCurrentContent();
-      const content =
-        currentContent.slice(0, selection.start) + NEWLINE + currentContent.slice(selection.end);
-      this.env.model.dispatch("SET_CURRENT_CONTENT", {
-        content,
-        selection: { start: selection.start + 1, end: selection.start + 1 },
-      });
-
-      this.processContent();
-      this.contentHelper.scrollSelectionIntoView();
+      this.composerRef.el?.dispatchEvent(
+        new InputEvent("input", { inputType: "insertParagraph", bubbles: true, isComposing: false })
+      );
       return;
     }
 
-    this.isKeyStillDown = false;
     if (this.autoCompleteState.showProvider) {
       const autoCompleteValue =
         this.autoCompleteState.values[this.autoCompleteState.selectedIndex]?.text;
@@ -335,71 +324,38 @@ export class Composer extends Component<ComposerProps, SpreadsheetChildEnv> {
     } else {
       ev.stopPropagation();
     }
-    const { start, end } = this.contentHelper.getCurrentSelection();
-    if (
-      !this.env.model.getters.isSelectingForComposer() &&
-      !(ev.key === "Enter" && (ev.altKey || ev.ctrlKey))
-    ) {
-      this.env.model.dispatch("CHANGE_COMPOSER_CURSOR_SELECTION", { start, end });
-      this.isKeyStillDown = true;
-    }
   }
 
   /*
    * Triggered automatically by the content-editable between the keydown and key up
    * */
-  onInput() {
+  onInput(ev: InputEvent) {
     if (this.props.focus === "inactive" || !this.shouldProcessInputEvents) {
       return;
     }
+    let content = this.contentHelper.getText();
+    let selection = this.contentHelper.getCurrentSelection();
+    if (ev.inputType === "insertParagraph") {
+      content = content.slice(0, selection.start) + NEWLINE + content.slice(selection.end);
+      selection = { start: selection.start + 1, end: selection.start + 1 };
+    }
     this.env.model.dispatch("STOP_COMPOSER_RANGE_SELECTION");
     this.env.model.dispatch("SET_CURRENT_CONTENT", {
-      content: this.contentHelper.getText(),
-      selection: this.contentHelper.getCurrentSelection(),
+      content,
+      selection,
     });
+    this.processTokenAtCursor();
   }
 
-  onKeyup(ev: KeyboardEvent) {
-    this.isKeyStillDown = false;
-    if (
-      this.props.focus === "inactive" ||
-      ["Control", "Alt", "Shift", "Tab", "Enter", "F4"].includes(ev.key)
-    ) {
-      return;
+  onKeyup() {
+    if (this.contentHelper.el === document.activeElement) {
+      const { start: oldStart, end: oldEnd } = this.env.model.getters.getComposerSelection();
+      const { start, end } = this.contentHelper.getCurrentSelection();
+
+      if (start !== oldStart || end !== oldEnd) {
+        this.env.model.dispatch("CHANGE_COMPOSER_CURSOR_SELECTION", { start, end });
+      }
     }
-
-    if (this.autoCompleteState.showProvider && ["ArrowUp", "ArrowDown"].includes(ev.key)) {
-      return; // already processed in keydown
-    }
-
-    if (
-      this.env.model.getters.isSelectingForComposer() &&
-      ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(ev.key)
-    ) {
-      return; // already processed in keydown
-    }
-
-    ev.preventDefault();
-    ev.stopPropagation();
-    this.autoCompleteState.showProvider = false;
-    if (ev.ctrlKey && ev.key === " ") {
-      this.showAutocomplete("");
-      this.env.model.dispatch("STOP_COMPOSER_RANGE_SELECTION");
-      return;
-    }
-
-    const { start: oldStart, end: oldEnd } = this.env.model.getters.getComposerSelection();
-    const { start, end } = this.contentHelper.getCurrentSelection();
-
-    if (start !== oldStart || end !== oldEnd) {
-      this.env.model.dispatch(
-        "CHANGE_COMPOSER_CURSOR_SELECTION",
-        this.contentHelper.getCurrentSelection()
-      );
-    }
-
-    this.processTokenAtCursor();
-    this.processContent();
   }
 
   showAutocomplete(searchTerm: string) {
@@ -422,14 +378,6 @@ export class Composer extends Component<ComposerProps, SpreadsheetChildEnv> {
     this.autoCompleteState.selectedIndex = 0;
   }
 
-  onMousedown(ev: MouseEvent) {
-    if (ev.button > 0) {
-      // not main button, probably a context menu
-      return;
-    }
-    this.contentHelper.removeSelection();
-  }
-
   onClick() {
     if (this.env.model.getters.isReadonly()) {
       return;
@@ -444,10 +392,6 @@ export class Composer extends Component<ComposerProps, SpreadsheetChildEnv> {
     this.processTokenAtCursor();
   }
 
-  onBlur() {
-    this.isKeyStillDown = false;
-  }
-
   // ---------------------------------------------------------------------------
   // Private
   // ---------------------------------------------------------------------------
@@ -456,24 +400,20 @@ export class Composer extends Component<ComposerProps, SpreadsheetChildEnv> {
     if (this.compositionActive) {
       return;
     }
-    const oldScroll = getElementScrollTop(this.composerRef.el);
-    this.contentHelper.removeAll(); // removes the content of the composer, to be added just after
     this.shouldProcessInputEvents = false;
-
     if (this.props.focus !== "inactive") {
       this.contentHelper.el.focus();
-      this.contentHelper.selectRange(0, 0); // move the cursor inside the composer at 0 0.
     }
     const content = this.getContentLines();
-    if (content.length !== 0 && content.length[0] !== 0) {
-      this.contentHelper.setText(content);
-      const { start, end } = this.env.model.getters.getComposerSelection();
+    this.contentHelper.setText(content);
 
+    if (content.length !== 0 && content.length[0] !== 0) {
       if (this.props.focus !== "inactive") {
         // Put the cursor back where it was before the rendering
+        const { start, end } = this.env.model.getters.getComposerSelection();
         this.contentHelper.selectRange(start, end);
       }
-      setElementScrollTop(this.composerRef.el, oldScroll);
+      this.contentHelper.scrollSelectionIntoView();
     }
 
     this.shouldProcessInputEvents = true;

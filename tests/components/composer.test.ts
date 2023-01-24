@@ -480,7 +480,7 @@ describe("composer", () => {
 
   test("clicking on the composer while typing text (not formula) does not duplicates text", async () => {
     composerEl = await typeInComposer("a");
-    await click(composerEl);
+    await simulateClick(composerEl);
     expect(composerEl.textContent).toBe("a");
   });
 
@@ -828,6 +828,12 @@ describe("composer", () => {
     expect(cehMock.selectionState.isSelectingRange).toBeFalsy();
     await typeInComposer(",");
     expect(cehMock.selectionState.isSelectingRange).toBeTruthy();
+  });
+
+  test("Hitting 'Tab' without the autocomplete open should move the cursor to the next cell", async () => {
+    await startComposition("test");
+    await keyDown("Tab");
+    expect(model.getters.getEditionMode()).toBe("inactive");
   });
 
   describe("F4 shorcut will loop through reference combinations", () => {

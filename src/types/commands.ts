@@ -98,6 +98,12 @@ export const invalidateEvaluationCommands = new Set<CommandTypes>([
   "INSERT_CELL",
   "UNDO",
   "REDO",
+  "ADD_MERGE",
+]);
+
+export const invalidateDependenciesEvaluationCommands = new Set<CommandTypes>([
+  ...invalidateEvaluationCommands,
+  "PASTE",
 ]);
 
 export const invalidateCFEvaluationCommands = new Set<CommandTypes>([

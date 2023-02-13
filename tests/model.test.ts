@@ -3,7 +3,7 @@ import { toZone } from "../src/helpers";
 import { Model, ModelConfig } from "../src/model";
 import { corePluginRegistry, featurePluginRegistry } from "../src/plugins/index";
 import { UIPlugin } from "../src/plugins/ui_plugin";
-import { Command, CoreCommand, coreTypes, DispatchResult } from "../src/types";
+import { Command, CommandTypes, CoreCommand, coreTypes, DispatchResult } from "../src/types";
 import { setupCollaborativeEnv } from "./collaborative/collaborative_helpers";
 import { copy, selectCell, setCellContent } from "./test_helpers/commands_helpers";
 import { getCell, getCellContent, getCellText } from "./test_helpers/getters_helpers";
@@ -109,6 +109,19 @@ describe("Model", () => {
     setCellContent(model, "A1", "hello");
     expect(getCellContent(model, "A1")).toBe("hello");
     featurePluginRegistry.remove("myUIPlugin");
+  });
+
+  test("Core plugins handle don't receive UI commands", () => {
+    const receivedCommands: CommandTypes[] = [];
+    class MyCorePlugin extends CorePlugin {
+      handle(cmd: CoreCommand) {
+        receivedCommands.push(cmd.type);
+      }
+    }
+    corePluginRegistry.add("myCorePlugin", MyCorePlugin);
+    const model = new Model();
+    model.dispatch("COPY");
+    expect(receivedCommands).not.toContain("COPY");
   });
 
   test("Can open a model in readonly mode", () => {

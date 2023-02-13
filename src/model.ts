@@ -530,8 +530,12 @@ export class Model extends EventBus<any> implements CommandDispatcher {
    * Dispatch the given command to the given handlers.
    * It will call `beforeHandle` and `handle`
    */
-  private dispatchToHandlers(handlers: CommandHandler<Command>[], command: Command) {
+  private dispatchToHandlers(allHandlers: CommandHandler<Command>[], command: Command) {
     command = deepCopy(command);
+    const isCommandCore = isCoreCommand(command);
+    const handlers = allHandlers.filter(
+      (handler) => isCommandCore || !(handler instanceof CorePlugin)
+    );
     for (const handler of handlers) {
       handler.beforeHandle(command);
     }

@@ -3,6 +3,7 @@ import { ChartDefinition, ExcelChartDefinition, FigureData } from "../../types";
 import { XLSXFigure, XLSXWorksheet } from "../../types/xlsx";
 import { convertEMUToDotValue, getColPosition, getRowPosition } from "../helpers/content_helpers";
 import { ExcelImage } from "./../../types/image";
+import { XLSXFigureAnchor } from "./../../types/xlsx";
 import { convertColor } from "./color_conversion";
 
 export function convertFigures(sheetData: XLSXWorksheet): FigureData<any>[] {
@@ -17,30 +18,31 @@ function convertFigure(
   id: string,
   sheetData: XLSXWorksheet
 ): FigureData<any> | undefined {
-  const x1 =
-    getColPosition(figure.anchors[0].col, sheetData) +
-    convertEMUToDotValue(figure.anchors[0].colOffset);
-  const x2 =
-    getColPosition(figure.anchors[1].col, sheetData) +
-    convertEMUToDotValue(figure.anchors[1].colOffset);
-
-  const y1 =
-    getRowPosition(figure.anchors[0].row, sheetData) +
-    convertEMUToDotValue(figure.anchors[0].rowOffset);
-  const y2 =
-    getRowPosition(figure.anchors[1].row, sheetData) +
-    convertEMUToDotValue(figure.anchors[1].rowOffset);
-
-  const width = x2 - x1;
-  const height = y2 - y1;
+  let x1: number, y1: number;
+  let height: number, width: number;
+  if (figure.figureSize) {
+    // one cell anchor
+    width = convertEMUToDotValue(figure.figureSize.width);
+    height = convertEMUToDotValue(figure.figureSize.height);
+    const { x, y } = getPositionFromAnchor(figure.anchors[0], sheetData);
+    x1 = x;
+    y1 = y;
+  } else {
+    const { x, y } = getPositionFromAnchor(figure.anchors[0], sheetData);
+    x1 = x;
+    y1 = y;
+    const { x: x2, y: y2 } = getPositionFromAnchor(figure.anchors[1], sheetData);
+    width = x2 - x1;
+    height = y2 - y1;
+  }
 
   if (isChartData(figure.data)) {
     return {
       id: id,
       x: x1,
       y: y1,
-      width: width,
-      height: height,
+      width,
+      height,
       tag: "chart",
       data: convertChartData(figure.data),
     };
@@ -90,5 +92,18 @@ function convertChartData(chartData: ExcelChartDefinition): ChartDefinition {
     stacked: chartData.stacked || false,
     aggregated: false,
     labelsAsText: false,
+  };
+}
+
+function getPositionFromAnchor(
+  anchor: XLSXFigureAnchor,
+  sheetData: XLSXWorksheet
+): {
+  x: number;
+  y: number;
+} {
+  return {
+    x: getColPosition(anchor.col, sheetData) + convertEMUToDotValue(anchor.colOffset),
+    y: getRowPosition(anchor.row, sheetData) + convertEMUToDotValue(anchor.rowOffset),
   };
 }

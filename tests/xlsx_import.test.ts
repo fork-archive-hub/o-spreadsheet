@@ -721,6 +721,31 @@ describe("Import xlsx data", () => {
   });
 
   test.each([
+    ["chart", "A1:F19"],
+    ["image", "H1:K20"],
+  ])("Can import figure %s which uses oneCellAnchor", (figureType, figureZone) => {
+    const testSheet = getWorkbookSheet("jestOneCellAnchor", convertedData)!;
+    const figZone = toZone(figureZone);
+    const figure = testSheet.figures.find((figure) => figure.tag === figureType)!;
+    expect(figure.x).toBeBetween(
+      getColPosition(figZone.left, testSheet),
+      getColPosition(figZone.left + 1, testSheet)
+    );
+    expect(figure.y).toBeBetween(
+      getRowPosition(figZone.top, testSheet),
+      getRowPosition(figZone.top + 1, testSheet)
+    );
+    expect(figure.width).toBeBetween(
+      getColPosition(figZone.right, testSheet) - getColPosition(figZone.left, testSheet),
+      getColPosition(figZone.right + 1, testSheet) - getColPosition(figZone.left, testSheet)
+    );
+    expect(figure.height).toBeBetween(
+      getRowPosition(figZone.bottom, testSheet) - getRowPosition(figZone.top, testSheet),
+      getRowPosition(figZone.bottom + 1, testSheet) - getRowPosition(figZone.top, testSheet)
+    );
+  });
+
+  test.each([
     ["line chart", "line", "#CECECE", "Sheet1!B27:B35 Sheet1!C27:C35"],
     ["bar chart", "bar", "#fff", "Sheet1!B27:B35 Sheet1!C27:C35"],
     ["pie chart", "pie", "#fff", "Sheet1!B27:B35"],

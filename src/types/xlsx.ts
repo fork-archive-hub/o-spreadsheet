@@ -1,4 +1,5 @@
 import { Alias, ExcelChartDefinition, Format, PaneDivision } from ".";
+import { FigureSize } from "./figure";
 import { ExcelImage } from "./image";
 
 /**
@@ -517,6 +518,7 @@ export interface XLSXFigureAnchor {
 export interface XLSXFigure {
   anchors: XLSXFigureAnchor[];
   data: ExcelChartDefinition | ExcelImage;
+  figureSize?: FigureSize;
 }
 
 export const XLSX_CHART_TYPES = [

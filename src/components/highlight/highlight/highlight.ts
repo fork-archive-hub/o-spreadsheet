@@ -1,6 +1,6 @@
 import { Component, useState } from "@odoo/owl";
 import { ComponentsImportance } from "../../../constants";
-import { clip, isEqual } from "../../../helpers";
+import { clip, isEqual, zoneToUnboundedZone } from "../../../helpers";
 import { Color, Pixel, SpreadsheetChildEnv, Zone } from "../../../types";
 import { css } from "../../helpers/css";
 import { gridOverlayPosition } from "../../helpers/dom_helpers";
@@ -52,16 +52,9 @@ export class Highlight extends Component<Props, SpreadsheetChildEnv> {
     const mouseMove = (col, row) => {
       if (lastCol !== col || lastRow !== row) {
         const activeSheetId = this.env.model.getters.getActiveSheetId();
-        lastCol = clip(
-          col === -1 ? lastCol : col,
-          0,
-          this.env.model.getters.getNumberCols(activeSheetId) - 1
-        );
-        lastRow = clip(
-          row === -1 ? lastRow : row,
-          0,
-          this.env.model.getters.getNumberRows(activeSheetId) - 1
-        );
+        const activeSheetSize = this.env.model.getters.getSheetSize(activeSheetId);
+        lastCol = clip(col === -1 ? lastCol : col, 0, activeSheetSize.numberOfCols - 1);
+        lastRow = clip(row === -1 ? lastRow : row, 0, activeSheetSize.numberOfRows - 1);
 
         let newZone: Zone = {
           left: Math.min(pivotCol, lastCol),
@@ -74,7 +67,10 @@ export class Highlight extends Component<Props, SpreadsheetChildEnv> {
 
         if (!isEqual(newZone, currentZone)) {
           this.env.model.dispatch("CHANGE_HIGHLIGHT", {
-            range: this.env.model.getters.getRangeDataFromZone(activeSheet.id, newZone),
+            range: this.env.model.getters.getRangeDataFromZone(
+              activeSheet.id,
+              zoneToUnboundedZone(newZone, activeSheetSize)
+            ),
           });
           currentZone = newZone;
         }
@@ -98,6 +94,7 @@ export class Highlight extends Component<Props, SpreadsheetChildEnv> {
 
     const position = gridOverlayPosition();
     const activeSheetId = this.env.model.getters.getActiveSheetId();
+    const activeSheetSize = this.env.model.getters.getSheetSize(activeSheetId);
 
     const initCol = this.env.model.getters.getColIndex(clientX - position.left);
     const initRow = this.env.model.getters.getRowIndex(clientY - position.top);
@@ -134,7 +131,10 @@ export class Highlight extends Component<Props, SpreadsheetChildEnv> {
 
         if (!isEqual(newZone, currentZone)) {
           this.env.model.dispatch("CHANGE_HIGHLIGHT", {
-            range: this.env.model.getters.getRangeDataFromZone(activeSheetId, newZone),
+            range: this.env.model.getters.getRangeDataFromZone(
+              activeSheetId,
+              zoneToUnboundedZone(newZone, activeSheetSize)
+            ),
           });
           currentZone = newZone;
         }

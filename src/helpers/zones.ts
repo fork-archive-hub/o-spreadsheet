@@ -678,3 +678,21 @@ export function getZonesRows(zones: Zone[]): Set<number> {
   }
   return set;
 }
+
+/** Get the unbounded version of a zone. */
+export function zoneToUnboundedZone(zone: Zone, sheetSize: ZoneDimension): UnboundedZone {
+  const unboundedZone: UnboundedZone = { ...zone };
+  if (zone.bottom === sheetSize.numberOfRows - 1) {
+    unboundedZone.bottom = undefined;
+    if (zone.top >= 1) {
+      unboundedZone.hasHeader = true;
+    }
+  }
+  if (zone.right === sheetSize.numberOfCols - 1 && unboundedZone.bottom !== undefined) {
+    unboundedZone.right = undefined;
+    if (zone.left >= 1) {
+      unboundedZone.hasHeader = true;
+    }
+  }
+  return unboundedZone;
+}

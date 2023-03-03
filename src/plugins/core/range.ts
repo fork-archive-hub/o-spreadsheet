@@ -24,6 +24,7 @@ import {
   RangeData,
   RangeProvider,
   UID,
+  UnboundedZone,
   Zone,
 } from "../../types/index";
 
@@ -332,6 +333,7 @@ export class RangeAdapter implements CommandHandler<CoreCommand> {
         ...expandedZone,
         bottom: rangeImpl.isFullCol ? undefined : expandedZone.bottom,
         right: rangeImpl.isFullRow ? undefined : expandedZone.right,
+        hasHeader: rangeImpl.unboundedZone.hasHeader,
       },
     });
     return this.getRangeString(expandedRange, forSheetId);
@@ -397,7 +399,7 @@ export class RangeAdapter implements CommandHandler<CoreCommand> {
     return this.getters.getRangeFromSheetXC(sheetId, xc).rangeData;
   }
 
-  getRangeDataFromZone(sheetId: UID, zone: Zone): RangeData {
+  getRangeDataFromZone(sheetId: UID, zone: Zone | UnboundedZone): RangeData {
     return { _sheetId: sheetId, _zone: zone };
   }
 

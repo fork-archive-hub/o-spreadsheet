@@ -3,7 +3,14 @@ import { ChartConfiguration } from "chart.js";
 import format from "xml-formatter";
 import { Spreadsheet, SpreadsheetProps } from "../../src/components/spreadsheet/spreadsheet";
 import { functionRegistry } from "../../src/functions/index";
-import { toCartesian, toUnboundedZone, toXC, toZone } from "../../src/helpers/index";
+import {
+  matrixMap,
+  range,
+  toCartesian,
+  toUnboundedZone,
+  toXC,
+  toZone,
+} from "../../src/helpers/index";
 import { Model } from "../../src/model";
 import { MergePlugin } from "../../src/plugins/core/merge";
 import { topbarMenuRegistry } from "../../src/registries";
@@ -25,6 +32,7 @@ import { XLSXExport } from "../../src/types/xlsx";
 import { ImageProvider } from "../components/__mocks__/mock_image_provider";
 import { OWL_TEMPLATES, registerCleanup } from "../setup/jest.setup";
 import { FileStore } from "../__mocks__/mock_file_store";
+import { EvaluatedCell } from "./../../src/types/cells";
 import { Currency } from "./../../src/types/currency";
 import { MockClipboard } from "./clipboard";
 import { redo, setCellContent, undo } from "./commands_helpers";
@@ -252,6 +260,50 @@ export function evaluateCell(xc: string, grid: GridDescr): any {
   return gridResult[xc];
 }
 
+export function getRangeValuesAsMatrix(
+  model: Model,
+  rangeXc: string,
+  sheetId: string = model.getters.getActiveSheetId()
+): string[][] {
+  return matrixMap(getRangeCellsAsMatrix(model, rangeXc, sheetId), (cell) => cell.value.toString());
+}
+
+export function getRangeFormatsAsMatrix(
+  model: Model,
+  rangeXc: string,
+  sheetId: string = model.getters.getActiveSheetId()
+): string[][] {
+  return matrixMap(getRangeCellsAsMatrix(model, rangeXc, sheetId), (cell) => cell.format || "");
+}
+
+export function getRangeCellsAsMatrix(
+  model: Model,
+  rangeXc: string,
+  sheetId: string = model.getters.getActiveSheetId()
+): EvaluatedCell[][] {
+  const rangeValue: EvaluatedCell[][] = [];
+  const zone = toZone(rangeXc);
+  for (const row of range(zone.top, zone.bottom + 1)) {
+    const colValues: EvaluatedCell[] = [];
+    for (const col of range(zone.left, zone.right + 1)) {
+      const cell = model.getters.getEvaluatedCell({ sheetId, col, row });
+      colValues.push(cell);
+    }
+    rangeValue.push(colValues);
+  }
+  return rangeValue;
+}
+
+export function getModelFromGrid(grid: GridDescr): Model {
+  const model = new Model();
+  for (let xc in grid) {
+    if (grid[xc] !== undefined) {
+      setCellContent(model, xc, grid[xc]!);
+    }
+  }
+  return model;
+}
+
 export function evaluateCellText(xc: string, grid: GridDescr): string {
   const gridResult = evaluateGridText(grid);
   return gridResult[xc] || "";
@@ -316,12 +368,8 @@ export function XCToMergeCellMap(
   return mergeCellMap;
 }
 
-export function zone(str: string): Zone {
-  return toZone(str);
-}
-
 export function target(str: string): Zone[] {
-  return str.split(",").map(zone);
+  return str.split(",").map(toZone);
 }
 
 export function toRangesData(sheetId: UID, str: string): RangeData[] {

@@ -40,6 +40,7 @@ interface EvaluatedCellProperties {
 }
 
 export type CellValue = string | number | boolean;
+export type OptionalCellValue = CellValue | undefined;
 
 export type EvaluatedCell = NumberCell | TextCell | BooleanCell | EmptyCell | ErrorCell;
 

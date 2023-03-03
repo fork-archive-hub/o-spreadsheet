@@ -15,6 +15,7 @@ import * as misc from "./module_custom";
 import * as database from "./module_database";
 import * as date from "./module_date";
 import * as engineering from "./module_engineering";
+import * as filter from "./module_filter";
 import * as financial from "./module_financial";
 import * as info from "./module_info";
 import * as logical from "./module_logical";
@@ -32,6 +33,7 @@ type Category = { name: string; functions: Functions };
 const categories: Category[] = [
   { name: _lt("Database"), functions: database },
   { name: _lt("Date"), functions: date },
+  { name: _lt("Filter"), functions: filter },
   { name: _lt("Financial"), functions: financial },
   { name: _lt("Info"), functions: info },
   { name: _lt("Lookup"), functions: lookup },

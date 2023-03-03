@@ -2,7 +2,7 @@
 import { numberToJsDate, parseDateTime } from "../helpers/dates";
 import { isNumber, parseNumber } from "../helpers/numbers";
 import { _lt } from "../translation";
-import { ArgValue, CellValue, MatrixArgValue, PrimitiveArgValue } from "../types";
+import { ArgValue, CellValue, Matrix, MatrixArgValue, PrimitiveArgValue } from "../types";
 
 const SORT_TYPES_ORDER = ["number", "string", "boolean", "undefined"];
 
@@ -682,4 +682,16 @@ function compareCellValues(left: CellValue | undefined, right: CellValue | undef
     }
   }
   return typeOrder;
+}
+
+export function toCellValueMatrix(values: Matrix<any>): Matrix<CellValue> {
+  return values.map((row) => row.map((value) => toCellValue(value)));
+}
+
+function toCellValue(value: any): CellValue {
+  if (value === null || value === undefined) return 0;
+  if (typeof value === "number") return value;
+  if (typeof value === "string") return value;
+  if (typeof value === "boolean") return value;
+  return String(value);
 }

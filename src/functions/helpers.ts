@@ -695,3 +695,7 @@ function toCellValue(value: any): CellValue {
   if (typeof value === "boolean") return value;
   return String(value);
 }
+
+export function isMatrixArgValue(x: ArgValue): x is MatrixArgValue {
+  return Array.isArray(x) && Array.isArray(x[0]);
+}

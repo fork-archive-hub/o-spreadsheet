@@ -7,8 +7,69 @@ import {
   OptionalCellValue,
   PrimitiveArgValue,
 } from "../types";
+import { NotAvailableError } from "../types/errors";
 import { arg } from "./arguments";
 import { toBoolean, toCellValueMatrix } from "./helpers";
+import {
+  assertArraySameDimensions,
+  assertSameDimensions,
+  assertSingleColOrRow,
+} from "./helper_assert";
+
+// -----------------------------------------------------------------------------
+// FILTER
+// -----------------------------------------------------------------------------
+export const FILTER: AddFunctionDescription = {
+  description: _lt(
+    "Returns a filtered version of the source range, returning only rows or columns that meet the specified conditions."
+  ),
+  args: [
+    arg("range (range<any>)", _lt("The data to be filtered.")),
+    arg(
+      "condition1 (range<boolean>)",
+      _lt(
+        "A column or row containing true or false values corresponding to the first column or row of range."
+      )
+    ),
+    arg(
+      "condition2 (range<boolean>, repeating)",
+      _lt("Additional column or row containing true or false values.")
+    ),
+  ],
+  returns: ["RANGE<ANY>"],
+  //TODO computeFormat
+  compute: function (range: MatrixArgValue, ...conditions: MatrixArgValue[]): CellValue[][] {
+    conditions.map((c) =>
+      assertSingleColOrRow(_lt("The arguments condition must be a single column or row."), c)
+    );
+    assertSameDimensions(
+      _lt("The arguments conditions must have the same dimensions."),
+      ...conditions
+    );
+    const _conditions = conditions.map((c) => c.flat());
+
+    const mode = conditions[0].length === 1 ? "row" : "col";
+    range = mode === "row" ? transpose2dArray(range) : range;
+
+    assertArraySameDimensions(
+      _lt("The range and conditions must have the same dimensions."),
+      range,
+      _conditions[0]
+    );
+
+    const results: OptionalCellValue[][] = [];
+
+    for (let i = 0; i < range.length; i++) {
+      const row = range[i];
+      if (_conditions.every((c) => c[i])) results.push(row);
+    }
+
+    if (!results.length) throw new NotAvailableError("No match found in FILTER evaluation");
+
+    return toCellValueMatrix(mode === "row" ? transpose2dArray(results) : results);
+  },
+  isExported: true,
+};
 
 // -----------------------------------------------------------------------------
 // UNIQUE

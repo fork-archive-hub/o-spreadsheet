@@ -17,6 +17,7 @@ import {
   toString,
   visitMatchingRanges,
 } from "./helpers";
+import { getUnitMatrix } from "./helper_matrices";
 
 const DEFAULT_FACTOR = 1;
 const DEFAULT_MODE = 0;
@@ -861,6 +862,25 @@ export const MOD: AddFunctionDescription = {
 };
 
 // -----------------------------------------------------------------------------
+// MUNIT
+// -----------------------------------------------------------------------------
+export const MUNIT: AddFunctionDescription = {
+  description: _lt("Returns a n x n unit matrix, where n is the input dimension."),
+  args: [
+    arg(
+      "dimension (number)",
+      _lt("An integer specifying the dimension size of the unit matrix. It must be positive.")
+    ),
+  ],
+  returns: ["RANGE<NUMBER>"],
+  compute: function (n: PrimitiveArgValue): number[][] {
+    const _n = toNumber(n);
+    return getUnitMatrix(_n);
+  },
+  isExported: true,
+};
+
+// -----------------------------------------------------------------------------
 // ODD
 // -----------------------------------------------------------------------------
 export const ODD: AddFunctionDescription = {
@@ -1314,18 +1334,6 @@ export const TRUNC: AddFunctionDescription = {
       _places = Math.trunc(_places);
     }
     return Math.trunc(_value * Math.pow(10, _places)) / Math.pow(10, _places);
-  },
-  isExported: true,
-};
-
-export const MUNIT: AddFunctionDescription = {
-  description: _lt("Return an n*n identity matrix."),
-  args: [arg("n (number)", _lt("size of the unit matrix"))],
-  returns: ["RANGE<NUMBER>"],
-  compute: function (n: PrimitiveArgValue): number[][] {
-    return Array.from({ length: toNumber(n) }, (_, i) =>
-      Array.from({ length: toNumber(n) }, (_, j) => (i == j ? 1 : 0))
-    );
   },
   isExported: true,
 };

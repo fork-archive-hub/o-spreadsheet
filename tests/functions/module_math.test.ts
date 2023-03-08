@@ -1,5 +1,12 @@
+import { Model } from "../../src";
 import { toNumber } from "../../src/functions/helpers";
-import { evaluateCell, evaluateCellFormat, evaluateGrid } from "../test_helpers/helpers";
+import { setCellContent } from "../test_helpers/commands_helpers";
+import {
+  evaluateCell,
+  evaluateCellFormat,
+  evaluateGrid,
+  getRangeValuesAsMatrix,
+} from "../test_helpers/helpers";
 
 describe("ABS formula", () => {
   test("take 1 argument", () => {
@@ -1561,6 +1568,28 @@ describe("MOD formula", () => {
   test("result format depends on 1st argument", () => {
     expect(evaluateCellFormat("A1", { A1: "=MOD(A2, 12)", A2: "42" })).toBe("");
     expect(evaluateCellFormat("A1", { A1: "=MOD(A2, 12)", A2: "4200%" })).toBe("0%");
+  });
+});
+
+describe("MUNIT function", () => {
+  test("MUNIT takes 1 arguments", () => {
+    expect(evaluateCell("A1", { A1: "=MUNIT()" })).toBe("#BAD_EXPR");
+    expect(evaluateCell("A1", { A1: "=MUNIT(2)" })).toBe(1);
+    expect(evaluateCell("A1", { A1: "=MUNIT(2, 0)" })).toBe("#BAD_EXPR");
+  });
+
+  test("Argument should be a number", () => {
+    expect(evaluateCell("A1", { A1: '=MUNIT("hello")' })).toBe("#ERROR"); // @compatibility: on google sheets, return #VALUE!
+  });
+
+  test("Generate unit matrix", () => {
+    const model = new Model();
+    setCellContent(model, "D1", "=MUNIT(3)");
+    expect(getRangeValuesAsMatrix(model, "D1:F3")).toEqual([
+      ["1", "0", "0"],
+      ["0", "1", "0"],
+      ["0", "0", "1"],
+    ]);
   });
 });
 

@@ -1,7 +1,9 @@
+import { transpose2dArray } from "../helpers";
 import { _lt } from "../translation";
 import {
   AddFunctionDescription,
   CellValue,
+  MatrixArg,
   MatrixArgValue,
   OptionalCellValue,
   PrimitiveArgValue,
@@ -61,6 +63,22 @@ export const EXPAND: AddFunctionDescription = {
       }
     }
     return toCellValueMatrix(result);
+  },
+  isExported: true,
+};
+
+// -----------------------------------------------------------------------------
+// TRANSPOSE
+// -----------------------------------------------------------------------------
+export const TRANSPOSE: AddFunctionDescription = {
+  description: _lt("Transposes the rows and columns of a range."),
+  args: [arg("range (range<any>)", _lt("The range to be transposed."))],
+  returns: ["RANGE<ANY>"],
+  computeFormat: (values: MatrixArg) => {
+    return transpose2dArray(values, (x) => x?.format);
+  },
+  compute: function (values: MatrixArgValue): CellValue[][] {
+    return toCellValueMatrix(transpose2dArray(values));
   },
   isExported: true,
 };

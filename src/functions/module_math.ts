@@ -3,7 +3,6 @@ import {
   AddFunctionDescription,
   Arg,
   ArgValue,
-  isMatrix,
   MatrixArgValue,
   PrimitiveArg,
   PrimitiveArgValue,
@@ -1358,28 +1357,6 @@ export const RANDARRAY: AddFunctionDescription = {
     return Array.from({ length: toNumber(n) }, (_, i) =>
       Array.from({ length: toNumber(m) }, (_, j) => Math.random())
     );
-  },
-  isExported: true,
-};
-
-function transpose(values, callback: (value: any) => any) {
-  if (isMatrix(values)) {
-    return Array.from({ length: values[0].length }, (_, i) =>
-      Array.from({ length: values.length }, (_, j) => callback(values[j][i]))
-    );
-  }
-  return callback(values);
-}
-
-export const TRANSPOSE: AddFunctionDescription = {
-  description: _lt("Transpose a matrix."),
-  args: [arg("matrix (range<number>)", _lt("The matrix to be transposed."))],
-  returns: ["NUMBER"],
-  computeFormat: (values: Arg) => {
-    return transpose(values, (x) => x?.format);
-  },
-  compute: function (values: ArgValue): any[][] {
-    return transpose(values, (x) => x);
   },
   isExported: true,
 };

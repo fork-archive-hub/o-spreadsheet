@@ -684,6 +684,17 @@ function compareCellValues(left: CellValue | undefined, right: CellValue | undef
   return typeOrder;
 }
 
+export function matrixMap<T, M>(matrix: Matrix<T>, fn: (value: T) => M): Matrix<M> {
+  let result: Matrix<M> = new Array(matrix.length);
+  for (let i = 0; i < matrix.length; i++) {
+    result[i] = new Array(matrix[i].length);
+    for (let j = 0; j < matrix[i].length; j++) {
+      result[i][j] = fn(matrix[i][j]);
+    }
+  }
+  return result;
+}
+
 export function toCellValueMatrix(values: Matrix<any>): Matrix<CellValue> {
   return values.map((row) => row.map((value) => toCellValue(value)));
 }

@@ -993,6 +993,35 @@ export const RAND: AddFunctionDescription = {
 };
 
 // -----------------------------------------------------------------------------
+// RANDARRAY
+// -----------------------------------------------------------------------------
+export const RANDARRAY: AddFunctionDescription = {
+  description: _lt("Returns a grid of random numbers between 0 inclusive and 1 exclusive."),
+  args: [
+    arg("rows (number, default=1)", _lt("The number of rows to populate with a random number.")),
+    arg(
+      "columns (number, default=1)",
+      _lt("The number of columns to populate with a random number.")
+    ),
+  ],
+  returns: ["RANGE<NUMBER>"],
+  compute: function (rows: PrimitiveArgValue = 1, columns: PrimitiveArgValue = 1): number[][] {
+    const _cols = toNumber(columns);
+    const _rows = toNumber(rows);
+
+    const result: number[][] = Array(_cols);
+    for (let col = 0; col < _cols; col++) {
+      result[col] = Array(_rows);
+      for (let row = 0; row < _rows; row++) {
+        result[col][row] = Math.random();
+      }
+    }
+    return result;
+  },
+  isExported: true,
+};
+
+// -----------------------------------------------------------------------------
 // RANDBETWEEN
 // -----------------------------------------------------------------------------
 export const RANDBETWEEN: AddFunctionDescription = {
@@ -1349,21 +1378,6 @@ export const MFILL: AddFunctionDescription = {
   compute: function (n: PrimitiveArgValue, m: PrimitiveArgValue, v: PrimitiveArgValue): any[][] {
     return Array.from({ length: toNumber(n) }, (_, i) =>
       Array.from({ length: toNumber(m) }, (_, j) => v)
-    );
-  },
-  isExported: true,
-};
-
-export const RANDARRAY: AddFunctionDescription = {
-  description: _lt("Return an n*n identity matrix."),
-  args: [
-    arg("n (number, default=1)", _lt("size of the unit matrix")),
-    arg("m (number, default=1)", _lt("size of the unit matrix")),
-  ],
-  returns: ["RANGE<NUMBER>"],
-  compute: function (n: PrimitiveArgValue = 1, m: PrimitiveArgValue = 1): number[][] {
-    return Array.from({ length: toNumber(n) }, (_, i) =>
-      Array.from({ length: toNumber(m) }, (_, j) => Math.random())
     );
   },
   isExported: true,

@@ -1,6 +1,7 @@
 import { Model } from "../../src";
 import { toNumber } from "../../src/functions/helpers";
 import { setCellContent } from "../test_helpers/commands_helpers";
+import { getEvaluatedCell } from "../test_helpers/getters_helpers";
 import {
   evaluateCell,
   evaluateCellFormat,
@@ -1840,6 +1841,42 @@ describe("RAND formula", () => {
   test("return a number", () => {
     expect(evaluateCell("A1", { A1: "=RAND()" })).toBeGreaterThanOrEqual(0);
     expect(evaluateCell("A1", { A1: "=RAND()" })).toBeLessThan(1);
+  });
+});
+
+describe("RANDARRAY function", () => {
+  test("RANDARRAY takes 0-2 arguments", () => {
+    expect(evaluateCell("A1", { A1: "=RANDARRAY()" })).toBeBetween(0, 1);
+    expect(evaluateCell("A1", { A1: "=RANDARRAY(2)" })).toBeBetween(0, 1);
+    expect(evaluateCell("A1", { A1: "=RANDARRAY(2, 2)" })).toBeBetween(0, 1);
+    expect(evaluateCell("A1", { A1: "=RANDARRAY(2, 2, 0)" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+  });
+
+  test("Random rows", () => {
+    const model = new Model();
+    setCellContent(model, "A1", "=RANDARRAY(2)");
+    expect(getEvaluatedCell(model, "A1").value).toBeBetween(0, 1);
+    expect(getEvaluatedCell(model, "A2").value).toBeBetween(0, 1);
+    expect(getEvaluatedCell(model, "B1").value).toBe("");
+    expect(getEvaluatedCell(model, "B21").value).toBe("");
+  });
+
+  test("Random columns", () => {
+    const model = new Model();
+    setCellContent(model, "A1", "=RANDARRAY(1, 2)");
+    expect(getEvaluatedCell(model, "A1").value).toBeBetween(0, 1);
+    expect(getEvaluatedCell(model, "A2").value).toBe("");
+    expect(getEvaluatedCell(model, "B1").value).toBeBetween(0, 1);
+    expect(getEvaluatedCell(model, "B2").value).toBe("");
+  });
+
+  test("Random rows and columns", () => {
+    const model = new Model();
+    setCellContent(model, "A1", "=RANDARRAY(2, 2)");
+    expect(getEvaluatedCell(model, "A1").value).toBeBetween(0, 1);
+    expect(getEvaluatedCell(model, "A2").value).toBeBetween(0, 1);
+    expect(getEvaluatedCell(model, "B1").value).toBeBetween(0, 1);
+    expect(getEvaluatedCell(model, "B2").value).toBeBetween(0, 1);
   });
 });
 

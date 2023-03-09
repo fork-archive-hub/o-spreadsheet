@@ -72,6 +72,70 @@ describe("EXPAND function", () => {
   });
 });
 
+describe("FLATTEN function", () => {
+  test("FLATTEN takes 1 at least arguments", () => {
+    expect(evaluateCell("A1", { A1: "=FLATTEN()" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=FLATTEN(B1:C2)" })).toBe(0);
+    expect(evaluateCell("A1", { A1: "=FLATTEN(B1:C2, B1:C2)" })).toBe(0);
+  });
+
+  test("Flatten a column returns the column", () => {
+    const grid = { A1: "A1", A2: "A2", A3: "A3" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=FLATTEN(A1:A3)");
+    expect(getRangeValuesAsMatrix(model, "D1:D3")).toEqual([["A1"], ["A2"], ["A3"]]);
+  });
+
+  test("Flatten a row", () => {
+    const grid = { A1: "A1", B1: "B1", C1: "C1" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=FLATTEN(A1:C1)");
+    expect(getRangeValuesAsMatrix(model, "D1:D3")).toEqual([["A1"], ["B1"], ["C1"]]);
+  });
+
+  test("Flatten a range goes row-first", () => {
+    const grid = { A1: "A1", A2: "A2", B1: "B1", B2: "B2", C1: "C1", C2: "C2" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=FLATTEN(A1:C2)");
+    expect(getRangeValuesAsMatrix(model, "D1:D6")).toEqual([
+      ["A1"],
+      ["B1"],
+      ["C1"],
+      ["A2"],
+      ["B2"],
+      ["C2"],
+    ]);
+  });
+
+  test("Flatten a range with undefined values transform them to zeroes", () => {
+    const grid = { A1: "A1", A2: undefined, B1: undefined, B2: "B2", C1: "C1", C2: "C2" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=FLATTEN(A1:C2)");
+    expect(getRangeValuesAsMatrix(model, "D1:D6")).toEqual([
+      ["A1"],
+      ["0"],
+      ["C1"],
+      ["0"],
+      ["B2"],
+      ["C2"],
+    ]);
+  });
+
+  test("Flatten multiple ranges", () => {
+    const grid = { A1: "A1", A2: "A2", B1: "B1", B2: "B2", D1: "D1", D2: "D2" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "E1", "=FLATTEN(A1:B2, D1:D2)");
+    expect(getRangeValuesAsMatrix(model, "E1:E6")).toEqual([
+      ["A1"],
+      ["B1"],
+      ["A2"],
+      ["B2"],
+      ["D1"],
+      ["D2"],
+    ]);
+  });
+});
+
 describe("TRANSPOSE function", () => {
   test("TRANSPOSE takes 1 arguments", () => {
     expect(evaluateCell("A1", { A1: "=TRANSPOSE()" })).toBe("#BAD_EXPR");

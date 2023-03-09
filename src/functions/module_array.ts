@@ -9,7 +9,7 @@ import {
   PrimitiveArgValue,
 } from "../types";
 import { arg } from "./arguments";
-import { assert, toCellValueMatrix, toNumber } from "./helpers";
+import { assert, flattenRowFirst, toCellValue, toCellValueMatrix, toNumber } from "./helpers";
 
 // -----------------------------------------------------------------------------
 // EXPAND
@@ -65,6 +65,22 @@ export const EXPAND: AddFunctionDescription = {
     return toCellValueMatrix(result);
   },
   isExported: true,
+};
+
+// -----------------------------------------------------------------------------
+// FLATTEN
+// -----------------------------------------------------------------------------
+export const FLATTEN: AddFunctionDescription = {
+  description: _lt("Flattens all the values from one or more ranges into a single column."),
+  args: [
+    arg("range (range<any>)", _lt("The first range to flatten.")),
+    arg("range2 (range<any>, repeating)", _lt("Additional ranges to flatten.")),
+  ],
+  returns: ["RANGE<ANY>"],
+  compute: function (...ranges: MatrixArgValue[]): CellValue[][] {
+    return [flattenRowFirst(ranges, toCellValue)];
+  },
+  isExported: false,
 };
 
 // -----------------------------------------------------------------------------

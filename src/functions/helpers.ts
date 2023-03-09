@@ -699,7 +699,7 @@ export function toCellValueMatrix(values: Matrix<any>): Matrix<CellValue> {
   return values.map((row) => row.map((value) => toCellValue(value)));
 }
 
-function toCellValue(value: any): CellValue {
+export function toCellValue(value: any): CellValue {
   if (value === null || value === undefined) return 0;
   if (typeof value === "number") return value;
   if (typeof value === "string") return value;
@@ -709,4 +709,26 @@ function toCellValue(value: any): CellValue {
 
 export function isMatrixArgValue(x: ArgValue): x is MatrixArgValue {
   return Array.isArray(x) && Array.isArray(x[0]);
+}
+
+/**
+ * Flatten an array of items, where each item can be a single value or a 2D array, and apply the
+ * callback to each element.
+ *
+ * The 2D array are flattened row first.
+ */
+export function flattenRowFirst<T, M>(items: Array<T | Matrix<T>>, callback: (val: T) => M): M[] {
+  const flattened: M[] = [];
+  for (const item of items) {
+    if (!Array.isArray(item)) {
+      flattened.push(callback(item));
+      continue;
+    }
+    for (let row = 0; row < item[0].length; row++) {
+      for (let col = 0; col < item.length; col++) {
+        flattened.push(callback(item[col][row]));
+      }
+    }
+  }
+  return flattened;
 }

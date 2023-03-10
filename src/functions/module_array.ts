@@ -2,6 +2,7 @@ import { transpose2dArray } from "../helpers";
 import { _lt } from "../translation";
 import {
   AddFunctionDescription,
+  ArgValue,
   CellValue,
   MatrixArg,
   MatrixArgValue,
@@ -48,6 +49,46 @@ export const ARRAY_CONSTRAIN: AddFunctionDescription = {
     return result;
   },
   isExported: false,
+};
+
+// -----------------------------------------------------------------------------
+// CHOOSECOLS
+// -----------------------------------------------------------------------------
+export const CHOOSECOLS: AddFunctionDescription = {
+  description: _lt("Creates a new array from the selected columns in the existing range."),
+  args: [
+    arg("array (range<any>)", _lt("The array that contains the columns to be returned.")),
+    arg(
+      "col_num (number, range<number>)",
+      _lt("The first column index of the columns to be returned.")
+    ),
+    arg(
+      "col_num2 (number, range<number>, repeating)",
+      _lt("The columns indexes of the columns to be returned.")
+    ),
+  ],
+  returns: ["RANGE<ANY>"],
+  //TODO computeFormat
+  compute: function (array: MatrixArgValue, ...columns: ArgValue[]): CellValue[][] {
+    const _columns = flattenRowFirst(columns, toNumber);
+    assert(
+      () => _columns.every((col) => col > 0 && col <= array.length),
+      _lt(
+        "The columns arguments must be between 1 and %s (got %s).",
+        array.length.toString(),
+        (_columns.find((col) => col <= 0 || col > array.length) || 0).toString()
+      )
+    );
+
+    const result: OptionalCellValue[][] = Array(_columns.length);
+    for (let i = 0; i < _columns.length; i++) {
+      const colIndex = _columns[i] - 1; // -1 because columns arguments are 1-indexed
+      result[i] = array[colIndex];
+    }
+
+    return toCellValueMatrix(result);
+  },
+  isExported: true,
 };
 
 // -----------------------------------------------------------------------------

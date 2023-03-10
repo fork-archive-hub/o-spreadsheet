@@ -62,6 +62,83 @@ describe("ARRAY.CONSTRAIN function", () => {
   });
 });
 
+describe("CHOOSECOLS function", () => {
+  test("CHOOSECOLS takes at least 2 arguments", () => {
+    expect(evaluateCell("A1", { A1: "=CHOOSECOLS()" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=CHOOSECOLS(B1:B5)" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=CHOOSECOLS(B1:B5, 1)" })).toBe(0);
+    expect(evaluateCell("A1", { A1: "=CHOOSECOLS(B1:B5, 1, 1)" })).toBe(0);
+  });
+
+  test("Column argument bust be greater than 0 and smaller than the number of cols in the range", () => {
+    expect(evaluateCell("A1", { A1: "=CHOOSECOLS(B1:B5, 0)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #VALUE!
+    expect(evaluateCell("A1", { A1: "=CHOOSECOLS(B1:B5, 1)" })).toBe(0);
+    expect(evaluateCell("A1", { A1: "=CHOOSECOLS(B1:B5, 2)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #VALUE!
+  });
+
+  test("Column arguments should be numbers, or convertible to number", () => {
+    expect(evaluateCell("A1", { A1: '=CHOOSECOLS(B1:B5, "kamoulox")' })).toBe("#ERROR"); // @compatibility: on google sheets, return #VALUE!
+    expect(evaluateCell("A1", { A1: "=CHOOSECOLS(B1:B5, TRUE)" })).toBe(0); // @compatibility: on google sheets, return #VALUE!
+    expect(evaluateCell("A1", { A1: "=CHOOSECOLS(B1:B5, 1)" })).toBe(0);
+  });
+
+  test("Chose a column", () => {
+    const grid = { A1: "A1", A2: "A2", A3: "A3", B1: "B1", B2: "B2", B3: "B3" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=CHOOSECOLS(A1:B3, 1)");
+    expect(getRangeValuesAsMatrix(model, "D1:E3")).toEqual([
+      ["A1", ""],
+      ["A2", ""],
+      ["A3", ""],
+    ]);
+  });
+
+  test("Chose multiple columns", () => {
+    const grid = { A1: "A1", A2: "A2", A3: "A3", B1: "B1", B2: "B2", B3: "B3" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=CHOOSECOLS(A1:B3, 1, 2)");
+    expect(getRangeValuesAsMatrix(model, "D1:E3")).toEqual([
+      ["A1", "B1"],
+      ["A2", "B2"],
+      ["A3", "B3"],
+    ]);
+  });
+
+  test("Chose multiple column with a range", () => {
+    const grid = { A1: "A1", A2: "A2", A3: "A3", B1: "B1", B2: "B2", B3: "B3", C1: "1", C2: "2" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=CHOOSECOLS(A1:B3, C1:C2)");
+    expect(getRangeValuesAsMatrix(model, "D1:E3")).toEqual([
+      ["A1", "B1"],
+      ["A2", "B2"],
+      ["A3", "B3"],
+    ]);
+  });
+
+  test("Order of chosen column is respected (row-first for ranges)", () => {
+    //prettier-ignore
+    const grid = {
+      A1: "A1", B1: "B1", C1: "C1", D1: "1", E1: "2",
+      A2: "A2", B2: "B2", C2: "C2", D2: "3", E2: "1",
+      A3: "A3", B3: "B3", C3: "C3",
+    };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D5", "=CHOOSECOLS(A1:C3, D1:E2, 2)");
+    expect(getRangeValuesAsMatrix(model, "D5:H7")).toEqual([
+      ["A1", "B1", "C1", "A1", "B1"],
+      ["A2", "B2", "C2", "A2", "B2"],
+      ["A3", "B3", "C3", "A3", "B3"],
+    ]);
+  });
+
+  test("Undefined values are transformed to zeroes", () => {
+    const grid = { A1: "A1", A2: "A2", A3: undefined };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=CHOOSECOLS(A1:A3, 1)");
+    expect(getRangeValuesAsMatrix(model, "D1:D3")).toEqual([["A1"], ["A2"], ["0"]]);
+  });
+});
+
 describe("EXPAND function", () => {
   test("EXPAND takes 1-4 arguments", () => {
     expect(evaluateCell("A1", { A1: "=EXPAND()" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A

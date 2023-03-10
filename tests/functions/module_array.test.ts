@@ -1,5 +1,5 @@
 import { setCellContent, setFormat } from "../test_helpers/commands_helpers";
-import { getRangeValues } from "../test_helpers/getters_helpers";
+import { getCellContent, getRangeValues } from "../test_helpers/getters_helpers";
 import {
   evaluateCell,
   getModelFromGrid,
@@ -445,6 +445,55 @@ describe("FREQUENCY function", () => {
     const model = getModelFromGrid(grid);
     setCellContent(model, "D1", "=FREQUENCY(A1:B7, C1:C5)");
     expect(getRangeValues(model, "D1:D4")).toEqual([4, 2, 3, 1]);
+  });
+});
+
+describe("SUMPRODUCT function", () => {
+  test("SUMPRODUCT takes at least 1 argument", () => {
+    expect(evaluateCell("A1", { A1: "=SUMPRODUCT()" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=SUMPRODUCT(5)" })).toBe(5);
+    expect(evaluateCell("A1", { A1: "=SUMPRODUCT(5, 5)" })).toBe(25);
+  });
+
+  test("Values must be numbers, or range of numbers", () => {
+    expect(evaluateCell("A1", { A1: '=SUMPRODUCT("hallo")' })).toBe("#ERROR"); // @compatibility: on google sheets, return #VALUE!
+    expect(evaluateCell("A1", { A1: "=SUMPRODUCT(B1:B2, B1:B2)", B1: "hey", B2: "yo" })).toBe(
+      "#ERROR"
+    ); // @compatibility: on google sheets, return #VALUE!
+  });
+
+  test("Range values must have the same dimensions", () => {
+    expect(evaluateCell("D1", { D1: "=SUMPRODUCT(A1:A2, A1:B1)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #VALUE!
+    expect(evaluateCell("D1", { D1: "=SUMPRODUCT(A1:A2, A1:A3)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #VALUE!
+  });
+
+  test("SUMPRODUCT with numbers arguments", () => {
+    expect(evaluateCell("A1", { A1: "=SUMPRODUCT(6)" })).toBe(6);
+    expect(evaluateCell("A1", { A1: "=SUMPRODUCT(6, 5)" })).toBe(30);
+    expect(evaluateCell("A1", { A1: "=SUMPRODUCT(6, 5, 10)" })).toBe(300);
+    expect(evaluateCell("A1", { A1: "=SUMPRODUCT(6, 5, B1)", B1: "10" })).toBe(300);
+  });
+
+  test("SUMPRODUCT with ranges", () => {
+    //prettier-ignore
+    const grid = {
+      A1: "1", B1: "2", C1: "3",
+      A2: "4", B2: "5", C2: "6",
+      A3: "7", B3: "8", C3: "9",
+     };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=SUMPRODUCT(A1:A3, B1:B3)");
+    expect(getCellContent(model, "D1")).toBe((1 * 2 + 4 * 5 + 7 * 8).toString());
+
+    setCellContent(model, "D1", "=SUMPRODUCT(A1:B2, B2:C3)");
+    expect(getCellContent(model, "D1")).toBe((1 * 5 + 2 * 6 + 4 * 8 + 5 * 9).toString());
+  });
+
+  test("Undefined values are replaced by zeroes", () => {
+    const grid = { A1: "1", A2: "6", B1: "5", B2: undefined };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=SUMPRODUCT(A1:A2, B1:B2)");
+    expect(getCellContent(model, "D1")).toBe("5");
   });
 });
 

@@ -14,10 +14,13 @@ import {
   assert,
   flattenRowFirst,
   isCellValueANumber,
+  isMatrixArgValue,
+  reduceNumbers,
   toCellValue,
   toCellValueMatrix,
   toNumber,
 } from "./helpers";
+import { assertSameDimensions } from "./helper_assert";
 
 // -----------------------------------------------------------------------------
 // ARRAY_CONSTRAIN
@@ -252,6 +255,48 @@ export const FREQUENCY: AddFunctionDescription = {
 
     const result = classesWithIndex.sort((a, b) => a.index - b.index).map((val) => val.count);
     return [result];
+  },
+  isExported: true,
+};
+
+// -----------------------------------------------------------------------------
+// SUMPRODUCT
+// -----------------------------------------------------------------------------
+export const SUMPRODUCT: AddFunctionDescription = {
+  description: _lt(
+    "Calculates the sum of the products of corresponding entries in equal-sized ranges."
+  ),
+  args: [
+    arg(
+      "range1 (number, range<number>)",
+      _lt(
+        "The first range whose entries will be multiplied with corresponding entries in the other ranges."
+      )
+    ),
+    arg(
+      "range2 (number, range<number>, repeating)",
+      _lt(
+        "The other range whose entries will be multiplied with corresponding entries in the other ranges."
+      )
+    ),
+  ],
+  returns: ["NUMBER"],
+  compute: function (...args: ArgValue[]): number {
+    assertSameDimensions(_lt("All the ranges must have the same dimensions."), ...args);
+    if (args.every(isMatrixArgValue)) {
+      let result = 0;
+      for (let i = 0; i < args[0].length; i++) {
+        for (let j = 0; j < args[0][i].length; j++) {
+          let product = 1;
+          for (const range of args) {
+            product *= toNumber(range[i][j]);
+          }
+          result += product;
+        }
+      }
+      return result;
+    }
+    return reduceNumbers(args, (acc, a) => acc * a, 1);
   },
   isExported: true,
 };

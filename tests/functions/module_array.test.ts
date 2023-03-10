@@ -1,4 +1,5 @@
 import { setCellContent, setFormat } from "../test_helpers/commands_helpers";
+import { getRangeValues } from "../test_helpers/getters_helpers";
 import {
   evaluateCell,
   getModelFromGrid,
@@ -133,6 +134,108 @@ describe("FLATTEN function", () => {
       ["D1"],
       ["D2"],
     ]);
+  });
+});
+
+describe("FREQUENCY function", () => {
+  test("FREQUENCY takes 2 arguments", () => {
+    expect(evaluateCell("A1", { A1: "=FREQUENCY()" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=FREQUENCY(B1:B5)" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=FREQUENCY(B1:B5, C1:C3)" })).toBe(0);
+    expect(evaluateCell("A1", { A1: "=FREQUENCY(B1:B5, C1:C3, 0)" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+  });
+
+  test("Frequency with single class test", () => {
+    const grid = { A1: "1", A2: "2", A3: "3" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=FREQUENCY(A1:A3, A1)");
+    expect(getRangeValues(model, "D1:D2")).toEqual([
+      1, // els <= 1
+      2, // els > 1
+    ]);
+
+    setCellContent(model, "D1", "=FREQUENCY(A1:A3, 1)");
+    expect(getRangeValues(model, "D1:D2")).toEqual([
+      1, // els <= 1
+      2, // els > 1
+    ]);
+  });
+
+  test("Simple frequency test", () => {
+    //prettier-ignore
+    const grid = {
+      A1: "1", C1: "1",
+      A2: "2", C2: "3",
+      A3: "3", C3: "5",
+      A4: "4",
+      A5: "5",
+     };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=FREQUENCY(A1:A6, C1:C3)");
+    expect(getRangeValues(model, "D1:D4")).toEqual([
+      1, // els <= 1
+      2, // 1 < els <= 3
+      2, // 3 < els <= 5
+      0, // 5 < els
+    ]);
+  });
+
+  test("Classes order is preserved", () => {
+    //prettier-ignore
+    const grid = {
+      A1: "1", C1: "3",
+      A2: "2", C2: "1",
+      A3: "3", C3: "5",
+      A4: "4",
+      A5: "5",
+     };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=FREQUENCY(A1:A6, C1:C3)");
+    expect(getRangeValues(model, "D1:D4")).toEqual([2, 1, 2, 0]);
+  });
+
+  test("Classes order is row-first", () => {
+    //prettier-ignore
+    const grid = {
+      A1: "1", C1: "3", D1: "1",
+      A2: "2", C2: "5",
+      A3: "3",
+      A4: "4",
+      A5: "5",
+     };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "E1", "=FREQUENCY(A1:A6, C1:D2)");
+    expect(getRangeValues(model, "E1:E4")).toEqual([2, 1, 2, 0]);
+  });
+
+  test("Data can be multidimensional range", () => {
+    //prettier-ignore
+    const grid = {
+      A1: "1", B1: "1", C1: "3",
+      A2: "2", B2: "2", C2: "1",
+      A3: "3", B3: "3", C3: "5",
+      A4: "4", B4: "4",
+      A5: "5", B5: "6",
+     };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=FREQUENCY(A1:B6, C1:C3)");
+    expect(getRangeValues(model, "D1:D4")).toEqual([4, 2, 3, 1]);
+  });
+
+  test("Non-number values are ignored", () => {
+    //prettier-ignore
+    const grid = {
+      A1: "1",        B1: "1",    C1: "3",
+      A2: "2",        B2: "2",    C2: "1",
+      A3: "3",        B3: "3",    C3: "5",
+      A4: "4",        B4: "4",    C4 : "geronimo",
+      A5: "5",        B5: "6",    C5 : undefined,
+      A6 : "hello",   B6 : "true",
+      A7 : undefined, B7 : "=A6",
+     };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=FREQUENCY(A1:B7, C1:C5)");
+    expect(getRangeValues(model, "D1:D4")).toEqual([4, 2, 3, 1]);
   });
 });
 

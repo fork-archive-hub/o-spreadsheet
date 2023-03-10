@@ -9,7 +9,14 @@ import {
   PrimitiveArgValue,
 } from "../types";
 import { arg } from "./arguments";
-import { assert, flattenRowFirst, toCellValue, toCellValueMatrix, toNumber } from "./helpers";
+import {
+  assert,
+  flattenRowFirst,
+  isCellValueANumber,
+  toCellValue,
+  toCellValueMatrix,
+  toNumber,
+} from "./helpers";
 
 // -----------------------------------------------------------------------------
 // EXPAND
@@ -81,6 +88,59 @@ export const FLATTEN: AddFunctionDescription = {
     return [flattenRowFirst(ranges, toCellValue)];
   },
   isExported: false,
+};
+
+// -----------------------------------------------------------------------------
+// FREQUENCY
+// -----------------------------------------------------------------------------
+export const FREQUENCY: AddFunctionDescription = {
+  description: _lt("Calculates the frequency distribution of a range."),
+  args: [
+    arg("data (range<any>)", _lt("The array of ranges containing the values to be counted.")),
+    arg("classes (number, range<any>)", _lt("The range containing the set of classes.")),
+  ],
+  returns: ["RANGE<NUMBER>"],
+  compute: function (data: MatrixArgValue, classes: MatrixArgValue): CellValue[][] {
+    const _data = flattenRowFirst([data], (val) => val).filter(isCellValueANumber);
+    const _classes = flattenRowFirst([classes], (val) => val).filter(isCellValueANumber);
+
+    /**
+     * Returns the frequency distribution of the data in the classes, ie. the number of elements in the range
+     * between each classes.
+     *
+     * For example:
+     * - data = [1, 2, 3, 4, 5]
+     * - classes = [3, 5, 1]
+     *
+     * The result will be:
+     * - 2 ==> number of elements 3 > el >= 5
+     * - 2 ==> number of elements 1 > el >= 3
+     * - 1 ==> number of elements <= 1
+     * - 0 ==> number of elements > 5
+     */
+
+    const classesWithIndex = _classes
+      .map((value, index) => ({ index, value, count: 0 }))
+      .sort((a, b) => a.value - b.value);
+    classesWithIndex.push({ index: classesWithIndex.length, value: Infinity, count: 0 });
+
+    const sortedData = _data.sort((a, b) => a - b);
+
+    let currentClassIndex = 0;
+    for (const val of sortedData) {
+      while (
+        val > classesWithIndex[currentClassIndex].value &&
+        currentClassIndex < classesWithIndex.length - 1
+      ) {
+        currentClassIndex++;
+      }
+      classesWithIndex[currentClassIndex].count++;
+    }
+
+    const result = classesWithIndex.sort((a, b) => a.index - b.index).map((val) => val.count);
+    return [result];
+  },
+  isExported: true,
 };
 
 // -----------------------------------------------------------------------------

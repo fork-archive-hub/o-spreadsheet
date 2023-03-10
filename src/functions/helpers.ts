@@ -732,3 +732,7 @@ export function flattenRowFirst<T, M>(items: Array<T | Matrix<T>>, callback: (va
   }
   return flattened;
 }
+
+export function isCellValueANumber(value: CellValue | undefined): value is number {
+  return typeof value === "number";
+}

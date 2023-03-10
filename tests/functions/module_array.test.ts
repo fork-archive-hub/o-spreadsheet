@@ -8,6 +8,60 @@ import {
   target,
 } from "../test_helpers/helpers";
 
+describe("ARRAY.CONSTRAIN function", () => {
+  test("ARRAY.CONSTRAIN takes 3 arguments", () => {
+    expect(evaluateCell("A1", { A1: "=ARRAY.CONSTRAIN()" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=ARRAY.CONSTRAIN(D1:F2)" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=ARRAY.CONSTRAIN(D1:F2, 2)" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=ARRAY.CONSTRAIN(D1:F2, 2, 2)" })).toBe(0);
+    expect(evaluateCell("A1", { A1: "=ARRAY.CONSTRAIN(D1:F2, 2, 2, 0)" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+  });
+
+  test("Constraint array", () => {
+    // prettier-ignore
+    const grid = {
+      A1: "A1", B1: "B1", C1: "C1",
+      A2: "A2", B2: "B2", C2: "C2",
+      A3: "A3", B3: "B2", C3: "C3",
+    };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=ARRAY.CONSTRAIN(A1:C3, 2, 2)");
+    expect(getRangeValuesAsMatrix(model, "D1:F3")).toEqual([
+      ["A1", "B1", ""],
+      ["A2", "B2", ""],
+      ["", "", ""],
+    ]);
+  });
+
+  test("Constraint array returns whole array if arguments col/row are greater than the range dimensions", () => {
+    // prettier-ignore
+    const grid = {
+      A1: "A1", B1: "B1", C1: "C1",
+      A2: "A2", B2: "B2", C2: "C2",
+      A3: "A3", B3: "B3", C3: "C3",
+    };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=ARRAY.CONSTRAIN(A1:C3, 11, 569)");
+    expect(getRangeValuesAsMatrix(model, "D1:G4")).toEqual([
+      ["A1", "B1", "C1", ""],
+      ["A2", "B2", "C2", ""],
+      ["A3", "B3", "C3", ""],
+      ["", "", "", ""],
+    ]);
+  });
+
+  test("Undefined values are transformed to zeroes", () => {
+    const grid = { A1: "A1", B1: "B1" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=ARRAY.CONSTRAIN(A1:B2, 2, 2)");
+    expect(getRangeValuesAsMatrix(model, "D1:F3")).toEqual([
+      ["A1", "B1", ""],
+      ["0", "0", ""],
+      ["", "", ""],
+    ]);
+  });
+});
+
 describe("EXPAND function", () => {
   test("EXPAND takes 1-4 arguments", () => {
     expect(evaluateCell("A1", { A1: "=EXPAND()" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A

@@ -19,6 +19,38 @@ import {
 } from "./helpers";
 
 // -----------------------------------------------------------------------------
+// ARRAY_CONSTRAIN
+// -----------------------------------------------------------------------------
+export const ARRAY_CONSTRAIN: AddFunctionDescription = {
+  description: _lt("Returns a result array constrained to a specific width and height."),
+  args: [
+    arg("input_range (range<any>)", _lt("The range to constrain.")),
+    arg("rows (number)", _lt("The number of rows in the constrained array.")),
+    arg("columns (number)", _lt("The number of columns in the constrained array.")),
+  ],
+  returns: ["RANGE<ANY>"],
+  //TODO computeFormat
+  compute: function (
+    array: MatrixArgValue,
+    rows: PrimitiveArgValue,
+    columns: PrimitiveArgValue | undefined
+  ): CellValue[][] {
+    const _rows = Math.min(toNumber(rows), array[0].length);
+    const _columns = Math.min(toNumber(columns), array.length);
+
+    const result: CellValue[][] = Array(_columns);
+    for (let col = 0; col < _columns; col++) {
+      result[col] = Array(_rows);
+      for (let row = 0; row < _rows; row++) {
+        result[col][row] = toCellValue(array[col][row]);
+      }
+    }
+    return result;
+  },
+  isExported: false,
+};
+
+// -----------------------------------------------------------------------------
 // EXPAND
 // -----------------------------------------------------------------------------
 export const EXPAND: AddFunctionDescription = {

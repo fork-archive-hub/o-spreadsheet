@@ -92,6 +92,46 @@ export const CHOOSECOLS: AddFunctionDescription = {
 };
 
 // -----------------------------------------------------------------------------
+// CHOOSEROWS
+// -----------------------------------------------------------------------------
+export const CHOOSEROWS: AddFunctionDescription = {
+  description: _lt("Creates a new array from the selected rows in the existing range."),
+  args: [
+    arg("array (range<any>)", _lt("The array that contains the rows to be returned.")),
+    arg("row_num (number, range<number>)", _lt("The first row index of the rows to be returned.")),
+    arg(
+      "row_num2 (number, range<number>, repeating)",
+      _lt("The rows indexes of the rows to be returned.")
+    ),
+  ],
+  returns: ["RANGE<ANY>"],
+  //TODO computeFormat
+  compute: function (array: MatrixArgValue, ...rows: ArgValue[]): CellValue[][] {
+    const _rows = flattenRowFirst(rows, toNumber);
+    assert(
+      () => _rows.every((row) => row > 0 && row <= array[0].length),
+      _lt(
+        "The rows arguments must be between 1 and %s (got %s).",
+        array[0].length.toString(),
+        (_rows.find((row) => row <= 0 || row > array[0].length) || 0).toString()
+      )
+    );
+
+    const result: CellValue[][] = Array(array.length);
+    for (let col = 0; col < array.length; col++) {
+      result[col] = Array(_rows.length);
+      for (let row = 0; row < _rows.length; row++) {
+        const rowIndex = _rows[row] - 1; // -1 because rows arguments are 1-indexed
+        result[col][row] = toCellValue(array[col][rowIndex]);
+      }
+    }
+
+    return result;
+  },
+  isExported: true,
+};
+
+// -----------------------------------------------------------------------------
 // EXPAND
 // -----------------------------------------------------------------------------
 export const EXPAND: AddFunctionDescription = {

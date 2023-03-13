@@ -572,6 +572,72 @@ describe("MINVERSE function", () => {
   });
 });
 
+describe("MMULT function", () => {
+  test("MMULT takes 2 arguments", () => {
+    expect(evaluateCell("A1", { A1: "=MMULT()" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=MMULT(1)" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=MMULT(1, 1)" })).toBe(1);
+    expect(evaluateCell("A1", { A1: "=MMULT(1, 1, 1)" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+  });
+
+  test("Sizes of the matrices should allow for matrix multiplication", () => {
+    expect(evaluateCell("D1", { D1: "=MMULT(A1:A2, A1:A2)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #NUM!
+    expect(evaluateCell("D1", { D1: "=MMULT(A1:B1, A1:B1)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #NUM!
+    expect(evaluateCell("D1", { D1: "=MMULT(A1:A2, A1:B2)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #NUM!
+  });
+
+  test("Argument must only contain number, or values convertibale to number", () => {
+    expect(evaluateCell("D1", { D1: "=MMULT(D2, D2)", D2: "hello" })).toBe("#ERROR"); // @compatibility: on google sheets, return #NUM!
+  });
+
+  test("Multiply 1x1 matrices", () => {
+    const grid = { A1: "5" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=MMULT(A1, A1)");
+    expect(getEvaluatedCell(model, "D1").value).toEqual(25);
+
+    setCellContent(model, "D1", "=MMULT(5, 5)");
+    expect(getEvaluatedCell(model, "D1").value).toEqual(25);
+  });
+
+  test("Invert matrices", () => {
+    //prettier-ignore
+    const grid = {
+      A1: "1", B1: "2", C1: "3",
+      A2: "4", B2: "5", C2: "6",
+      A3: "7", B3: "8", C3: "9",
+     };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=MMULT(A1:C3, A1:C3)");
+    expect(getRangeValuesAsMatrix(model, "D1:F3")).toEqual([
+      ["30", "36", "42"],
+      ["66", "81", "96"],
+      ["102", "126", "150"],
+    ]);
+
+    setCellContent(model, "D1", "=MMULT(A1:C3, A1:A3)");
+    expect(getRangeValuesAsMatrix(model, "D1:F3")).toEqual([
+      ["30", "", ""],
+      ["66", "", ""],
+      ["102", "", ""],
+    ]);
+
+    setCellContent(model, "D1", "=MMULT(A1:B1, A1:C2)");
+    expect(getRangeValuesAsMatrix(model, "D1:F3")).toEqual([
+      ["9", "12", "15"],
+      ["", "", ""],
+      ["", "", ""],
+    ]);
+
+    setCellContent(model, "D1", "=MMULT(A1:A3, A1:C1)");
+    expect(getRangeValuesAsMatrix(model, "D1:F3")).toEqual([
+      ["1", "2", "3"],
+      ["4", "8", "12"],
+      ["7", "14", "21"],
+    ]);
+  });
+});
+
 describe("SUMPRODUCT function", () => {
   test("SUMPRODUCT takes at least 1 argument", () => {
     expect(evaluateCell("A1", { A1: "=SUMPRODUCT()" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A

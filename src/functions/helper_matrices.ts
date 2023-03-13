@@ -104,3 +104,32 @@ function swapMatrixRows(matrix: number[][], row1: number, row2: number) {
     matrix[i][row2] = tmp;
   }
 }
+
+/**
+ * Matrix multiplication of 2 matrices.
+ * ex: matrix1 : n x l, matrix2 : m x n => result : m x l
+ *
+ * Note: we use indexing [col][row] instead of the standard mathematical notation [row][col]
+ */
+export function multiplyMatrices(matrix1: Matrix<number>, matrix2: Matrix<number>): Matrix<number> {
+  if (matrix1.length !== matrix2[0].length) {
+    throw new Error("Cannot multiply matrices : incompatible matrices size.");
+  }
+
+  const rowsM1 = matrix1[0].length;
+  const colsM2 = matrix2.length;
+  const n = matrix1.length;
+
+  const result: Matrix<number> = Array(colsM2);
+  for (let col = 0; col < colsM2; col++) {
+    result[col] = Array(rowsM1);
+    for (let row = 0; row < rowsM1; row++) {
+      let sum = 0;
+      for (let k = 0; k < n; k++) {
+        sum += matrix1[k][row] * matrix2[col][k];
+      }
+      result[col][row] = sum;
+    }
+  }
+  return result;
+}

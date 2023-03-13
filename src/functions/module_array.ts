@@ -23,7 +23,7 @@ import {
   toNumber,
 } from "./helpers";
 import { assertSameDimensions, assertSquareMatrix } from "./helper_assert";
-import { invertMatrix } from "./helper_matrices";
+import { invertMatrix, multiplyMatrices } from "./helper_matrices";
 
 // -----------------------------------------------------------------------------
 // ARRAY_CONSTRAIN
@@ -322,6 +322,41 @@ export const MINVERSE: AddFunctionDescription = {
     }
 
     return inverted;
+  },
+  isExported: true,
+};
+
+// -----------------------------------------------------------------------------
+// MMULT
+// -----------------------------------------------------------------------------
+export const MMULT: AddFunctionDescription = {
+  description: _lt("Calculates the matrix product of two matrices."),
+  args: [
+    arg(
+      "matrix1 (number, range<number>)",
+      _lt("The first matrix in the matrix multiplication operation.")
+    ),
+    arg(
+      "matrix2 (number, range<number>)",
+      _lt("The second matrix in the matrix multiplication operation.")
+    ),
+  ],
+  returns: ["RANGE<NUMBER>"],
+  compute: function (matrix1: ArgValue, matrix2: ArgValue): CellValue[][] {
+    let _matrix1: Matrix<number> = matrixMap(toMatrixArgValue(matrix1), toNumber);
+    let _matrix2: Matrix<number> = matrixMap(toMatrixArgValue(matrix2), toNumber);
+
+    assert(
+      () => _matrix1.length === _matrix2[0].length,
+      _lt(
+        "In [[FUNCTION_NAME]], the number of columns of the first matrix (%s) must be equal to the \
+        number of rows of the second matrix (%s).",
+        _matrix1.length.toString(),
+        _matrix2[0].length.toString()
+      )
+    );
+
+    return multiplyMatrices(_matrix1, _matrix2);
   },
   isExported: true,
 };

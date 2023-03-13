@@ -8,3 +8,99 @@ export function getUnitMatrix(n: number): Matrix<number> {
   }
   return matrix;
 }
+
+/**
+ * Invert a matrix and compute its determinant using Gaussian Elimination.
+ *
+ * The Matrix should be a square matrix, and should be indexed [col][row] instead of the
+ * standard mathematical indexing [row][col].
+ */
+export function invertMatrix(M: Matrix<number>): {
+  inverted?: Matrix<number>;
+  determinant: number;
+} {
+  // Use Gaussian Elimination to calculate the inverse:
+  // (1) 'augment' the matrix (left) by the identity (on the right)
+  // (2) Turn the matrix on the left into the identity using elementary row operations
+  // (3) The matrix on the right becomes the inverse (was the identity matrix)
+  //
+  // There are 3 elementary row operations:
+  // (a) Swap 2 rows. This multiply the determinant by -1.
+  // (b) Multiply a row by a scalar. This multiply the determinant by that scalar.
+  // (c) Add to a row a multiple of another row. This does not change the determinant.
+
+  if (M.length !== M[0].length) {
+    throw new Error(
+      `Function [[FUNCTION_NAME]] invert matrix error, only square matrices are invertible`
+    );
+  }
+
+  let determinant = 1;
+  const dim = M.length;
+  const I: Matrix<number> = getUnitMatrix(dim);
+  const C: Matrix<number> = M.map((row) => row.slice());
+
+  // Perform elementary row operations
+  for (let i = 0; i < dim; i++) {
+    let diagonalElement = C[i][i];
+
+    // if we have a 0 on the diagonal we'll need to swap with a lower row
+    if (diagonalElement == 0) {
+      //look through every row below the i'th row
+      for (let ii = i + 1; ii < dim; ii++) {
+        //if the ii'th row has a non-0 in the i'th col, swap it with that row
+        if (C[i][ii] != 0) {
+          swapMatrixRows(C, i, ii);
+          swapMatrixRows(I, i, ii);
+          determinant *= -1;
+          break;
+        }
+      }
+      diagonalElement = C[i][i];
+      //if it's still 0, matrix isn't invertible
+      if (diagonalElement === 0) {
+        return { determinant: 0 };
+      }
+    }
+
+    // Scale this row down by e (so we have a 1 on the diagonal)
+    for (let j = 0; j < dim; j++) {
+      C[j][i] = C[j][i] / diagonalElement;
+      I[j][i] = I[j][i] / diagonalElement;
+    }
+    determinant *= diagonalElement;
+
+    // Subtract a multiple of the current row from ALL of
+    // the other rows so that there will be 0's in this column in the
+    // rows above and below this one
+    for (let ii = 0; ii < dim; ii++) {
+      if (ii == i) {
+        continue;
+      }
+
+      // We want to change this element to 0
+      const e = C[i][ii];
+
+      // Subtract (the row above(or below) scaled by e) from (the
+      // current row) but start at the i'th column and assume all the
+      // stuff left of diagonal is 0 (which it should be if we made this
+      // algorithm correctly)
+
+      for (let j = 0; j < dim; j++) {
+        C[j][ii] -= e * C[j][i];
+        I[j][ii] -= e * I[j][i];
+      }
+    }
+  }
+
+  // We've done all operations, C should be the identity matrix I should be the inverse
+  return { inverted: I, determinant };
+}
+
+function swapMatrixRows(matrix: number[][], row1: number, row2: number) {
+  for (let i = 0; i < matrix.length; i++) {
+    const tmp = matrix[i][row1];
+    matrix[i][row1] = matrix[i][row2];
+    matrix[i][row2] = tmp;
+  }
+}

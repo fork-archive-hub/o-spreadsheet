@@ -711,6 +711,11 @@ export function isMatrixArgValue(x: ArgValue): x is MatrixArgValue {
   return Array.isArray(x) && Array.isArray(x[0]);
 }
 
+export function toMatrixArgValue(values: ArgValue): MatrixArgValue {
+  if (isMatrixArgValue(values)) return values;
+  return [[values === null ? 0 : values]];
+}
+
 /**
  * Flatten an array of items, where each item can be a single value or a 2D array, and apply the
  * callback to each element.

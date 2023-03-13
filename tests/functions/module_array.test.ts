@@ -1,5 +1,5 @@
 import { setCellContent, setFormat } from "../test_helpers/commands_helpers";
-import { getCellContent, getRangeValues } from "../test_helpers/getters_helpers";
+import { getCellContent, getEvaluatedCell, getRangeValues } from "../test_helpers/getters_helpers";
 import {
   evaluateCell,
   getModelFromGrid,
@@ -445,6 +445,130 @@ describe("FREQUENCY function", () => {
     const model = getModelFromGrid(grid);
     setCellContent(model, "D1", "=FREQUENCY(A1:B7, C1:C5)");
     expect(getRangeValues(model, "D1:D4")).toEqual([4, 2, 3, 1]);
+  });
+});
+
+describe("MDETERM function", () => {
+  test("MDETERM takes 1 arguments", () => {
+    expect(evaluateCell("A1", { A1: "=MDETERM()" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=MDETERM(1)" })).toBe(1);
+    expect(evaluateCell("A1", { A1: "=MDETERM(1, 0)" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+  });
+
+  test("Argument must be a square matrix", () => {
+    const grid = { A1: "1", B1: "0", A2: "0", B2: "1" };
+    expect(evaluateCell("D1", { D1: "=MDETERM(A1:B1)", ...grid })).toBe("#ERROR"); // @compatibility: on google sheets, return #VALUE!
+    expect(evaluateCell("D1", { D1: "=MDETERM(A1:A2)", ...grid })).toBe("#ERROR"); // @compatibility: on google sheets, return #VALUE!
+  });
+
+  test("Argument must only contain number, or values convertibale to number", () => {
+    expect(evaluateCell("D1", { D1: "=MDETERM(D2)", D2: "hello" })).toBe("#ERROR"); // @compatibility: on google sheets, return #NUM!
+  });
+
+  test("Determinant of 1x1 matrix", () => {
+    const grid = { A1: "5" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=MDETERM(A1)");
+    expect(getEvaluatedCell(model, "D1").value).toEqual(5);
+
+    setCellContent(model, "D1", "=MDETERM(5)");
+    expect(getEvaluatedCell(model, "D1").value).toEqual(5);
+  });
+
+  test("Determinant of matrices", () => {
+    //prettier-ignore
+    let grid = {
+      A1: "1", B1: "1", C1: "0",
+      A2: "1", B2: "1", C2: "1",
+      A3: "0", B3: "2", C3: "0",
+     };
+    let model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=MDETERM(A1:C3)");
+    expect(getEvaluatedCell(model, "D1").value).toEqual(-2);
+
+    //prettier-ignore
+    grid = {
+      A1: "1", B1: "1", C1: "0",
+      A2: "0", B2: "2", C2: "0",
+      A3: "1", B3: "1", C3: "1",
+     };
+    model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=MDETERM(A1:C3)");
+    expect(getEvaluatedCell(model, "D1").value).toEqual(2);
+
+    //prettier-ignore
+    grid = {
+        A1: "-51", B1: "-1", C1: "56",
+        A2: "12", B2: "-2", C2: "18",
+        A3: "-100", B3: "1", C3: "25.65",
+    };
+    model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=MDETERM(A1:C3)");
+    expect(getEvaluatedCell(model, "D1").value).toBeCloseTo(-4885.9);
+  });
+});
+
+describe("MINVERSE function", () => {
+  test("MINVERSE takes 1 arguments", () => {
+    expect(evaluateCell("A1", { A1: "=MINVERSE()" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=MINVERSE(1)" })).toBe(1);
+    expect(evaluateCell("A1", { A1: "=MINVERSE(1, 0)" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+  });
+
+  test("Argument must be a square matrix", () => {
+    const grid = { A1: "1", B1: "0", A2: "0", B2: "1" };
+    expect(evaluateCell("D1", { D1: "=MINVERSE(A1:B1)", ...grid })).toBe("#ERROR"); // @compatibility: on google sheets, return #VALUE!
+    expect(evaluateCell("D1", { D1: "=MINVERSE(A1:A2)", ...grid })).toBe("#ERROR"); // @compatibility: on google sheets, return #VALUE!
+  });
+
+  test("Argument must be an invertible matrix", () => {
+    const grid = { A1: "1", B1: "1", A2: "1", B2: "1" };
+    expect(evaluateCell("D1", { D1: "=MINVERSE(0)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #NUM!
+    expect(evaluateCell("D1", { D1: "=MINVERSE(A1:B2)", ...grid })).toBe("#ERROR"); // @compatibility: on google sheets, return #NUM!
+  });
+
+  test("Argument must only contain number, or values convertibale to number", () => {
+    expect(evaluateCell("D1", { D1: "=MINVERSE(D2)", D2: "hello" })).toBe("#ERROR"); // @compatibility: on google sheets, return #NUM!
+  });
+
+  test("Invert 1x1 matrix", () => {
+    const grid = { A1: "5" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=MINVERSE(A1)");
+    expect(getEvaluatedCell(model, "D1").value).toEqual(1 / 5);
+
+    setCellContent(model, "D1", "=MINVERSE(5)");
+    expect(getEvaluatedCell(model, "D1").value).toEqual(1 / 5);
+  });
+
+  test("Invert matrices", () => {
+    //prettier-ignore
+    let grid = {
+      A1: "1", B1: "1", C1: "0",
+      A2: "1", B2: "1", C2: "1",
+      A3: "0", B3: "2", C3: "0",
+     };
+    let model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=MINVERSE(A1:C3)");
+    expect(getRangeValuesAsMatrix(model, "D1:F3")).toEqual([
+      ["1", "0", "-0.5"],
+      ["0", "0", "0.5"],
+      ["-1", "1", "0"],
+    ]);
+
+    //prettier-ignore
+    grid = {
+      A1: "-5", B1: "1", C1: "0",
+      A2: "1", B2: "6", C2: "1",
+      A3: "0", B3: "1", C3: "0",
+     };
+    model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=MINVERSE(A1:C3)");
+    expect(getRangeValuesAsMatrix(model, "D1:F3")).toEqual([
+      ["-0.2", "0", "0.2"],
+      ["0", "0", "1"],
+      ["0.2", "1", "-6.2"],
+    ]);
   });
 });
 

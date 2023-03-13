@@ -25,3 +25,7 @@ export function assertArraySameDimensions(errorStr: string, ...args: any[][]) {
     assert(() => arg.length === dims, errorStr);
   }
 }
+
+export function assertSquareMatrix(errorStr: string, arg: MatrixArgValue) {
+  assert(() => arg.length === arg[0].length, errorStr);
+}

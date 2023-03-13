@@ -1,9 +1,10 @@
-import { transpose2dArray } from "../helpers";
+import { matrixMap, transpose2dArray } from "../helpers";
 import { _lt } from "../translation";
 import {
   AddFunctionDescription,
   ArgValue,
   CellValue,
+  Matrix,
   MatrixArg,
   MatrixArgValue,
   OptionalCellValue,
@@ -18,9 +19,11 @@ import {
   reduceNumbers,
   toCellValue,
   toCellValueMatrix,
+  toMatrixArgValue,
   toNumber,
 } from "./helpers";
-import { assertSameDimensions } from "./helper_assert";
+import { assertSameDimensions, assertSquareMatrix } from "./helper_assert";
+import { invertMatrix } from "./helper_matrices";
 
 // -----------------------------------------------------------------------------
 // ARRAY_CONSTRAIN
@@ -255,6 +258,70 @@ export const FREQUENCY: AddFunctionDescription = {
 
     const result = classesWithIndex.sort((a, b) => a.index - b.index).map((val) => val.count);
     return [result];
+  },
+  isExported: true,
+};
+
+// -----------------------------------------------------------------------------
+// MDETERM
+// -----------------------------------------------------------------------------
+export const MDETERM: AddFunctionDescription = {
+  description: _lt("Returns the matrix determinant of a square matrix."),
+  args: [
+    arg(
+      "square_matrix (number, range<number>)",
+      _lt(
+        "An range with an equal number of rows and columns representing a matrix whose determinant will be calculated."
+      )
+    ),
+  ],
+  returns: ["NUMBER"],
+  compute: function (matrix: ArgValue): number {
+    if (!Array.isArray(matrix)) {
+      return toNumber(matrix);
+    }
+    const _matrix: Matrix<number> = matrixMap(matrix, toNumber);
+
+    assertSquareMatrix(
+      _lt("The argument square_matrix must have the same number of columns and rows."),
+      _matrix
+    );
+
+    const { determinant } = invertMatrix(_matrix);
+
+    return determinant;
+  },
+  isExported: true,
+};
+
+// -----------------------------------------------------------------------------
+// MINVERSE
+// -----------------------------------------------------------------------------
+export const MINVERSE: AddFunctionDescription = {
+  description: _lt("Returns the multiplicative inverse of a square matrix."),
+  args: [
+    arg(
+      "square_matrix (number, range<number>)",
+      _lt(
+        "An range with an equal number of rows and columns representing a matrix whose multiplicative inverse will be calculated."
+      )
+    ),
+  ],
+  returns: ["RANGE<NUMBER>"],
+  compute: function (matrix: ArgValue): CellValue[][] {
+    const _matrix: Matrix<number> = matrixMap(toMatrixArgValue(matrix), toNumber);
+
+    assertSquareMatrix(
+      _lt("The argument square_matrix must have the same number of columns and rows."),
+      _matrix
+    );
+
+    const { inverted } = invertMatrix(_matrix);
+    if (!inverted) {
+      throw new Error(_lt("The matrix is not invertible."));
+    }
+
+    return inverted;
   },
   isExported: true,
 };

@@ -687,6 +687,44 @@ describe("SUMPRODUCT function", () => {
   });
 });
 
+describe("SUMX2MY2 function", () => {
+  test("SUMX2MY2 takes 2 arguments", () => {
+    expect(evaluateCell("A1", { A1: "=SUMX2MY2()" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=SUMX2MY2(5)" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=SUMX2MY2(5, 5)" })).toBe(0);
+    expect(evaluateCell("A1", { A1: "=SUMX2MY2(5, 5, 0)" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+  });
+
+  test("2 arguments must have the same dimensions", () => {
+    expect(evaluateCell("A1", { A1: "=SUMX2MY2(B1, B1:D3)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=SUMX2MY2(B1:B2, B1:C1)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #N/A
+  });
+
+  test("On single cell", () => {
+    const grid = { A1: "5" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=SUMX2MY2(6, 4)");
+    expect(getEvaluatedCell(model, "D1").value).toBe(36 - 16);
+
+    setCellContent(model, "D1", "=SUMX2MY2(A1, 4)");
+    expect(getEvaluatedCell(model, "D1").value).toBe(25 - 16);
+  });
+
+  test("On range", () => {
+    const grid = { A1: "1", A2: "2", A3: "3", B1: "4", B2: "5", B3: "6" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=SUMX2MY2(A1:A3, B1:B3)");
+    expect(getEvaluatedCell(model, "D1").value).toEqual(-63);
+  });
+
+  test("On multidimensional range", () => {
+    const grid = { A1: "1", A2: "2", B1: "3", C1: "4", C2: "5", D1: "6" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "E1", "=SUMX2MY2(A1:B2, C1:D2)");
+    expect(getEvaluatedCell(model, "E1").value).toEqual(-63);
+  });
+});
+
 describe("TRANSPOSE function", () => {
   test("TRANSPOSE takes 1 arguments", () => {
     expect(evaluateCell("A1", { A1: "=TRANSPOSE()" })).toBe("#BAD_EXPR");

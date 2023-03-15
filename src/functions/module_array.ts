@@ -404,6 +404,48 @@ export const SUMPRODUCT: AddFunctionDescription = {
 };
 
 // -----------------------------------------------------------------------------
+// SUMX2MY2
+// -----------------------------------------------------------------------------
+export const SUMX2MY2: AddFunctionDescription = {
+  description: _lt(
+    "Calculates the sum of the difference of the squares of the values in two array."
+  ),
+  args: [
+    arg(
+      "array_x (number, range<number>)",
+      _lt(
+        "The array or range of values whose squares will be reduced by the squares of corresponding entries in array_y and added together."
+      )
+    ),
+    arg(
+      "array_y (number, range<number>)",
+      _lt(
+        "The array or range of values whose squares will be subtracted from the squares of corresponding entries in array_x and added together."
+      )
+    ),
+  ],
+  returns: ["NUMBER"],
+  compute: function (arrayX: ArgValue, arrayY: ArgValue): number {
+    assertSameDimensions(
+      "The arguments array_x and array_y must have the same dimensions.",
+      arrayX,
+      arrayY
+    );
+
+    const _arrayX = flattenRowFirst([arrayX], toNumber);
+    const _arrayY = flattenRowFirst([arrayY], toNumber);
+
+    let result = 0;
+    for (let i = 0; i < _arrayX.length; i++) {
+      result += _arrayX[i] ** 2 - _arrayY[i] ** 2;
+    }
+
+    return result;
+  },
+  isExported: true,
+};
+
+// -----------------------------------------------------------------------------
 // TRANSPOSE
 // -----------------------------------------------------------------------------
 export const TRANSPOSE: AddFunctionDescription = {

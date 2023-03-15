@@ -1,4 +1,4 @@
-import { matrixMap, transpose2dArray } from "../helpers";
+import { isDefined, matrixMap, transpose2dArray } from "../helpers";
 import { _lt } from "../translation";
 import {
   AddFunctionDescription,
@@ -16,7 +16,9 @@ import {
   flattenRowFirst,
   isCellValueANumber,
   isMatrixArgValue,
+  mapAndFlattenMatrix,
   reduceNumbers,
+  toBoolean,
   toCellValue,
   toCellValueMatrix,
   toMatrixArgValue,
@@ -515,6 +517,101 @@ export const SUMXMY2: AddFunctionDescription = {
     }
 
     return result;
+  },
+  isExported: true,
+};
+
+// -----------------------------------------------------------------------------
+// TOCOL
+// -----------------------------------------------------------------------------
+const TO_COL_ROW_DEFAULT_IGNORE = 0;
+const TO_COL_ROW_DEFAULT_SCAN = false;
+const TO_COL_ROW_ARGS = [
+  arg("array (any, range<any>)", _lt("The array which will be transformed.")),
+  arg(
+    `ignore (number, default=${TO_COL_ROW_DEFAULT_IGNORE})`,
+    _lt(
+      "The control to ignore blanks and errors. 0 (default) is to keep all values, 1 is to ignore blanks, 2 is to ignore errors, and 3 is to ignore blanks and errors."
+    )
+  ),
+  arg(
+    `scan_by_column (number, default=${TO_COL_ROW_DEFAULT_SCAN})`,
+    _lt(
+      "Whether the array should be scanned by column. True scans the array by column and false (default) \
+      scans the array by row."
+    )
+  ),
+];
+
+export const TOCOL: AddFunctionDescription = {
+  description: _lt("Transforms a range of cells into a single column."),
+  args: TO_COL_ROW_ARGS,
+  returns: ["RANGE<ANY>"],
+  //TODO compute format
+  compute: function (
+    array: ArgValue,
+    ignore: PrimitiveArgValue = TO_COL_ROW_DEFAULT_IGNORE,
+    scanByColumn: PrimitiveArgValue = TO_COL_ROW_DEFAULT_SCAN
+  ): CellValue[][] {
+    const _array = toMatrixArgValue(array);
+    const _ignore = toNumber(ignore);
+    const _scanByColumn = toBoolean(scanByColumn);
+
+    assert(() => _ignore >= 0 && _ignore <= 3, _lt("Argument ignore must be between 0 and 3"));
+
+    const mappedFn = (item: OptionalCellValue) => {
+      // TODO : implement ignore value 2 (ignore error) & 3 (ignore blanks and errors) once we can have errors in
+      // the array w/o crashing
+      if ((_ignore === 1 || _ignore === 3) && (item === undefined || item === null)) {
+        return undefined;
+      }
+
+      return toCellValue(item);
+    };
+
+    const result = _scanByColumn
+      ? mapAndFlattenMatrix(_array, mappedFn, "colFirst")
+      : mapAndFlattenMatrix(_array, mappedFn, "rowFirst");
+
+    return [result.filter(isDefined)];
+  },
+  isExported: true,
+};
+
+// -----------------------------------------------------------------------------
+// TOROW
+// -----------------------------------------------------------------------------
+export const TOROW: AddFunctionDescription = {
+  description: _lt("Transforms a range of cells into a single row."),
+  args: TO_COL_ROW_ARGS,
+  returns: ["RANGE<ANY>"],
+  //TODO compute format
+  compute: function (
+    array: ArgValue,
+    ignore: PrimitiveArgValue = TO_COL_ROW_DEFAULT_IGNORE,
+    scanByColumn: PrimitiveArgValue = TO_COL_ROW_DEFAULT_SCAN
+  ): CellValue[][] {
+    const _array = toMatrixArgValue(array);
+    const _ignore = toNumber(ignore);
+    const _scanByColumn = toBoolean(scanByColumn);
+
+    assert(() => _ignore >= 0 && _ignore <= 3, _lt("Argument ignore must be between 0 and 3"));
+
+    const mappedFn = (item: OptionalCellValue) => {
+      // TODO : implement ignore value 2 (ignore error) & 3 (ignore blanks and errors) once we can have errors in
+      // the array w/o crashing
+      if ((_ignore === 1 || _ignore === 3) && (item === undefined || item === null)) {
+        return undefined;
+      }
+
+      return [toCellValue(item)];
+    };
+
+    const result = _scanByColumn
+      ? mapAndFlattenMatrix(_array, mappedFn, "colFirst")
+      : mapAndFlattenMatrix(_array, mappedFn, "rowFirst");
+
+    return result.filter(isDefined);
   },
   isExported: true,
 };

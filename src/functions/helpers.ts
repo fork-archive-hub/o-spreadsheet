@@ -717,6 +717,40 @@ export function toMatrixArgValue(values: ArgValue): MatrixArgValue {
 }
 
 /**
+ * Map a function to a matrix[col][row] and return the result as a flat array, either
+ * flattening row first or column first.
+ *
+ * @param dim : "rowFirst" | "colFirst".
+ */
+export function mapAndFlattenMatrix<T, U>(
+  matrix: Matrix<T>,
+  fn: (val: T) => U,
+  dim: "rowFirst" | "colFirst"
+): Array<U> {
+  return dim === "rowFirst" ? mapMatrixRowFirst(matrix, fn) : mapMatrixColFirst(matrix, fn);
+}
+
+function mapMatrixRowFirst<T, U>(matrix: Matrix<T>, fn: (val: T) => U): Array<U> {
+  const result: Array<U> = Array(matrix[0].length * matrix.length);
+  for (let row = 0; row < matrix[0].length; row++) {
+    for (let col = 0; col < matrix.length; col++) {
+      result[row * matrix.length + col] = fn(matrix[col][row]);
+    }
+  }
+  return result;
+}
+
+function mapMatrixColFirst<T, U>(matrix: Matrix<T>, fn: (val: T) => U): Array<U> {
+  const result: Array<U> = Array(matrix[0].length * matrix.length);
+  for (let col = 0; col < matrix.length; col++) {
+    for (let row = 0; row < matrix[0].length; row++) {
+      result[col * matrix[0].length + row] = fn(matrix[col][row]);
+    }
+  }
+  return result;
+}
+
+/**
  * Flatten an array of items, where each item can be a single value or a 2D array, and apply the
  * callback to each element.
  *
@@ -729,11 +763,7 @@ export function flattenRowFirst<T, M>(items: Array<T | Matrix<T>>, callback: (va
       flattened.push(callback(item));
       continue;
     }
-    for (let row = 0; row < item[0].length; row++) {
-      for (let col = 0; col < item.length; col++) {
-        flattened.push(callback(item[col][row]));
-      }
-    }
+    mapMatrixRowFirst(item, (val) => flattened.push(callback(val)));
   }
   return flattened;
 }

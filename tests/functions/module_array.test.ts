@@ -801,6 +801,128 @@ describe("SUMXMY2 function", () => {
   });
 });
 
+describe("TOCOL function", () => {
+  test("TOCOL takes 1-3 arguments", () => {
+    expect(evaluateCell("A1", { A1: "=TOCOL()" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=TOCOL(B1:B5)" })).toBe(0);
+    expect(evaluateCell("A1", { A1: "=TOCOL(B1:B5, 0)" })).toBe(0);
+    expect(evaluateCell("A1", { A1: "=TOCOL(B1:B5, 0, 0)" })).toBe(0);
+    expect(evaluateCell("A1", { A1: "=TOCOL(B1:B5, 0, 0, 0)" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+  });
+
+  test("Argument ignore must be between 0 and 3", () => {
+    expect(evaluateCell("A1", { A1: "=TOCOL(B1:B5, -1)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #VALUE!
+    expect(evaluateCell("A1", { A1: "=TOCOL(B1:B5, 0)" })).toBe(0);
+    expect(evaluateCell("A1", { A1: "=TOCOL(B1:B5, 1)" })).toBe("");
+    expect(evaluateCell("A1", { A1: "=TOCOL(B1:B5, 2)" })).toBe(0);
+    expect(evaluateCell("A1", { A1: "=TOCOL(B1:B5, 3)" })).toBe("");
+    expect(evaluateCell("A1", { A1: "=TOCOL(B1:B5, 4)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #VALUE!
+  });
+
+  test("Simple TOCOL call", () => {
+    const grid = { A1: "A1", A2: "A2", A3: "A3", B1: "B1", B2: "B2", B3: "B3" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=TOCOL(A1:B3)");
+    expect(getRangeValuesAsMatrix(model, "D1:D6")).toEqual([
+      ["A1"],
+      ["B1"],
+      ["A2"],
+      ["B2"],
+      ["A3"],
+      ["B3"],
+    ]);
+  });
+
+  test("TOCOL: undefined values are replaced by zeroes", () => {
+    const grid = { A1: "A1", A2: "A2", B1: "B1", B2: undefined };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=TOCOL(A1:B2)");
+    expect(getRangeValuesAsMatrix(model, "D1:D4")).toEqual([["A1"], ["B1"], ["A2"], ["0"]]);
+  });
+
+  test("Argument ignore", () => {
+    const grid = { A1: "A1", A2: "A2", B1: "B1", B2: undefined };
+    const model = getModelFromGrid(grid);
+    // ignore=0, keep all
+    setCellContent(model, "D1", "=TOCOL(A1:B2, 0)");
+    expect(getRangeValuesAsMatrix(model, "D1:D4")).toEqual([["A1"], ["B1"], ["A2"], ["0"]]);
+    // ignore=1, ignore empty cells
+    setCellContent(model, "D1", "=TOCOL(A1:B2, 1)");
+    expect(getRangeValuesAsMatrix(model, "D1:D4")).toEqual([["A1"], ["B1"], ["A2"], [""]]);
+    // ignore=3, ignore empty cells
+    setCellContent(model, "D1", "=TOCOL(A1:B2, 3)");
+    expect(getRangeValuesAsMatrix(model, "D1:D4")).toEqual([["A1"], ["B1"], ["A2"], [""]]);
+  });
+
+  test("Argument scan_by_column", () => {
+    const grid = { A1: "A1", A2: "A2", A3: "A3", B1: "B1", B2: "B2", B3: "B3" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=TOCOL(A1:B3, 0, 1)");
+    expect(getRangeValuesAsMatrix(model, "D1:D6")).toEqual([
+      ["A1"],
+      ["A2"],
+      ["A3"],
+      ["B1"],
+      ["B2"],
+      ["B3"],
+    ]);
+  });
+});
+
+describe("TOROW function", () => {
+  test("TOROW takes 1-3 arguments", () => {
+    expect(evaluateCell("A1", { A1: "=TOROW()" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=TOROW(B1:B5)" })).toBe(0);
+    expect(evaluateCell("A1", { A1: "=TOROW(B1:B5, 0)" })).toBe(0);
+    expect(evaluateCell("A1", { A1: "=TOROW(B1:B5, 0, 0)" })).toBe(0);
+    expect(evaluateCell("A1", { A1: "=TOROW(B1:B5, 0, 0, 0)" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+  });
+
+  test("Argument ignore must be between 0 and 3", () => {
+    expect(evaluateCell("A1", { A1: "=TOROW(B1:B5, -1)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #VALUE!
+    expect(evaluateCell("A1", { A1: "=TOROW(B1:B5, 0)" })).toBe(0);
+    expect(evaluateCell("A1", { A1: "=TOROW(B1:B5, 1)" })).toBe("");
+    expect(evaluateCell("A1", { A1: "=TOROW(B1:B5, 2)" })).toBe(0);
+    expect(evaluateCell("A1", { A1: "=TOROW(B1:B5, 3)" })).toBe("");
+    expect(evaluateCell("A1", { A1: "=TOROW(B1:B5, 4)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #VALUE!
+  });
+
+  test("Simple TOROW call", () => {
+    const grid = { A1: "A1", A2: "A2", A3: "A3", B1: "B1", B2: "B2", B3: "B3" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=TOROW(A1:B3)");
+    expect(getRangeValuesAsMatrix(model, "D1:I1")).toEqual([["A1", "B1", "A2", "B2", "A3", "B3"]]);
+  });
+
+  test("TOROW: undefined values are replaced by zeroes", () => {
+    const grid = { A1: "A1", A2: "A2", B1: "B1", B2: undefined };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=TOROW(A1:B2)");
+    expect(getRangeValuesAsMatrix(model, "D1:G1")).toEqual([["A1", "B1", "A2", "0"]]);
+  });
+
+  test("Argument ignore", () => {
+    const grid = { A1: "A1", A2: "A2", B1: "B1", B2: undefined };
+    const model = getModelFromGrid(grid);
+    // ignore=0, keep all
+    setCellContent(model, "D1", "=TOROW(A1:B2, 0)");
+    expect(getRangeValuesAsMatrix(model, "D1:G1")).toEqual([["A1", "B1", "A2", "0"]]);
+    // ignore=1, ignore empty cells
+    setCellContent(model, "D1", "=TOROW(A1:B2, 1)");
+    expect(getRangeValuesAsMatrix(model, "D1:G1")).toEqual([["A1", "B1", "A2", ""]]);
+    // ignore=3, ignore empty cells
+    setCellContent(model, "D1", "=TOROW(A1:B2, 3)");
+    expect(getRangeValuesAsMatrix(model, "D1:G1")).toEqual([["A1", "B1", "A2", ""]]);
+  });
+
+  test("Argument scan_by_column", () => {
+    const grid = { A1: "A1", A2: "A2", A3: "A3", B1: "B1", B2: "B2", B3: "B3" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=TOROW(A1:B3, 0, 1)");
+    expect(getRangeValuesAsMatrix(model, "D1:I1")).toEqual([["A1", "A2", "A3", "B1", "B2", "B3"]]);
+  });
+});
+
 describe("TRANSPOSE function", () => {
   test("TRANSPOSE takes 1 arguments", () => {
     expect(evaluateCell("A1", { A1: "=TRANSPOSE()" })).toBe("#BAD_EXPR");

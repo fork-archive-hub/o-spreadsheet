@@ -446,6 +446,40 @@ export const SUMX2MY2: AddFunctionDescription = {
 };
 
 // -----------------------------------------------------------------------------
+// SUMX2PY2
+// -----------------------------------------------------------------------------
+export const SUMX2PY2: AddFunctionDescription = {
+  description: _lt("Calculates the sum of the sum of the squares of the values in two array."),
+  args: [
+    arg(
+      "array_x (number, range<number>)",
+      _lt(
+        "The array or range of values whose squares will be added to the squares of corresponding entries in array_y and added together."
+      )
+    ),
+    arg(
+      "array_y (number, range<number>)",
+      _lt(
+        "The array or range of values whose squares will be added to the squares of corresponding entries in array_x and added together."
+      )
+    ),
+  ],
+  returns: ["NUMBER"],
+  compute: function (arrayX: ArgValue, arrayY: ArgValue): number {
+    assertSameDimensions(
+      "The arguments array_x and array_y must have the same dimensions.",
+      arrayX,
+      arrayY
+    );
+
+    const _array = flattenRowFirst([arrayX, arrayY], toNumber);
+    const result = _array.reduce((acc, x) => acc + x ** 2, 0);
+    return result;
+  },
+  isExported: true,
+};
+
+// -----------------------------------------------------------------------------
 // TRANSPOSE
 // -----------------------------------------------------------------------------
 export const TRANSPOSE: AddFunctionDescription = {

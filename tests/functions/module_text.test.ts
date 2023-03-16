@@ -1,4 +1,6 @@
-import { evaluateCell, evaluateGrid } from "../test_helpers/helpers";
+import { Model } from "../../src";
+import { setCellContent } from "../test_helpers/commands_helpers";
+import { evaluateCell, evaluateGrid, getRangeValuesAsMatrix } from "../test_helpers/helpers";
 
 describe("CHAR formula", () => {
   test("functional tests on simple arguments", () => {
@@ -487,6 +489,62 @@ describe("SEARCH formula", () => {
     expect(
       evaluateCell("A1", { A1: "=SEARCH(A2, A3, A4)", A2: "TRUE", A3: "FALSETRUE", A4: "1" })
     ).toBe(6);
+  });
+});
+
+describe("SPLIT function", () => {
+  test("SPLIT takes 2-4 arguments", () => {
+    expect(evaluateCell("A1", { A1: "=SPLIT()" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: '=SPLIT("Hello")' })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: '=SPLIT("Hello", " ")' })).toBe("Hello");
+    expect(evaluateCell("A1", { A1: '=SPLIT("Hello", " ", 1)' })).toBe("Hello");
+    expect(evaluateCell("A1", { A1: '=SPLIT("Hello", " ", 1, 1)' })).toBe("Hello");
+    expect(evaluateCell("A1", { A1: '=SPLIT("Hello", " ", 1, 1, 0)' })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+  });
+
+  test("delimiter argument should not be empty", () => {
+    expect(evaluateCell("A1", { A1: '=SPLIT("Hello", "", 1, 1)' })).toBe("#ERROR"); // @compatibility: on google sheets, return #VALUE!
+    expect(evaluateCell("A1", { A1: '=SPLIT("Hello", B1, 1, 1)', B1: '=""' })).toBe("#ERROR"); // @compatibility: on google sheets, return #VALUE!
+  });
+
+  test("Simple split", () => {
+    const model = new Model();
+    setCellContent(model, "B2", "Hello there, General Kenobi");
+    setCellContent(model, "A1", '=SPLIT(B2, " ")');
+    expect(getRangeValuesAsMatrix(model, "A1:D1")).toEqual([
+      ["Hello", "there,", "General", "Kenobi"],
+    ]);
+  });
+
+  test("Split with multiple characters", () => {
+    const model = new Model();
+    setCellContent(model, "B2", "Hello there, General Kenobi");
+    setCellContent(model, "A1", '=SPLIT(B2, " e")');
+    expect(getRangeValuesAsMatrix(model, "A1:J1")).toEqual([
+      ["H", "llo", "th", "r", ",", "G", "n", "ral", "K", "nobi"],
+    ]);
+  });
+
+  test("split_by_each argument", () => {
+    const model = new Model();
+    setCellContent(model, "B2", "Hello there, General Kenobi");
+    setCellContent(model, "A1", '=SPLIT(B2, ", ", 1)');
+    expect(getRangeValuesAsMatrix(model, "A1:D1")).toEqual([
+      ["Hello", "there", "General", "Kenobi"],
+    ]);
+
+    setCellContent(model, "A1", '=SPLIT(B2, ", ", 0)');
+    expect(getRangeValuesAsMatrix(model, "A1:B1")).toEqual([["Hello there", "General Kenobi"]]);
+  });
+
+  test("remove_empty_text argument", () => {
+    const model = new Model();
+    setCellContent(model, "B2", "Hello     there");
+    setCellContent(model, "A1", '=SPLIT(B2, " ", 1, 1)');
+    expect(getRangeValuesAsMatrix(model, "A1:B1")).toEqual([["Hello", "there"]]);
+
+    setCellContent(model, "A1", '=SPLIT(B2, " ", 1, 0)');
+    expect(getRangeValuesAsMatrix(model, "A1:F1")).toEqual([["Hello", "", "", "", "", "there"]]);
   });
 });
 

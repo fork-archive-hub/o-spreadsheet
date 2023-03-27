@@ -675,6 +675,10 @@ export const INSERT_LINK = (env: SpreadsheetChildEnv) => {
   env.model.dispatch("OPEN_CELL_POPOVER", { col, row, popoverType: "LinkEditor" });
 };
 
+export const OPEN_SPLIT_INTO_COLUMNS_SIDEPANEL_ACTION = (env: SpreadsheetChildEnv) => {
+  env.openSidePanel("SplitToColumns", {});
+};
+
 //------------------------------------------------------------------------------
 // Filters action
 //------------------------------------------------------------------------------

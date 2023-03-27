@@ -1,4 +1,4 @@
-import { Model, Spreadsheet } from "../src";
+import { Model } from "../src";
 import { FONT_SIZES } from "../src/constants";
 import { zoneToXc } from "../src/helpers";
 import { interactivePaste } from "../src/helpers/ui/paste_interactive";
@@ -27,7 +27,7 @@ import {
   mockUuidV4To,
   mountSpreadsheet,
   nextTick,
-  spyDispatch,
+  spyModelDispatch,
   target,
 } from "./test_helpers/helpers";
 jest.mock("../src/helpers/uuid", () => require("./__mocks__/uuid"));
@@ -94,13 +94,15 @@ describe("Menu Item Registry", () => {
 
 describe("Menu Item actions", () => {
   let model: Model;
-  let parent: Spreadsheet;
   let env: SpreadsheetChildEnv;
   let dispatch: jest.SpyInstance;
+  let fixture: HTMLElement;
 
   beforeEach(async () => {
-    ({ parent, model, env } = await mountSpreadsheet());
-    dispatch = spyDispatch(parent);
+    // TODO : only 3 of the 100 tests in the file need a mounted spreadsheet. We should check if we cannot mock things to avoid
+    // mounting the spreadsheet, or separate the tests in another describe, to not mount the spreadsheet 97 times for nothing.
+    ({ model, env, fixture } = await mountSpreadsheet());
+    dispatch = spyModelDispatch(model);
   });
 
   test("Edit -> undo", () => {
@@ -512,7 +514,6 @@ describe("Menu Item actions", () => {
 
   test("Insert -> new sheet", () => {
     mockUuidV4To(model, 42);
-    dispatch = spyDispatch(parent);
     const activeSheetId = env.model.getters.getActiveSheetId();
     doAction(["insert", "insert_sheet"], env);
     expect(dispatch).toHaveBeenNthCalledWith(1, "CREATE_SHEET", {
@@ -757,6 +758,23 @@ describe("Menu Item actions", () => {
         style: { wrapping: "clip" },
       });
     });
+  });
+
+  test("Data -> Split to columns action", async () => {
+    doAction(["data", "split_to_columns"], env);
+    await nextTick();
+    expect(fixture.querySelector(".o-split-to-cols-panel")).toBeTruthy();
+  });
+
+  test("Data -> Split to columns is disabled when multiple cols are selected", () => {
+    setSelection(model, ["A1"]);
+    expect(getNode(["data", "split_to_columns"]).isEnabled(env)).toBeTruthy();
+
+    setSelection(model, ["A1:C1"]);
+    expect(getNode(["data", "split_to_columns"]).isEnabled(env)).toBeFalsy();
+
+    setSelection(model, ["A1", "B1"]);
+    expect(getNode(["data", "split_to_columns"]).isEnabled(env)).toBeFalsy();
   });
 
   test("Data -> Sort ascending", () => {

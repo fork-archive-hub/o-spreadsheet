@@ -78,6 +78,13 @@ topbarMenuRegistry
     isVisible: ACTIONS.IS_ONLY_ONE_RANGE,
     separator: true,
   })
+  .addChild("split_to_columns", ["data"], {
+    name: _lt("Split text to columns"),
+    sequence: 1,
+    action: ACTIONS.OPEN_SPLIT_INTO_COLUMNS_SIDEPANEL_ACTION,
+    isEnabled: (env: SpreadsheetChildEnv) => env.model.getters.isSingleColSelected(),
+    separator: true,
+  })
   .addChild("sort_ascending", ["data", "sort_range"], {
     name: _lt("Ascending (A ⟶ Z)"),
     sequence: 10,

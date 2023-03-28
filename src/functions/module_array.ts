@@ -265,6 +265,38 @@ export const FREQUENCY: AddFunctionDescription = {
 };
 
 // -----------------------------------------------------------------------------
+// HSTACK
+// -----------------------------------------------------------------------------
+export const HSTACK: AddFunctionDescription = {
+  description: _lt("Appends ranges horizontally and in sequence to return a larger array."),
+  args: [
+    arg("range1 (any, range<any>)", _lt("The first range to be appended.")),
+    arg("range2 (any, range<any>, repeating)", _lt("Additional ranges to add to range1.")),
+  ],
+  returns: ["RANGE<ANY>"],
+  //TODO computeFormat
+  compute: function (...ranges: ArgValue[]): CellValue[][] {
+    const _ranges = ranges.map((range) => toMatrixArgValue(range));
+
+    const nRows = Math.max(..._ranges.map((range) => range[0].length));
+
+    const colArray: CellValue[][] = [];
+    for (const range of _ranges) {
+      for (const col of range) {
+        //TODO: fill with #N/A for unavailable values instead of zeroes
+        const paddedCol: CellValue[] = Array(nRows).fill(0);
+        for (let i = 0; i < col.length; i++) {
+          paddedCol[i] = toCellValue(col[i]);
+        }
+        colArray.push(paddedCol);
+      }
+    }
+    return colArray;
+  },
+  isExported: true,
+};
+
+// -----------------------------------------------------------------------------
 // MDETERM
 // -----------------------------------------------------------------------------
 export const MDETERM: AddFunctionDescription = {

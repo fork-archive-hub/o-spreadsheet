@@ -448,6 +448,53 @@ describe("FREQUENCY function", () => {
   });
 });
 
+describe("HSTACK function", () => {
+  test("HSTACK takes at least 1 argument", () => {
+    expect(evaluateCell("A1", { A1: "=HSTACK()" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=HSTACK(5)" })).toBe(5);
+    expect(evaluateCell("A1", { A1: "=HSTACK(5, 0)" })).toBe(5);
+  });
+
+  test("HSTACK with single values", () => {
+    const grid = { E1: "hey" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "A1", "=HSTACK(5, 9, E1)");
+    expect(getRangeValuesAsMatrix(model, "A1:C1")).toEqual([["5", "9", "hey"]]);
+  });
+
+  test("HSTACK with ranges of same dimensions", () => {
+    const grid = { A1: "A1", A2: "A2", A3: "A3", B1: "B1", B2: "B2", B3: "B3" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=HSTACK(A1:A3, B1:B3)");
+    expect(getRangeValuesAsMatrix(model, "D1:E3")).toEqual([
+      ["A1", "B1"],
+      ["A2", "B2"],
+      ["A3", "B3"],
+    ]);
+  });
+
+  test("HSTACK with ranges of different dimensions: padded with zeroes", () => {
+    const grid = { A1: "A1", A2: "A2", A3: "A3", B1: "B1", B2: "B2", B3: "B3" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=HSTACK(A1:A3, A1:B2, 9)");
+    expect(getRangeValuesAsMatrix(model, "D1:G3")).toEqual([
+      ["A1", "A1", "B1", "9"],
+      ["A2", "A2", "B2", "0"],
+      ["A3", "0", "0", "0"],
+    ]);
+  });
+
+  test("undefined values are replaced with zeroes", () => {
+    const grid = { A1: "A1", A2: undefined, B1: undefined, B2: "B2" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=HSTACK(A1:A2, B1:B2)");
+    expect(getRangeValuesAsMatrix(model, "D1:E2")).toEqual([
+      ["A1", "0"],
+      ["0", "B2"],
+    ]);
+  });
+});
+
 describe("MDETERM function", () => {
   test("MDETERM takes 1 arguments", () => {
     expect(evaluateCell("A1", { A1: "=MDETERM()" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A

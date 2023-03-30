@@ -749,3 +749,54 @@ export const WRAPCOLS: AddFunctionDescription = {
   },
   isExported: true,
 };
+
+// -----------------------------------------------------------------------------
+// WRAPROWS
+// -----------------------------------------------------------------------------
+export const WRAPROWS: AddFunctionDescription = {
+  description: _lt(
+    "Wraps the provided row or column of cells by rows after a specified number of elements to form a new array."
+  ),
+  args: [
+    arg("range (any, range<any>)", _lt("The range to wrap.")),
+    arg(
+      "wrap_count (number)",
+      _lt("The maximum number of cells for each row, rounded down to the nearest whole number.")
+    ),
+    arg(
+      "pad_with  (any, default=0)", // TODO : replace with #N/A
+      _lt("The value with which to fill the extra cells in the range.")
+    ),
+  ],
+  returns: ["RANGE<ANY>"],
+  //TODO computeFormat
+  compute: function (
+    range: ArgValue,
+    wrapCount: PrimitiveArgValue,
+    padWith: PrimitiveArgValue = 0
+  ): CellValue[][] {
+    const _range = toMatrixArgValue(range);
+    const nOfCols = Math.floor(toNumber(wrapCount));
+    const _padWith = padWith === null ? 0 : padWith;
+
+    assertSingleColOrRow(_lt("Argument range must be a single row or column."), _range);
+
+    const values = _range.flat();
+    const nOfRows = Math.ceil(values.length / nOfCols);
+    const result: CellValue[][] = Array(nOfCols)
+      .fill([])
+      .map(() => Array(nOfRows).fill(_padWith));
+
+    for (let row = 0; row < nOfRows; row++) {
+      for (let col = 0; col < nOfCols; col++) {
+        const index = row * nOfCols + col;
+        if (index < values.length) {
+          result[col][row] = toCellValue(values[index]);
+        }
+      }
+    }
+
+    return result;
+  },
+  isExported: true,
+};

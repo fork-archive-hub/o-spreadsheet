@@ -44,40 +44,40 @@ beforeEach(async () => {
   composerEl = fixture.querySelector(".o-grid div.o-composer")!;
 });
 
+beforeEach(() => {
+  clearFunctions();
+  functionRegistry.add("IF", {
+    description: "do if",
+    args: [],
+    compute: () => 1,
+    returns: ["ANY"],
+  });
+  functionRegistry.add("SUM", {
+    description: "do sum",
+    args: [],
+    compute: () => 1,
+    returns: ["ANY"],
+  });
+  functionRegistry.add("SZZ", {
+    description: "do something",
+    args: [],
+    compute: () => 1,
+    returns: ["ANY"],
+  });
+  functionRegistry.add("HIDDEN", {
+    description: "do something",
+    args: [],
+    compute: () => 1,
+    returns: ["ANY"],
+    hidden: true,
+  });
+});
+
+afterEach(() => {
+  restoreDefaultFunctions();
+});
+
 describe("Functions autocomplete", () => {
-  beforeEach(() => {
-    clearFunctions();
-    functionRegistry.add("IF", {
-      description: "do if",
-      args: [],
-      compute: () => 1,
-      returns: ["ANY"],
-    });
-    functionRegistry.add("SUM", {
-      description: "do sum",
-      args: [],
-      compute: () => 1,
-      returns: ["ANY"],
-    });
-    functionRegistry.add("SZZ", {
-      description: "do something",
-      args: [],
-      compute: () => 1,
-      returns: ["ANY"],
-    });
-    functionRegistry.add("HIDDEN", {
-      description: "do something",
-      args: [],
-      compute: () => 1,
-      returns: ["ANY"],
-      hidden: true,
-    });
-  });
-
-  afterAll(() => {
-    restoreDefaultFunctions();
-  });
-
   describe("autocomplete", () => {
     test("= do not show autocomplete", async () => {
       await typeInComposerGrid("=");
@@ -293,32 +293,6 @@ describe("Functions autocomplete", () => {
 });
 
 describe("Autocomplete parenthesis", () => {
-  beforeAll(() => {
-    clearFunctions();
-    functionRegistry.add("IF", {
-      description: "do if",
-      args: [],
-      compute: () => 1,
-      returns: ["ANY"],
-    });
-    functionRegistry.add("SUM", {
-      description: "do sum",
-      args: [],
-      compute: () => 1,
-      returns: ["ANY"],
-    });
-    functionRegistry.add("SZZ", {
-      description: "do something",
-      args: [],
-      compute: () => 1,
-      returns: ["ANY"],
-    });
-  });
-
-  afterAll(() => {
-    restoreDefaultFunctions();
-  });
-
   test("=sum(1,2 + enter adds closing parenthesis", async () => {
     await typeInComposerGrid("=sum(1,2");
     await keyDown("Enter");
@@ -409,6 +383,3 @@ describe("composer Assistant", () => {
     expect(assistantEL.style.transform).toBe("translate(0, -100%)");
   });
 });
-
-describe("autocomplete parameters", () => {});
-describe("custom autocomplete", () => {});

@@ -1061,3 +1061,77 @@ describe("VSTACK function", () => {
     ]);
   });
 });
+
+describe("WRAPCOLS function", () => {
+  test("WRAPCOLS takes 2-3 arguments", () => {
+    expect(evaluateCell("A1", { A1: "=WRAPCOLS()" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=WRAPCOLS(B1)" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=WRAPCOLS(B1, 8)" })).toBe(0);
+    expect(evaluateCell("A1", { A1: '=WRAPCOLS(B1, 8, "pad")' })).toBe(0);
+    expect(evaluateCell("A1", { A1: '=WRAPCOLS(B1, 8, "pad", 0)' })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+  });
+
+  test("range argument must be a singe col or single row", () => {
+    expect(evaluateCell("A1", { A1: '=WRAPCOLS(B1:C2, 8, "pad")' })).toBe("#ERROR"); // @compatibility: on google sheets, return #VALUE!
+    expect(evaluateCell("A1", { A1: '=WRAPCOLS(B3:D9, 8, "pad")' })).toBe("#ERROR"); // @compatibility: on google sheets, return #VALUE!
+  });
+
+  test("with single cells", () => {
+    const grid = { A1: "A1" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=WRAPCOLS(A1, 2)");
+    expect(getRangeValuesAsMatrix(model, "D1:D2")).toEqual([["A1"], ["0"]]);
+
+    setCellContent(model, "D1", "=WRAPCOLS(56, 2)");
+    expect(getRangeValuesAsMatrix(model, "D1:D2")).toEqual([["56"], ["0"]]);
+  });
+
+  test("with single column", () => {
+    const grid = { A1: "A1", A2: "A2", A3: "A3", A4: "A4" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=WRAPCOLS(A1:A4, 2)");
+    expect(getRangeValuesAsMatrix(model, "D1:E2")).toEqual([
+      ["A1", "A3"],
+      ["A2", "A4"],
+    ]);
+  });
+
+  test("with single row", () => {
+    const grid = { A1: "A1", B1: "B1", C1: "C1", D1: "D1" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "E1", "=WRAPCOLS(A1:D1, 2)");
+    expect(getRangeValuesAsMatrix(model, "E1:F2")).toEqual([
+      ["A1", "C1"],
+      ["B1", "D1"],
+    ]);
+  });
+
+  test("array padding", () => {
+    const grid = { A1: "A1", A2: "A2", A3: "A3" };
+    const model = getModelFromGrid(grid);
+
+    // pad with 0 by default
+    setCellContent(model, "D1", "=WRAPCOLS(A1:A3, 2)");
+    expect(getRangeValuesAsMatrix(model, "D1:E2")).toEqual([
+      ["A1", "A3"],
+      ["A2", "0"],
+    ]);
+
+    // pad_with argument value
+    setCellContent(model, "D1", '=WRAPCOLS(A1:A3, 2, "padding")');
+    expect(getRangeValuesAsMatrix(model, "D1:E2")).toEqual([
+      ["A1", "A3"],
+      ["A2", "padding"],
+    ]);
+  });
+
+  test("undefined values are replaced by zeroes", () => {
+    const grid = { A1: "A1", B1: undefined, C1: undefined, D1: "D1" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "E1", "=WRAPCOLS(A1:D1, 2)");
+    expect(getRangeValuesAsMatrix(model, "E1:F2")).toEqual([
+      ["A1", "0"],
+      ["0", "D1"],
+    ]);
+  });
+});

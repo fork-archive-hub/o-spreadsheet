@@ -24,7 +24,7 @@ import {
   toMatrixArgValue,
   toNumber,
 } from "./helpers";
-import { assertSameDimensions, assertSquareMatrix } from "./helper_assert";
+import { assertSameDimensions, assertSingleColOrRow, assertSquareMatrix } from "./helper_assert";
 import { invertMatrix, multiplyMatrices } from "./helper_matrices";
 
 // -----------------------------------------------------------------------------
@@ -693,6 +693,56 @@ export const VSTACK: AddFunctionDescription = {
         }
       }
       currentRow += range[0].length;
+    }
+
+    return result;
+  },
+  isExported: true,
+};
+
+// -----------------------------------------------------------------------------
+// WRAPCOLS
+// -----------------------------------------------------------------------------
+export const WRAPCOLS: AddFunctionDescription = {
+  description: _lt(
+    "Wraps the provided row or column of cells by columns after a specified number of elements to form a new array."
+  ),
+  args: [
+    arg("range (any, range<any>)", _lt("The range to wrap.")),
+    arg(
+      "wrap_count (number)",
+      _lt("The maximum number of cells for each column, rounded down to the nearest whole number.")
+    ),
+    arg(
+      "pad_with  (any, default=0)", // TODO : replace with #N/A
+      _lt("The value with which to fill the extra cells in the range.")
+    ),
+  ],
+  returns: ["RANGE<ANY>"],
+  //TODO computeFormat
+  compute: function (
+    range: ArgValue,
+    wrapCount: PrimitiveArgValue,
+    padWith: PrimitiveArgValue = 0
+  ): CellValue[][] {
+    const _range = toMatrixArgValue(range);
+    const nOfRows = Math.floor(toNumber(wrapCount));
+    const _padWith = padWith === null ? 0 : padWith;
+
+    assertSingleColOrRow(_lt("Argument range must be a single row or column."), _range);
+
+    const values = _range.flat();
+    const nOfCols = Math.ceil(values.length / nOfRows);
+
+    const result: CellValue[][] = Array(nOfCols);
+    for (let col = 0; col < nOfCols; col++) {
+      result[col] = Array(nOfRows).fill(_padWith);
+      for (let row = 0; row < nOfRows; row++) {
+        const index = col * nOfRows + row;
+        if (index < values.length) {
+          result[col][row] = toCellValue(values[index]);
+        }
+      }
     }
 
     return result;

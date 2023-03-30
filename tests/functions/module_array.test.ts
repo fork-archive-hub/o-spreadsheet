@@ -1013,3 +1013,51 @@ describe("TRANSPOSE function", () => {
     expect(getRangeFormatsAsMatrix(model, "D1:E1")).toEqual([["0.00", "0.000"]]);
   });
 });
+
+describe("VSTACK function", () => {
+  test("VSTACK takes at least 1 argument", () => {
+    expect(evaluateCell("A1", { A1: "=VSTACK()" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=VSTACK(5)" })).toBe(5);
+    expect(evaluateCell("A1", { A1: "=VSTACK(5, 0)" })).toBe(5);
+  });
+
+  test("VSTACK with single values", () => {
+    const grid = { E1: "oi" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "A1", "=VSTACK(5, 9, E1)");
+    expect(getRangeValuesAsMatrix(model, "A1:A3")).toEqual([["5"], ["9"], ["oi"]]);
+  });
+
+  test("VSTACK with ranges of same dimensions", () => {
+    const grid = { A1: "A1", A2: "A2", A3: "A3", B1: "B1", B2: "B2", B3: "B3" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=VSTACK(A1:B1, A3:B3, A2:B2)");
+    expect(getRangeValuesAsMatrix(model, "D1:E3")).toEqual([
+      ["A1", "B1"],
+      ["A3", "B3"],
+      ["A2", "B2"],
+    ]);
+  });
+
+  test("VSTACK with ranges of different dimensions: padded with zeroes", () => {
+    const grid = { A1: "A1", A2: "A2", A3: "A3", B1: "B1", B2: "B2", B3: "B3" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=VSTACK(A1:B1, B2:B3, 9)");
+    expect(getRangeValuesAsMatrix(model, "D1:E4")).toEqual([
+      ["A1", "B1"],
+      ["B2", "0"],
+      ["B3", "0"],
+      ["9", "0"],
+    ]);
+  });
+
+  test("undefined values are replaced with zeroes", () => {
+    const grid = { A1: "A1", A2: undefined, B1: undefined, B2: "B2" };
+    const model = getModelFromGrid(grid);
+    setCellContent(model, "D1", "=VSTACK(A1:B1, A2:B2)");
+    expect(getRangeValuesAsMatrix(model, "D1:E2")).toEqual([
+      ["A1", "0"],
+      ["0", "B2"],
+    ]);
+  });
+});

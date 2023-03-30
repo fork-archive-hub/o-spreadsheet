@@ -663,3 +663,39 @@ export const TRANSPOSE: AddFunctionDescription = {
   },
   isExported: true,
 };
+
+// -----------------------------------------------------------------------------
+// VSTACK
+// -----------------------------------------------------------------------------
+export const VSTACK: AddFunctionDescription = {
+  description: _lt("Appends ranges vertically and in sequence to return a larger array."),
+  args: [
+    arg("range1 (any, range<any>)", _lt("The first range to be appended.")),
+    arg("range2 (any, range<any>, repeating)", _lt("Additional ranges to add to range1.")),
+  ],
+  returns: ["RANGE<ANY>"],
+  //TODO computeFormat
+  compute: function (...ranges: ArgValue[]): CellValue[][] {
+    const _ranges = ranges.map((range) => toMatrixArgValue(range));
+
+    const nCols = Math.max(..._ranges.map((range) => range.length));
+    const nRows = _ranges.reduce((acc, range) => acc + range[0].length, 0);
+
+    const result: CellValue[][] = Array(nCols)
+      .fill([])
+      .map(() => Array(nRows).fill(0)); // TODO fill with #N/A
+
+    let currentRow = 0;
+    for (const range of _ranges) {
+      for (let col = 0; col < range.length; col++) {
+        for (let row = 0; row < range[col].length; row++) {
+          result[col][currentRow + row] = toCellValue(range[col][row]);
+        }
+      }
+      currentRow += range[0].length;
+    }
+
+    return result;
+  },
+  isExported: true,
+};

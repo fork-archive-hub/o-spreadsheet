@@ -85,4 +85,5 @@ export interface ExcelFilterTableData {
 export interface ExcelFilterData {
   colId: number;
   filteredValues: string[];
+  displayBlanks?: boolean;
 }

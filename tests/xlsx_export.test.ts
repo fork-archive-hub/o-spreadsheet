@@ -1013,11 +1013,22 @@ describe("Test XLSX export", () => {
       expect(exported.sheets[0].rows[2].isHidden).toBeTruthy();
     });
 
+    test("Empty filters aren't exported", () => {
+      const model = new Model();
+      createFilter(model, "A1:B4");
+      setCellContent(model, "A2", "Hello");
+      setCellContent(model, "B2", "Hello");
+      const exported = getExportedExcelData(model);
+      expect(exported.sheets[0].filterTables[0].filters).toHaveLength(0);
+    });
+
     test("Filtered values are not duplicated", () => {
       const model = new Model();
       createFilter(model, "A1:B4");
       setCellContent(model, "A2", "Konnichiwa");
       setCellContent(model, "A3", "Konnichiwa");
+      setCellContent(model, "A4", "5");
+      updateFilter(model, "A1", ["5"]);
       const exported = getExportedExcelData(model);
       expect(exported.sheets[0].filterTables[0].filters[0].filteredValues).toEqual(["Konnichiwa"]);
     });
@@ -1025,6 +1036,8 @@ describe("Test XLSX export", () => {
     test("Empty cells are not added to filteredValues", () => {
       const model = new Model();
       createFilter(model, "A1:B4");
+      setCellContent(model, "A2", "5");
+      updateFilter(model, "A1", ["5"]);
       const exported = getExportedExcelData(model);
       expect(exported.sheets[0].filterTables[0].filters[0].filteredValues).toEqual([]);
     });
@@ -1032,21 +1045,33 @@ describe("Test XLSX export", () => {
     test("Formulas evaluated to empty string are not added to filteredValues", () => {
       const model = new Model();
       createFilter(model, "A1:B4");
-      setCellContent(model, "A2", '=""');
+      setCellContent(model, "A2", "5");
+      updateFilter(model, "A1", ["5"]);
+      setCellContent(model, "A3", '=""');
       const exported = getExportedExcelData(model);
       expect(exported.sheets[0].filterTables[0].filters[0].filteredValues).toEqual([]);
+      expect(exported.sheets[0].filterTables[0].filters[0].displayBlanks).toEqual(true);
     });
 
     test("Export data filters snapshot", async () => {
       const model = new Model();
+      createFilter(model, "A1:C4");
+
       setCellContent(model, "A1", "Hello");
-      setCellContent(model, "B1", "Hello");
-      setCellContent(model, "C1", "56");
       setCellContent(model, "A2", "5");
       setCellContent(model, "A3", "5");
       setCellContent(model, "A4", "78");
-      createFilter(model, "A1:C4");
       updateFilter(model, "A1", ["5"]);
+
+      setCellContent(model, "B1", "Hello");
+      setCellContent(model, "B2", '=""');
+      setCellContent(model, "B3", "5");
+      updateFilter(model, "B1", ["5"]);
+
+      setCellContent(model, "C1", "56");
+      setCellContent(model, "C2", "5");
+      updateFilter(model, "C2", ["5"]);
+
       expect(await exportPrettifiedXlsx(model)).toMatchSnapshot();
     });
   });

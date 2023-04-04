@@ -8,6 +8,7 @@ import {
   WorkbookData,
 } from "../../types/index";
 import { CorePlugin } from "../core_plugin";
+import { DEFAULT_CELL_HEIGHT } from "./../../constants";
 
 interface FigureState {
   readonly figures: { [sheet: string]: Record<UID, Figure | undefined> | undefined };
@@ -66,7 +67,8 @@ export class FigurePlugin extends CorePlugin<FigureState> implements FigureState
     const numHeader = this.getters.getNumberRows(sheetId);
     let gridHeight = 0;
     for (let i = 0; i < numHeader; i++) {
-      gridHeight += this.getters.getRowSize(sheetId, i);
+      // TODO : do something that actually work
+      gridHeight += this.getters.getUserRowSize(sheetId, i) || DEFAULT_CELL_HEIGHT;
     }
     const figures = this.getters.getFigures(sheetId);
     for (const figure of figures) {

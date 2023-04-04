@@ -441,3 +441,13 @@ export function moveItemToIndex<T>(array: T[], startIndex: number, targetIndex: 
   array.splice(targetIndex, 0, item);
   return array;
 }
+
+export function removeIndexesFromArray<T>(array: T[], indexes: number[]): T[] {
+  return array.filter((_, index) => !indexes.includes(index));
+}
+
+export function insertItemsAtIndex<T>(array: T[], items: T[], index: number): T[] {
+  const newArray = [...array];
+  newArray.splice(index, 0, ...items);
+  return newArray;
+}

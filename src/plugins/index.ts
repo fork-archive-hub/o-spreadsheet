@@ -43,6 +43,7 @@ import {
   GridSelectionPlugin,
   SheetViewPlugin,
 } from "./ui_stateful";
+import { UIRowSizePlugin } from "./ui_stateful/row_size";
 
 export const corePluginRegistry = new Registry<CorePluginConstructor>()
   .add("sheet", SheetPlugin)
@@ -87,4 +88,5 @@ export const coreViewsPluginRegistry = new Registry<UIPluginConstructor>()
   .add("evaluation", EvaluationPlugin)
   .add("evaluation_chart", EvaluationChartPlugin)
   .add("evaluation_cf", EvaluationConditionalFormatPlugin)
+  .add("row_size", UIRowSizePlugin)
   .add("custom_colors", CustomColorsPlugin);

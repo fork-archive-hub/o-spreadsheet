@@ -30,6 +30,7 @@ import { SheetUIPlugin } from "../plugins/ui_feature/ui_sheet";
 import { ClipboardPlugin } from "../plugins/ui_stateful/clipboard";
 import { EditionPlugin } from "../plugins/ui_stateful/edition";
 import { FilterEvaluationPlugin } from "../plugins/ui_stateful/filter_evaluation";
+import { UIRowSizePlugin } from "../plugins/ui_stateful/row_size";
 import { GridSelectionPlugin } from "../plugins/ui_stateful/selection";
 import { SheetViewPlugin } from "../plugins/ui_stateful/sheetview";
 // -----------------------------------------------------------------------------
@@ -135,6 +136,7 @@ type FilterEvaluationGetters = Pick<
   FilterEvaluationPlugin,
   GetterNames<typeof FilterEvaluationPlugin>
 >;
+type UIRowSizeGetters = Pick<UIRowSizePlugin, GetterNames<typeof UIRowSizePlugin>>;
 
 export type Getters = {
   isReadonly: () => boolean;
@@ -161,4 +163,5 @@ export type Getters = {
   ViewportGetters &
   CellPopoverPluginGetters &
   FilterEvaluationGetters &
-  HeaderVisibilityIUIGetters;
+  HeaderVisibilityIUIGetters &
+  UIRowSizeGetters;

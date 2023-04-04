@@ -28,8 +28,9 @@ import {
 import { getCell } from "../test_helpers/getters_helpers";
 import { DEFAULT_CELL_HEIGHT } from "./../../src/constants";
 
-function getDefaultCellHeight(cell: Cell | undefined) {
-  return Math.round(getDefaultCellHeightHelper(cell));
+const ctx = document.createElement("canvas").getContext("2d")!;
+function getDefaultCellHeight(cell: Cell | undefined, colSize = DEFAULT_CELL_WIDTH) {
+  return Math.round(getDefaultCellHeightHelper(ctx, cell, colSize));
 }
 
 describe("Model resizer", () => {
@@ -381,6 +382,28 @@ describe("Model resizer", () => {
           MIN_CELL_TEXT_MARGIN
       );
       expect(model.getters.getRowSize(sheet.id, 0)).toBe(multiLineHeight);
+    });
+
+    test("wrapped text update the row size", () => {
+      setStyle(model, "C1", { fontSize: 10, wrapping: "wrap" });
+      setCellContent(model, "C1", "C1");
+
+      resizeColumns(model, ["C"], 100);
+      setCellContent(model, "C1", "multiples wrapped lines");
+      const cell = model.getters.getCell({ sheetId: sheet.id, col: 2, row: 0 })!;
+      const expectedHeight = getDefaultCellHeight(cell, 100);
+      expect(expectedHeight).toBeGreaterThan(DEFAULT_CELL_HEIGHT);
+      expect(model.getters.getRowSize(sheet.id, 0)).toBe(expectedHeight);
+    });
+
+    test("updating column size updates row height with wrapped text", () => {
+      setCellContent(model, "A1", "multiples wrapped lines");
+      setStyle(model, "A1", { fontSize: 10, wrapping: "wrap" });
+      const cell = model.getters.getCell({ sheetId: sheet.id, col: 0, row: 0 })!;
+      expect(model.getters.getRowSize(sheet.id, 0)).toBe(getDefaultCellHeight(cell));
+
+      resizeColumns(model, ["A"], 5);
+      expect(model.getters.getRowSize(sheet.id, 0)).toBe(getDefaultCellHeight(cell, 5));
     });
 
     test("deleting tallest cell in the row update row height", () => {

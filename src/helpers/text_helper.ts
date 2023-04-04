@@ -5,10 +5,9 @@ import {
   DEFAULT_FONT_WEIGHT,
   MIN_CELL_TEXT_MARGIN,
   MIN_CF_ICON_MARGIN,
-  NEWLINE,
   PADDING_AUTORESIZE_VERTICAL,
 } from "../constants";
-import { Cell, Pixel, Style } from "../types";
+import { Cell, Style } from "../types";
 
 export function computeTextLinesHeight(textLineHeight: number, numberOfLines: number = 1) {
   return numberOfLines * (textLineHeight + MIN_CELL_TEXT_MARGIN) - MIN_CELL_TEXT_MARGIN;
@@ -17,12 +16,20 @@ export function computeTextLinesHeight(textLineHeight: number, numberOfLines: nu
 /**
  * Get the default height of the cell given its style.
  */
-export function getDefaultCellHeight(cell: Cell | undefined): Pixel {
-  if (!cell || !cell.content) {
-    return DEFAULT_CELL_HEIGHT;
-  }
+export function getDefaultCellHeight(
+  ctx: CanvasRenderingContext2D,
+  cell: Cell | undefined,
+  colSize: number
+) {
+  if (!cell || !cell.content) return DEFAULT_CELL_HEIGHT;
+  const maxWidth = cell.style?.wrapping ? colSize - 2 * MIN_CELL_TEXT_MARGIN : undefined;
+
+  const multiLineText = cell.isFormula
+    ? [cell.content]
+    : getMultiLineText(ctx, cell.content, cell.style, maxWidth);
+
   const fontSize = computeTextFontSizeInPixels(cell.style);
-  const multiLineText = cell.content.split(NEWLINE);
+
   return computeTextLinesHeight(fontSize, multiLineText.length) + 2 * PADDING_AUTORESIZE_VERTICAL;
 }
 

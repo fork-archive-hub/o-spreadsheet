@@ -1052,7 +1052,7 @@ describe("renderer", () => {
         x: DEFAULT_CELL_WIDTH, // clipped to the left
         y: 0,
         width: 20, // clipped to the right
-        height: DEFAULT_CELL_HEIGHT,
+        height: model.getters.getRowSize("sheet1", 0),
       });
     }
   );
@@ -1083,7 +1083,7 @@ describe("renderer", () => {
         x: DEFAULT_CELL_WIDTH, // clipped to the left
         y: 0,
         width: 20, // clipped to the right
-        height: DEFAULT_CELL_HEIGHT,
+        height: model.getters.getRowSize("sheet1", 0),
       });
     }
   );

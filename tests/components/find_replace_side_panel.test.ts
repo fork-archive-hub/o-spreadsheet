@@ -51,22 +51,6 @@ describe("find and replace sidePanel component", () => {
       expect(document.activeElement).toBe(document.querySelector(selectors.inputSearch));
     });
 
-    test("focusing the sidepanel will update the search", async () => {
-      setInputValueAndTrigger(selectors.inputSearch, "hello", "input");
-      await nextTick();
-      const inputSearch: HTMLElement = document.activeElement as HTMLButtonElement;
-      expect(document.activeElement).toBe(document.querySelector(selectors.inputSearch));
-
-      inputSearch!.blur();
-      expect(document.activeElement).toBe(document.querySelector("body"));
-
-      const sidePanel = document.querySelector(".o-find-and-replace");
-      const dispatch = spyDispatch(parent);
-      sidePanel!.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
-      await nextTick();
-      expect(dispatch).toHaveBeenCalledWith("REFRESH_SEARCH");
-    });
-
     test("disable next/previous/replace/replaceAll if searching on empty string", async () => {
       setInputValueAndTrigger(selectors.inputSearch, "", "input");
       await nextTick();
@@ -105,7 +89,13 @@ describe("find and replace sidePanel component", () => {
       jest.runOnlyPendingTimers();
       await nextTick();
       expect(dispatch).toHaveBeenCalledWith("UPDATE_SEARCH", {
-        searchOptions: { exactMatch: false, matchCase: false, searchFormulas: false },
+        searchOptions: {
+          exactMatch: false,
+          matchCase: false,
+          searchFormulas: false,
+          searchScope: "allSheets",
+          specificRange: undefined,
+        },
         toSearch: "1",
       });
     });
@@ -133,7 +123,13 @@ describe("find and replace sidePanel component", () => {
       jest.runOnlyPendingTimers();
       await nextTick();
       expect(dispatch).toHaveBeenCalledWith("UPDATE_SEARCH", {
-        searchOptions: { exactMatch: false, matchCase: false, searchFormulas: false },
+        searchOptions: {
+          exactMatch: false,
+          matchCase: false,
+          searchFormulas: false,
+          searchScope: "allSheets",
+          specificRange: undefined,
+        },
         toSearch: "",
       });
     });
@@ -194,7 +190,13 @@ describe("find and replace sidePanel component", () => {
       setInputValueAndTrigger(selectors.inputSearch, "Hell", "input");
       await click(fixture, selectors.checkBoxMatchingCase);
       expect(dispatch).toHaveBeenCalledWith("UPDATE_SEARCH", {
-        searchOptions: { exactMatch: false, matchCase: true, searchFormulas: false },
+        searchOptions: {
+          exactMatch: false,
+          matchCase: true,
+          searchFormulas: false,
+          searchScope: "allSheets",
+          specificRange: undefined,
+        },
         toSearch: "Hell",
       });
     });
@@ -205,7 +207,13 @@ describe("find and replace sidePanel component", () => {
       setInputValueAndTrigger(selectors.inputSearch, "Hell", "input");
       await click(fixture, selectors.checkBoxExactMatch);
       expect(dispatch).toHaveBeenCalledWith("UPDATE_SEARCH", {
-        searchOptions: { exactMatch: true, matchCase: false, searchFormulas: false },
+        searchOptions: {
+          exactMatch: true,
+          matchCase: false,
+          searchFormulas: false,
+          searchScope: "allSheets",
+          specificRange: undefined,
+        },
         toSearch: "Hell",
       });
     });
@@ -216,7 +224,13 @@ describe("find and replace sidePanel component", () => {
       setInputValueAndTrigger(selectors.inputSearch, "Hell", "input");
       await click(fixture, selectors.checkBoxSearchFormulas);
       expect(dispatch).toHaveBeenCalledWith("UPDATE_SEARCH", {
-        searchOptions: { exactMatch: false, matchCase: false, searchFormulas: true },
+        searchOptions: {
+          exactMatch: false,
+          matchCase: false,
+          searchFormulas: true,
+          searchScope: "allSheets",
+          specificRange: undefined,
+        },
         toSearch: "Hell",
       });
     });

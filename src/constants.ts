@@ -24,6 +24,7 @@ export const BACKGROUND_HEADER_FILTER_COLOR = "#E6F4EA";
 export const BACKGROUND_HEADER_SELECTED_FILTER_COLOR = "#CEEAD6";
 export const SEPARATOR_COLOR = "#E0E2E4";
 export const ICONS_COLOR = "#4A4F59";
+export const SPECIFIC_RANGE_BORDER_COLOR = "#FA9C1B";
 
 // Color picker defaults as upper case HEX to match `toHex`helper
 export const COLOR_PICKER_DEFAULTS: Color[] = [

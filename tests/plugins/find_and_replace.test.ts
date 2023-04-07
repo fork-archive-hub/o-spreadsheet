@@ -15,84 +15,128 @@ let searchOptions: SearchOptions;
 
 describe("basic search", () => {
   beforeEach(() => {
-    model = new Model();
+    const sheet1 = "s1";
+    model = new Model({ sheets: [{ id: sheet1 }] });
     setCellContent(model, "A1", "hello");
     setCellContent(model, "A2", "hello1");
     setCellContent(model, "A3", "=1");
     setCellContent(model, "A4", "111");
-    setCellContent(model, "A5", "1");
-    setCellContent(model, "A6", "2");
+    const sheet2 = "s2";
+    createSheet(model, { activate: true, sheetId: sheet2 });
+    setCellContent(model, "A1", "hey");
+    setCellContent(model, "A2", "hey1");
+    setCellContent(model, "A3", "=2");
+    setCellContent(model, "A4", "222");
+    activateSheet(model, "s1");
+    const range = model.getters.getRangeFromSheetXC(sheet1, "Sheet2!A1:D13");
     searchOptions = {
       matchCase: false,
       exactMatch: false,
       searchFormulas: false,
+      searchScope: "thisSheet",
+      specificRange: range,
     };
   });
-  test("simple search", () => {
+
+  test("simple search for search scope thisSheet", () => {
+    model.dispatch("UPDATE_SEARCH", { toSearch: "1", searchOptions });
+    const matches = model.getters.getSearchMatches();
+    const matchIndex = model.getters.getCurrentSelectedMatchIndex();
+    expect(matches).toHaveLength(3);
+    expect(matchIndex).toStrictEqual(0);
+    expect(matches[0]).toStrictEqual({ sheetId: "s1", col: 0, row: 1, selected: true });
+    expect(matches[1]).toStrictEqual({ sheetId: "s1", col: 0, row: 2, selected: false });
+    expect(matches[2]).toStrictEqual({ sheetId: "s1", col: 0, row: 3, selected: false });
+  });
+
+  test("simple search for search scope thisSheet", () => {
+    searchOptions.searchScope = "allSheets";
     model.dispatch("UPDATE_SEARCH", { toSearch: "1", searchOptions });
     const matches = model.getters.getSearchMatches();
     const matchIndex = model.getters.getCurrentSelectedMatchIndex();
     expect(matches).toHaveLength(4);
     expect(matchIndex).toStrictEqual(0);
-    expect(matches[0]).toStrictEqual({ col: 0, row: 1, selected: true });
-    expect(matches[1]).toStrictEqual({ col: 0, row: 2, selected: false });
-    expect(matches[2]).toStrictEqual({ col: 0, row: 3, selected: false });
-    expect(matches[3]).toStrictEqual({ col: 0, row: 4, selected: false });
+    expect(matches[0]).toStrictEqual({ sheetId: "s1", col: 0, row: 1, selected: true });
+    expect(matches[1]).toStrictEqual({ sheetId: "s1", col: 0, row: 2, selected: false });
+    expect(matches[2]).toStrictEqual({ sheetId: "s1", col: 0, row: 3, selected: false });
+    expect(matches[3]).toStrictEqual({ sheetId: "s2", col: 0, row: 1, selected: false });
+  });
+
+  test("simple search for search scope specificRange", () => {
+    searchOptions.searchScope = "specificRange";
+    model.dispatch("UPDATE_SEARCH", { toSearch: "1", searchOptions });
+    const matches = model.getters.getSearchMatches();
+    const matchIndex = model.getters.getCurrentSelectedMatchIndex();
+    expect(matches).toHaveLength(1);
+    expect(matchIndex).toStrictEqual(0);
+    expect(matches[0]).toStrictEqual({ sheetId: "s2", col: 0, row: 1, selected: true });
   });
 
   test("search with a regexp characters", () => {
     setCellContent(model, "A1", "hello (world).*");
     model.dispatch("UPDATE_SEARCH", { toSearch: "(world", searchOptions });
     const matches = model.getters.getSearchMatches();
-    expect(matches).toStrictEqual([{ col: 0, row: 0, selected: true }]);
+    expect(matches).toStrictEqual([{ sheetId: "s1", col: 0, row: 0, selected: true }]);
   });
 
   test("Update search automatically select the first match", () => {
-    model.dispatch("UPDATE_SEARCH", { toSearch: "2", searchOptions });
-    expect(model.getters.getSelection().zones).toEqual([toZone("A6")]);
-  });
-
-  test("modifying cells won't change the search", () => {
     model.dispatch("UPDATE_SEARCH", { toSearch: "1", searchOptions });
-    let matches = model.getters.getSearchMatches();
-    let matchIndex = model.getters.getCurrentSelectedMatchIndex();
-    expect(matches.length).toBe(4);
-    expect(matchIndex).toStrictEqual(0);
-    expect(matches[0]).toStrictEqual({ col: 0, row: 1, selected: true });
-    expect(matches[1]).toStrictEqual({ col: 0, row: 2, selected: false });
-    expect(matches[2]).toStrictEqual({ col: 0, row: 3, selected: false });
-    expect(matches[3]).toStrictEqual({ col: 0, row: 4, selected: false });
-    setCellContent(model, "A2", "hello");
-    setCellContent(model, "B1", "1");
-    matches = model.getters.getSearchMatches();
-    matchIndex = model.getters.getCurrentSelectedMatchIndex();
-    expect(matches.length).toBe(4);
-    expect(matchIndex).toStrictEqual(0);
-    expect(matches[0]).toStrictEqual({ col: 0, row: 1, selected: true });
-    expect(matches[1]).toStrictEqual({ col: 0, row: 2, selected: false });
-    expect(matches[2]).toStrictEqual({ col: 0, row: 3, selected: false });
-    expect(matches[3]).toStrictEqual({ col: 0, row: 4, selected: false });
+    expect(model.getters.getSelection().zones).toEqual([toZone("A2")]);
   });
 
-  test("change the search", async () => {
+  test("change the search for thisSheet searchScope", () => {
     model.dispatch("UPDATE_SEARCH", { toSearch: "hello", searchOptions });
     model.dispatch("SELECT_SEARCH_NEXT_MATCH");
     let matches = model.getters.getSearchMatches();
     let matchIndex = model.getters.getCurrentSelectedMatchIndex();
     expect(matches).toHaveLength(2);
     expect(matchIndex).toStrictEqual(1);
-    expect(matches[0]).toStrictEqual({ col: 0, row: 0, selected: false });
-    expect(matches[1]).toStrictEqual({ col: 0, row: 1, selected: true });
+    expect(matches[0]).toStrictEqual({ sheetId: "s1", col: 0, row: 0, selected: false });
+    expect(matches[1]).toStrictEqual({ sheetId: "s1", col: 0, row: 1, selected: true });
+    model.dispatch("UPDATE_SEARCH", { toSearch: "1", searchOptions });
+    matches = model.getters.getSearchMatches();
+    matchIndex = model.getters.getCurrentSelectedMatchIndex();
+    expect(matches).toHaveLength(3);
+    expect(matchIndex).toStrictEqual(0);
+    expect(matches[0]).toStrictEqual({ sheetId: "s1", col: 0, row: 1, selected: true });
+    expect(matches[1]).toStrictEqual({ sheetId: "s1", col: 0, row: 2, selected: false });
+    expect(matches[2]).toStrictEqual({ sheetId: "s1", col: 0, row: 3, selected: false });
+  });
 
+  test("change the search for allSheet searchScope", () => {
+    searchOptions.searchScope = "allSheets";
+    model.dispatch("UPDATE_SEARCH", { toSearch: "hello", searchOptions });
+    model.dispatch("SELECT_SEARCH_NEXT_MATCH");
+    let matches = model.getters.getSearchMatches();
+    let matchIndex = model.getters.getCurrentSelectedMatchIndex();
+    expect(matches).toHaveLength(2);
+    expect(matchIndex).toStrictEqual(1);
+    expect(matches[0]).toStrictEqual({ sheetId: "s1", col: 0, row: 0, selected: false });
+    expect(matches[1]).toStrictEqual({ sheetId: "s1", col: 0, row: 1, selected: true });
     model.dispatch("UPDATE_SEARCH", { toSearch: "1", searchOptions });
     matches = model.getters.getSearchMatches();
     matchIndex = model.getters.getCurrentSelectedMatchIndex();
     expect(matches).toHaveLength(4);
     expect(matchIndex).toStrictEqual(0);
-    expect(matches[0]).toStrictEqual({ col: 0, row: 1, selected: true });
-    expect(matches[1]).toStrictEqual({ col: 0, row: 2, selected: false });
-    expect(matches[2]).toStrictEqual({ col: 0, row: 3, selected: false });
-    expect(matches[3]).toStrictEqual({ col: 0, row: 4, selected: false });
+    expect(matches[0]).toStrictEqual({ sheetId: "s1", col: 0, row: 1, selected: true });
+    expect(matches[1]).toStrictEqual({ sheetId: "s1", col: 0, row: 2, selected: false });
+    expect(matches[2]).toStrictEqual({ sheetId: "s1", col: 0, row: 3, selected: false });
+    expect(matches[3]).toStrictEqual({ sheetId: "s2", col: 0, row: 1, selected: false });
+  });
+
+  test("change the search for specificRange searchScope", () => {
+    searchOptions.searchScope = "specificRange";
+    model.dispatch("UPDATE_SEARCH", { toSearch: "hello", searchOptions });
+    model.dispatch("SELECT_SEARCH_NEXT_MATCH");
+    let matches = model.getters.getSearchMatches();
+    let matchIndex = model.getters.getCurrentSelectedMatchIndex();
+    expect(matches).toHaveLength(0);
+    model.dispatch("UPDATE_SEARCH", { toSearch: "1", searchOptions });
+    matches = model.getters.getSearchMatches();
+    matchIndex = model.getters.getCurrentSelectedMatchIndex();
+    expect(matches).toHaveLength(1);
+    expect(matchIndex).toStrictEqual(0);
+    expect(matches[0]).toStrictEqual({ sheetId: "s2", col: 0, row: 1, selected: true });
   });
 
   test("search on empty string does not match anything", () => {
@@ -102,9 +146,43 @@ describe("basic search", () => {
 
   test("search on empty string clears matches", () => {
     model.dispatch("UPDATE_SEARCH", { toSearch: "1", searchOptions });
-    expect(model.getters.getSearchMatches()).toHaveLength(4);
+    expect(model.getters.getSearchMatches()).toHaveLength(3);
     model.dispatch("UPDATE_SEARCH", { toSearch: "", searchOptions });
     expect(model.getters.getSearchMatches()).toHaveLength(0);
+  });
+
+  test("start searching from current sheet and update index", () => {
+    searchOptions.searchScope = "allSheets";
+    activateSheet(model, "s2");
+    model.dispatch("UPDATE_SEARCH", { toSearch: "1", searchOptions });
+    const matches = model.getters.getSearchMatches();
+    const matchIndex = model.getters.getCurrentSelectedMatchIndex();
+    expect(matches).toHaveLength(4);
+    expect(matchIndex).toStrictEqual(3);
+    expect(matches[0]).toStrictEqual({ sheetId: "s1", col: 0, row: 1, selected: false });
+    expect(matches[1]).toStrictEqual({ sheetId: "s1", col: 0, row: 2, selected: false });
+    expect(matches[2]).toStrictEqual({ sheetId: "s1", col: 0, row: 3, selected: false });
+    expect(matches[3]).toStrictEqual({ sheetId: "s2", col: 0, row: 1, selected: true });
+  });
+
+  test("modifying cells update the search", () => {
+    model.dispatch("UPDATE_SEARCH", { toSearch: "1", searchOptions });
+    let matches = model.getters.getSearchMatches();
+    let matchIndex = model.getters.getCurrentSelectedMatchIndex();
+    expect(matches.length).toBe(3);
+    expect(matchIndex).toStrictEqual(0);
+    expect(matches[0]).toStrictEqual({ sheetId: "s1", col: 0, row: 1, selected: true });
+    expect(matches[1]).toStrictEqual({ sheetId: "s1", col: 0, row: 2, selected: false });
+    expect(matches[2]).toStrictEqual({ sheetId: "s1", col: 0, row: 3, selected: false });
+    setCellContent(model, "A2", "hello");
+    setCellContent(model, "B1", "1");
+    matches = model.getters.getSearchMatches();
+    matchIndex = model.getters.getCurrentSelectedMatchIndex();
+    expect(matches.length).toBe(3);
+    expect(matchIndex).toStrictEqual(0);
+    expect(matches[0]).toStrictEqual({ sheetId: "s1", col: 1, row: 0, selected: true });
+    expect(matches[1]).toStrictEqual({ sheetId: "s1", col: 0, row: 2, selected: false });
+    expect(matches[2]).toStrictEqual({ sheetId: "s1", col: 0, row: 3, selected: false });
   });
 
   test.skip("Will search a modified cell", () => {
@@ -114,68 +192,92 @@ describe("basic search", () => {
     let matchIndex = model.getters.getCurrentSelectedMatchIndex();
     expect(matches).toHaveLength(4);
     expect(matchIndex).toStrictEqual(0);
-    expect(matches[0]).toStrictEqual({ col: 0, row: 1, selected: true });
-    expect(matches[1]).toStrictEqual({ col: 0, row: 2, selected: false });
-    expect(matches[2]).toStrictEqual({ col: 0, row: 3, selected: false });
-    expect(matches[3]).toStrictEqual({ col: 0, row: 4, selected: false });
+    expect(matches[0]).toStrictEqual({ sheetId: "s1", col: 0, row: 1, selected: true });
+    expect(matches[1]).toStrictEqual({ sheetId: "s1", col: 0, row: 2, selected: false });
+    expect(matches[2]).toStrictEqual({ sheetId: "s1", col: 0, row: 3, selected: false });
     setCellContent(model, "B1", "=1");
     setCellContent(model, "B2", "=11");
     matches = model.getters.getSearchMatches();
     matchIndex = model.getters.getCurrentSelectedMatchIndex();
-    expect(matches).toHaveLength(6);
+    expect(matches).toHaveLength(5);
     expect(matchIndex).toStrictEqual(0);
-    expect(matches[0]).toStrictEqual({ col: 1, row: 0, selected: false });
-    expect(matches[1]).toStrictEqual({ col: 0, row: 1, selected: true });
-    expect(matches[2]).toStrictEqual({ col: 1, row: 1, selected: false });
-    expect(matches[3]).toStrictEqual({ col: 0, row: 2, selected: false });
-    expect(matches[4]).toStrictEqual({ col: 0, row: 3, selected: false });
-    expect(matches[5]).toStrictEqual({ col: 0, row: 4, selected: false });
-  });
-
-  test("new search when changing sheet", () => {
-    const sheet1 = model.getters.getActiveSheetId();
-    const sheet2 = "42";
-    createSheet(model, { activate: true, sheetId: sheet2 });
-    setCellContent(model, "B1", "hello");
-    setCellContent(model, "B2", "Hello");
-    setCellContent(model, "B3", "hello1");
-    activateSheet(model, sheet1);
-    model.dispatch("UPDATE_SEARCH", { toSearch: "hello", searchOptions });
-    let matches = model.getters.getSearchMatches();
-    let matchIndex = model.getters.getCurrentSelectedMatchIndex();
-    expect(matches).toHaveLength(2);
-    expect(matchIndex).toStrictEqual(0);
-    activateSheet(model, sheet2);
-    matches = model.getters.getSearchMatches();
-    matchIndex = model.getters.getCurrentSelectedMatchIndex();
-    expect(matches).toHaveLength(3);
-    expect(matchIndex).toStrictEqual(0);
-    activateSheet(model, sheet1);
-    matches = model.getters.getSearchMatches();
-    matchIndex = model.getters.getCurrentSelectedMatchIndex();
-    expect(matches).toHaveLength(2);
-    expect(matchIndex).toStrictEqual(0);
+    expect(matches[0]).toStrictEqual({ sheetId: "s1", col: 0, row: 1, selected: true });
+    expect(matches[2]).toStrictEqual({ sheetId: "s1", col: 1, row: 1, selected: false });
+    expect(matches[3]).toStrictEqual({ sheetId: "s1", col: 0, row: 2, selected: false });
+    expect(matches[4]).toStrictEqual({ sheetId: "s1", col: 1, row: 2, selected: false });
+    expect(matches[5]).toStrictEqual({ sheetId: "s1", col: 1, row: 3, selected: false });
   });
 });
+
 describe("next/previous cycle", () => {
   beforeEach(() => {
-    model = new Model({ sheets: [{ id: "s1" }] });
+    const sheet1 = "s1";
+    model = new Model({ sheets: [{ id: sheet1 }] });
     setCellContent(model, "A1", "1");
     setCellContent(model, "A2", "1");
+    const sheet2 = "s2";
+    createSheet(model, { activate: true, sheetId: sheet2 });
     setCellContent(model, "A3", "1");
+    activateSheet(model, "s1");
+    const range = model.getters.getRangeFromSheetXC(sheet1, "Sheet2!A1:D13");
+    searchOptions = {
+      matchCase: false,
+      exactMatch: false,
+      searchFormulas: false,
+      searchScope: "thisSheet",
+      specificRange: range,
+    };
   });
-  test("Next will select the next match", () => {
+
+  test("Next will select the next match for thisSheet searcscope", () => {
+    model.dispatch("UPDATE_SEARCH", { toSearch: "1", searchOptions });
+    model.dispatch("SELECT_SEARCH_NEXT_MATCH");
+    const matches = model.getters.getSearchMatches();
+    const matchIndex = model.getters.getCurrentSelectedMatchIndex();
+    expect(matches).toHaveLength(2);
+    expect(matchIndex).toStrictEqual(1);
+    expect(matches[0]).toStrictEqual({ sheetId: "s1", col: 0, row: 0, selected: false });
+    expect(matches[1]).toStrictEqual({ sheetId: "s1", col: 0, row: 1, selected: true });
+  });
+
+  test("Next will select the next match for allSheet searcscope", () => {
+    searchOptions.searchScope = "allSheets";
     model.dispatch("UPDATE_SEARCH", { toSearch: "1", searchOptions });
     model.dispatch("SELECT_SEARCH_NEXT_MATCH");
     const matches = model.getters.getSearchMatches();
     const matchIndex = model.getters.getCurrentSelectedMatchIndex();
     expect(matches).toHaveLength(3);
     expect(matchIndex).toStrictEqual(1);
-    expect(matches[0]).toStrictEqual({ col: 0, row: 0, selected: false });
-    expect(matches[1]).toStrictEqual({ col: 0, row: 1, selected: true });
-    expect(matches[2]).toStrictEqual({ col: 0, row: 2, selected: false });
+    expect(matches[0]).toStrictEqual({ sheetId: "s1", col: 0, row: 0, selected: false });
+    expect(matches[1]).toStrictEqual({ sheetId: "s1", col: 0, row: 1, selected: true });
+    expect(matches[2]).toStrictEqual({ sheetId: "s2", col: 0, row: 2, selected: false });
   });
-  test("Next than previous will cancel each other", () => {
+
+  test("Next will select the next match for specificRange searcscope", () => {
+    searchOptions.searchScope = "specificRange";
+    model.dispatch("UPDATE_SEARCH", { toSearch: "1", searchOptions });
+    model.dispatch("SELECT_SEARCH_NEXT_MATCH");
+    const matches = model.getters.getSearchMatches();
+    const matchIndex = model.getters.getCurrentSelectedMatchIndex();
+    expect(matches).toHaveLength(1);
+    expect(matchIndex).toStrictEqual(0);
+    expect(matches[0]).toStrictEqual({ sheetId: "s2", col: 0, row: 2, selected: true });
+  });
+
+  test("Next than previous will cancel each other for thisSheet searchscope", () => {
+    model.dispatch("UPDATE_SEARCH", { toSearch: "1", searchOptions });
+    model.dispatch("SELECT_SEARCH_NEXT_MATCH");
+    model.dispatch("SELECT_SEARCH_PREVIOUS_MATCH");
+    const matches = model.getters.getSearchMatches();
+    const matchIndex = model.getters.getCurrentSelectedMatchIndex();
+    expect(matches).toHaveLength(2);
+    expect(matchIndex).toStrictEqual(0);
+    expect(matches[0]).toStrictEqual({ sheetId: "s1", col: 0, row: 0, selected: true });
+    expect(matches[1]).toStrictEqual({ sheetId: "s1", col: 0, row: 1, selected: false });
+  });
+
+  test("Next than previous will cancel each other for allSheets searchscope", () => {
+    searchOptions.searchScope = "allSheets";
     model.dispatch("UPDATE_SEARCH", { toSearch: "1", searchOptions });
     model.dispatch("SELECT_SEARCH_NEXT_MATCH");
     model.dispatch("SELECT_SEARCH_PREVIOUS_MATCH");
@@ -183,112 +285,223 @@ describe("next/previous cycle", () => {
     const matchIndex = model.getters.getCurrentSelectedMatchIndex();
     expect(matches).toHaveLength(3);
     expect(matchIndex).toStrictEqual(0);
-    expect(matches[0]).toStrictEqual({ col: 0, row: 0, selected: true });
-    expect(matches[1]).toStrictEqual({ col: 0, row: 1, selected: false });
-    expect(matches[2]).toStrictEqual({ col: 0, row: 2, selected: false });
+    expect(matches[0]).toStrictEqual({ sheetId: "s1", col: 0, row: 0, selected: true });
+    expect(matches[1]).toStrictEqual({ sheetId: "s1", col: 0, row: 1, selected: false });
+    expect(matches[2]).toStrictEqual({ sheetId: "s2", col: 0, row: 2, selected: false });
   });
 
-  test("search will cycle with next", () => {
+  test("Next than previous will cancel each other for specificRange searchscope", () => {
+    searchOptions.searchScope = "specificRange";
+    model.dispatch("UPDATE_SEARCH", { toSearch: "1", searchOptions });
+    model.dispatch("SELECT_SEARCH_NEXT_MATCH");
+    model.dispatch("SELECT_SEARCH_PREVIOUS_MATCH");
+    const matches = model.getters.getSearchMatches();
+    const matchIndex = model.getters.getCurrentSelectedMatchIndex();
+    expect(matches).toHaveLength(1);
+    expect(matchIndex).toStrictEqual(0);
+    expect(matches[0]).toStrictEqual({ sheetId: "s2", col: 0, row: 2, selected: true });
+  });
+
+  test("search will cycle with next for thisSheet search scope", () => {
+    model.dispatch("UPDATE_SEARCH", { toSearch: "1", searchOptions });
+    let matches = model.getters.getSearchMatches();
+    let matchIndex = model.getters.getCurrentSelectedMatchIndex();
+    expect(getActivePosition(model)).toBe("A1");
+    expect(matches).toHaveLength(2);
+    expect(matchIndex).toStrictEqual(0);
+    expect(matches[0]).toStrictEqual({ sheetId: "s1", col: 0, row: 0, selected: true });
+    expect(matches[1]).toStrictEqual({ sheetId: "s1", col: 0, row: 1, selected: false });
+
+    model.dispatch("SELECT_SEARCH_NEXT_MATCH");
+    matches = model.getters.getSearchMatches();
+    matchIndex = model.getters.getCurrentSelectedMatchIndex();
+    expect(getActivePosition(model)).toBe("A2");
+    expect(matches).toHaveLength(2);
+    expect(matchIndex).toStrictEqual(1);
+    expect(matches[0]).toStrictEqual({ sheetId: "s1", col: 0, row: 0, selected: false });
+    expect(matches[1]).toStrictEqual({ sheetId: "s1", col: 0, row: 1, selected: true });
+
+    model.dispatch("SELECT_SEARCH_NEXT_MATCH");
+    matches = model.getters.getSearchMatches();
+    matchIndex = model.getters.getCurrentSelectedMatchIndex();
+    expect(getActivePosition(model)).toBe("A1");
+    expect(matches).toHaveLength(2);
+    expect(matchIndex).toStrictEqual(0);
+    expect(matches[0]).toStrictEqual({ sheetId: "s1", col: 0, row: 0, selected: true });
+    expect(matches[1]).toStrictEqual({ sheetId: "s1", col: 0, row: 1, selected: false });
+
+    model.dispatch("SELECT_SEARCH_NEXT_MATCH");
+    matches = model.getters.getSearchMatches();
+    matchIndex = model.getters.getCurrentSelectedMatchIndex();
+    expect(getActivePosition(model)).toBe("A2");
+    expect(matches).toHaveLength(2);
+    expect(matchIndex).toStrictEqual(1);
+    expect(matches[0]).toStrictEqual({ sheetId: "s1", col: 0, row: 0, selected: false });
+    expect(matches[1]).toStrictEqual({ sheetId: "s1", col: 0, row: 1, selected: true });
+  });
+
+  test("search will cycle with next for allSheets search scope", () => {
+    searchOptions.searchScope = "allSheets";
+    model.dispatch("UPDATE_SEARCH", { toSearch: "1", searchOptions });
+    let matches = model.getters.getSearchMatches();
+    let matchIndex = model.getters.getCurrentSelectedMatchIndex();
+
+    expect(getActivePosition(model)).toBe("A1");
+    expect(matches).toHaveLength(3);
+    expect(matchIndex).toStrictEqual(0);
+    expect(matches[0]).toStrictEqual({ sheetId: "s1", col: 0, row: 0, selected: true });
+    expect(matches[1]).toStrictEqual({ sheetId: "s1", col: 0, row: 1, selected: false });
+    expect(matches[2]).toStrictEqual({ sheetId: "s2", col: 0, row: 2, selected: false });
+
+    model.dispatch("SELECT_SEARCH_NEXT_MATCH");
+    matches = model.getters.getSearchMatches();
+    matchIndex = model.getters.getCurrentSelectedMatchIndex();
+    expect(getActivePosition(model)).toBe("A2");
+    expect(matches).toHaveLength(3);
+    expect(matchIndex).toStrictEqual(1);
+    expect(matches[0]).toStrictEqual({ sheetId: "s1", col: 0, row: 0, selected: false });
+    expect(matches[1]).toStrictEqual({ sheetId: "s1", col: 0, row: 1, selected: true });
+    expect(matches[2]).toStrictEqual({ sheetId: "s2", col: 0, row: 2, selected: false });
+
+    model.dispatch("SELECT_SEARCH_NEXT_MATCH");
+    matches = model.getters.getSearchMatches();
+    matchIndex = model.getters.getCurrentSelectedMatchIndex();
+    expect(getActivePosition(model)).toBe("A3");
+    expect(matches).toHaveLength(3);
+    expect(matchIndex).toStrictEqual(2);
+    expect(matches[0]).toStrictEqual({ sheetId: "s1", col: 0, row: 0, selected: false });
+    expect(matches[1]).toStrictEqual({ sheetId: "s1", col: 0, row: 1, selected: false });
+    expect(matches[2]).toStrictEqual({ sheetId: "s2", col: 0, row: 2, selected: true });
+
+    model.dispatch("SELECT_SEARCH_NEXT_MATCH");
+    matches = model.getters.getSearchMatches();
+    matchIndex = model.getters.getCurrentSelectedMatchIndex();
+    expect(getActivePosition(model)).toBe("A1");
+    expect(matches).toHaveLength(3);
+    expect(matchIndex).toStrictEqual(0);
+    expect(matches[0]).toStrictEqual({ sheetId: "s1", col: 0, row: 0, selected: true });
+    expect(matches[1]).toStrictEqual({ sheetId: "s1", col: 0, row: 1, selected: false });
+    expect(matches[2]).toStrictEqual({ sheetId: "s2", col: 0, row: 2, selected: false });
+  });
+
+  test("search will cycle with next for specificRange search scope", () => {
+    searchOptions.searchScope = "specificRange";
+    model.dispatch("UPDATE_SEARCH", { toSearch: "1", searchOptions });
+    let matches = model.getters.getSearchMatches();
+    let matchIndex = model.getters.getCurrentSelectedMatchIndex();
+
+    expect(getActivePosition(model)).toBe("A3");
+    expect(matches).toHaveLength(1);
+    expect(matchIndex).toStrictEqual(0);
+    expect(matches[0]).toStrictEqual({ sheetId: "s2", col: 0, row: 2, selected: true });
+
+    model.dispatch("SELECT_SEARCH_NEXT_MATCH");
+    matches = model.getters.getSearchMatches();
+    matchIndex = model.getters.getCurrentSelectedMatchIndex();
+    expect(getActivePosition(model)).toBe("A3");
+    expect(matches).toHaveLength(1);
+    expect(matchIndex).toStrictEqual(0);
+    expect(matches[0]).toStrictEqual({ sheetId: "s2", col: 0, row: 2, selected: true });
+  });
+
+  test("search will cycle with previous for %s search scope", () => {
+    model.dispatch("UPDATE_SEARCH", { toSearch: "1", searchOptions });
+    let matches = model.getters.getSearchMatches();
+    let matchIndex = model.getters.getCurrentSelectedMatchIndex();
+    expect(getActivePosition(model)).toBe("A1");
+    expect(matches).toHaveLength(2);
+    expect(matchIndex).toStrictEqual(0);
+    expect(matches[0]).toStrictEqual({ sheetId: "s1", col: 0, row: 0, selected: true });
+    expect(matches[1]).toStrictEqual({ sheetId: "s1", col: 0, row: 1, selected: false });
+
+    model.dispatch("SELECT_SEARCH_PREVIOUS_MATCH");
+    matches = model.getters.getSearchMatches();
+    matchIndex = model.getters.getCurrentSelectedMatchIndex();
+    expect(getActivePosition(model)).toBe("A2");
+    expect(matches).toHaveLength(2);
+    expect(matchIndex).toStrictEqual(1);
+    expect(matches[0]).toStrictEqual({ sheetId: "s1", col: 0, row: 0, selected: false });
+    expect(matches[1]).toStrictEqual({ sheetId: "s1", col: 0, row: 1, selected: true });
+
+    model.dispatch("SELECT_SEARCH_PREVIOUS_MATCH");
+    matches = model.getters.getSearchMatches();
+    matchIndex = model.getters.getCurrentSelectedMatchIndex();
+    expect(getActivePosition(model)).toBe("A1");
+    expect(matches).toHaveLength(2);
+    expect(matchIndex).toStrictEqual(0);
+    expect(matches[0]).toStrictEqual({ sheetId: "s1", col: 0, row: 0, selected: true });
+    expect(matches[1]).toStrictEqual({ sheetId: "s1", col: 0, row: 1, selected: false });
+
+    model.dispatch("SELECT_SEARCH_PREVIOUS_MATCH");
+    matches = model.getters.getSearchMatches();
+    matchIndex = model.getters.getCurrentSelectedMatchIndex();
+    expect(getActivePosition(model)).toBe("A2");
+    expect(matches).toHaveLength(2);
+    expect(matchIndex).toStrictEqual(1);
+    expect(matches[0]).toStrictEqual({ sheetId: "s1", col: 0, row: 0, selected: false });
+    expect(matches[1]).toStrictEqual({ sheetId: "s1", col: 0, row: 1, selected: true });
+  });
+
+  test("search will cycle with previous for %s search scope", () => {
+    searchOptions.searchScope = "allSheets";
     model.dispatch("UPDATE_SEARCH", { toSearch: "1", searchOptions });
     let matches = model.getters.getSearchMatches();
     let matchIndex = model.getters.getCurrentSelectedMatchIndex();
     expect(getActivePosition(model)).toBe("A1");
     expect(matches).toHaveLength(3);
     expect(matchIndex).toStrictEqual(0);
-    expect(matches[0]).toStrictEqual({ col: 0, row: 0, selected: true });
-    expect(matches[1]).toStrictEqual({ col: 0, row: 1, selected: false });
-    expect(matches[2]).toStrictEqual({ col: 0, row: 2, selected: false });
+    expect(matches[0]).toStrictEqual({ sheetId: "s1", col: 0, row: 0, selected: true });
+    expect(matches[1]).toStrictEqual({ sheetId: "s1", col: 0, row: 1, selected: false });
+    expect(matches[2]).toStrictEqual({ sheetId: "s2", col: 0, row: 2, selected: false });
 
-    model.dispatch("SELECT_SEARCH_NEXT_MATCH");
-    matches = model.getters.getSearchMatches();
-    matchIndex = model.getters.getCurrentSelectedMatchIndex();
-    expect(getActivePosition(model)).toBe("A2");
-    expect(matches).toHaveLength(3);
-    expect(matchIndex).toStrictEqual(1);
-    expect(matches[0]).toStrictEqual({ col: 0, row: 0, selected: false });
-    expect(matches[1]).toStrictEqual({ col: 0, row: 1, selected: true });
-    expect(matches[2]).toStrictEqual({ col: 0, row: 2, selected: false });
-
-    model.dispatch("SELECT_SEARCH_NEXT_MATCH");
+    model.dispatch("SELECT_SEARCH_PREVIOUS_MATCH");
     matches = model.getters.getSearchMatches();
     matchIndex = model.getters.getCurrentSelectedMatchIndex();
     expect(getActivePosition(model)).toBe("A3");
     expect(matches).toHaveLength(3);
     expect(matchIndex).toStrictEqual(2);
-    expect(matches[0]).toStrictEqual({ col: 0, row: 0, selected: false });
-    expect(matches[1]).toStrictEqual({ col: 0, row: 1, selected: false });
-    expect(matches[2]).toStrictEqual({ col: 0, row: 2, selected: true });
+    expect(matches[0]).toStrictEqual({ sheetId: "s1", col: 0, row: 0, selected: false });
+    expect(matches[1]).toStrictEqual({ sheetId: "s1", col: 0, row: 1, selected: false });
+    expect(matches[2]).toStrictEqual({ sheetId: "s2", col: 0, row: 2, selected: true });
 
-    model.dispatch("SELECT_SEARCH_NEXT_MATCH");
-    matches = model.getters.getSearchMatches();
-    matchIndex = model.getters.getCurrentSelectedMatchIndex();
-    expect(getActivePosition(model)).toBe("A1");
-    expect(matches).toHaveLength(3);
-    expect(matchIndex).toStrictEqual(0);
-    expect(matches[0]).toStrictEqual({ col: 0, row: 0, selected: true });
-    expect(matches[1]).toStrictEqual({ col: 0, row: 1, selected: false });
-    expect(matches[2]).toStrictEqual({ col: 0, row: 2, selected: false });
-
-    model.dispatch("SELECT_SEARCH_NEXT_MATCH");
+    model.dispatch("SELECT_SEARCH_PREVIOUS_MATCH");
     matches = model.getters.getSearchMatches();
     matchIndex = model.getters.getCurrentSelectedMatchIndex();
     expect(getActivePosition(model)).toBe("A2");
     expect(matches).toHaveLength(3);
     expect(matchIndex).toStrictEqual(1);
-    expect(matches[0]).toStrictEqual({ col: 0, row: 0, selected: false });
-    expect(matches[1]).toStrictEqual({ col: 0, row: 1, selected: true });
-    expect(matches[2]).toStrictEqual({ col: 0, row: 2, selected: false });
+    expect(matches[0]).toStrictEqual({ sheetId: "s1", col: 0, row: 0, selected: false });
+    expect(matches[1]).toStrictEqual({ sheetId: "s1", col: 0, row: 1, selected: true });
+    expect(matches[2]).toStrictEqual({ sheetId: "s2", col: 0, row: 2, selected: false });
+
+    model.dispatch("SELECT_SEARCH_PREVIOUS_MATCH");
+    matches = model.getters.getSearchMatches();
+    matchIndex = model.getters.getCurrentSelectedMatchIndex();
+    expect(getActivePosition(model)).toBe("A1");
+    expect(matches).toHaveLength(3);
+    expect(matchIndex).toStrictEqual(0);
+    expect(matches[0]).toStrictEqual({ sheetId: "s1", col: 0, row: 0, selected: true });
+    expect(matches[1]).toStrictEqual({ sheetId: "s1", col: 0, row: 1, selected: false });
+    expect(matches[2]).toStrictEqual({ sheetId: "s2", col: 0, row: 2, selected: false });
   });
-  test("search will cycle with previous", () => {
+
+  test("search will cycle with previous for %s search scope", () => {
+    searchOptions.searchScope = "specificRange";
     model.dispatch("UPDATE_SEARCH", { toSearch: "1", searchOptions });
     let matches = model.getters.getSearchMatches();
     let matchIndex = model.getters.getCurrentSelectedMatchIndex();
-    expect(getActivePosition(model)).toBe("A1");
-    expect(matches).toHaveLength(3);
+    expect(getActivePosition(model)).toBe("A3");
+    expect(matches).toHaveLength(1);
     expect(matchIndex).toStrictEqual(0);
-    expect(matches[0]).toStrictEqual({ col: 0, row: 0, selected: true });
-    expect(matches[1]).toStrictEqual({ col: 0, row: 1, selected: false });
-    expect(matches[2]).toStrictEqual({ col: 0, row: 2, selected: false });
+    expect(matches[0]).toStrictEqual({ sheetId: "s2", col: 0, row: 2, selected: true });
 
     model.dispatch("SELECT_SEARCH_PREVIOUS_MATCH");
     matches = model.getters.getSearchMatches();
     matchIndex = model.getters.getCurrentSelectedMatchIndex();
     expect(getActivePosition(model)).toBe("A3");
-    expect(matches).toHaveLength(3);
-    expect(matchIndex).toStrictEqual(2);
-    expect(matches[0]).toStrictEqual({ col: 0, row: 0, selected: false });
-    expect(matches[1]).toStrictEqual({ col: 0, row: 1, selected: false });
-    expect(matches[2]).toStrictEqual({ col: 0, row: 2, selected: true });
-
-    model.dispatch("SELECT_SEARCH_PREVIOUS_MATCH");
-    matches = model.getters.getSearchMatches();
-    matchIndex = model.getters.getCurrentSelectedMatchIndex();
-    expect(getActivePosition(model)).toBe("A2");
-    expect(matches).toHaveLength(3);
-    expect(matchIndex).toStrictEqual(1);
-    expect(matches[0]).toStrictEqual({ col: 0, row: 0, selected: false });
-    expect(matches[1]).toStrictEqual({ col: 0, row: 1, selected: true });
-    expect(matches[2]).toStrictEqual({ col: 0, row: 2, selected: false });
-
-    model.dispatch("SELECT_SEARCH_PREVIOUS_MATCH");
-    matches = model.getters.getSearchMatches();
-    matchIndex = model.getters.getCurrentSelectedMatchIndex();
-    expect(getActivePosition(model)).toBe("A1");
-    expect(matches).toHaveLength(3);
+    expect(matches).toHaveLength(1);
     expect(matchIndex).toStrictEqual(0);
-    expect(matches[0]).toStrictEqual({ col: 0, row: 0, selected: true });
-    expect(matches[1]).toStrictEqual({ col: 0, row: 1, selected: false });
-    expect(matches[2]).toStrictEqual({ col: 0, row: 2, selected: false });
-
-    model.dispatch("SELECT_SEARCH_PREVIOUS_MATCH");
-    matches = model.getters.getSearchMatches();
-    matchIndex = model.getters.getCurrentSelectedMatchIndex();
-    expect(getActivePosition(model)).toBe("A3");
-    expect(matches).toHaveLength(3);
-    expect(matchIndex).toStrictEqual(2);
-    expect(matches[0]).toStrictEqual({ col: 0, row: 0, selected: false });
-    expect(matches[1]).toStrictEqual({ col: 0, row: 1, selected: false });
-    expect(matches[2]).toStrictEqual({ col: 0, row: 2, selected: true });
+    expect(matches[0]).toStrictEqual({ sheetId: "s2", col: 0, row: 2, selected: true });
   });
 });
 
@@ -300,6 +513,8 @@ describe("next/previous with single match", () => {
       matchCase: false,
       exactMatch: false,
       searchFormulas: false,
+      searchScope: "thisSheet",
+      specificRange: undefined,
     };
     model.dispatch("UPDATE_SEARCH", { toSearch: "1", searchOptions });
     model.dispatch("SELECT_SEARCH_NEXT_MATCH");
@@ -354,6 +569,8 @@ describe("search options", () => {
       matchCase: false,
       exactMatch: false,
       searchFormulas: false,
+      searchScope: "thisSheet",
+      specificRange: undefined,
     };
   });
 
@@ -364,8 +581,8 @@ describe("search options", () => {
     const matchIndex = model.getters.getCurrentSelectedMatchIndex();
     expect(matches).toHaveLength(2);
     expect(matchIndex).toStrictEqual(0);
-    expect(matches[0]).toStrictEqual({ col: 0, row: 1, selected: true });
-    expect(matches[1]).toStrictEqual({ col: 0, row: 4, selected: false });
+    expect(matches[0]).toStrictEqual({ sheetId: "Sheet1", col: 0, row: 1, selected: true });
+    expect(matches[1]).toStrictEqual({ sheetId: "Sheet1", col: 0, row: 4, selected: false });
   });
 
   test("Can search matching entire cell", () => {
@@ -375,8 +592,8 @@ describe("search options", () => {
     const matchIndex = model.getters.getCurrentSelectedMatchIndex();
     expect(matches).toHaveLength(2);
     expect(matchIndex).toStrictEqual(0);
-    expect(matches[0]).toStrictEqual({ col: 0, row: 3, selected: true });
-    expect(matches[1]).toStrictEqual({ col: 0, row: 4, selected: false });
+    expect(matches[0]).toStrictEqual({ sheetId: "Sheet1", col: 0, row: 3, selected: true });
+    expect(matches[1]).toStrictEqual({ sheetId: "Sheet1", col: 0, row: 4, selected: false });
   });
 
   test("Can search in formulas", () => {
@@ -386,8 +603,8 @@ describe("search options", () => {
     const matchIndex = model.getters.getCurrentSelectedMatchIndex();
     expect(matches).toHaveLength(2);
     expect(matchIndex).toStrictEqual(0);
-    expect(matches[0]).toStrictEqual({ col: 0, row: 0, selected: true });
-    expect(matches[1]).toStrictEqual({ col: 0, row: 2, selected: false });
+    expect(matches[0]).toStrictEqual({ sheetId: "Sheet1", col: 0, row: 0, selected: true });
+    expect(matches[1]).toStrictEqual({ sheetId: "Sheet1", col: 0, row: 2, selected: false });
   });
 
   test("Can search in formulas(2)", () => {
@@ -396,7 +613,7 @@ describe("search options", () => {
     let matchIndex = model.getters.getCurrentSelectedMatchIndex();
     expect(matches).toHaveLength(1);
     expect(matchIndex).toStrictEqual(0);
-    expect(matches[0]).toStrictEqual({ col: 0, row: 2, selected: true });
+    expect(matches[0]).toStrictEqual({ sheetId: "Sheet1", col: 0, row: 2, selected: true });
     searchOptions.searchFormulas = true;
     model.dispatch("UPDATE_SEARCH", { toSearch: "4", searchOptions });
     matches = model.getters.getSearchMatches();
@@ -411,10 +628,10 @@ describe("search options", () => {
     let matchIndex = model.getters.getCurrentSelectedMatchIndex();
     expect(matches).toHaveLength(4);
     expect(matchIndex).toStrictEqual(0);
-    expect(matches[0]).toStrictEqual({ col: 0, row: 0, selected: true });
-    expect(matches[1]).toStrictEqual({ col: 0, row: 1, selected: false });
-    expect(matches[2]).toStrictEqual({ col: 0, row: 3, selected: false });
-    expect(matches[3]).toStrictEqual({ col: 0, row: 4, selected: false });
+    expect(matches[0]).toStrictEqual({ sheetId: "Sheet1", col: 0, row: 0, selected: true });
+    expect(matches[1]).toStrictEqual({ sheetId: "Sheet1", col: 0, row: 1, selected: false });
+    expect(matches[2]).toStrictEqual({ sheetId: "Sheet1", col: 0, row: 3, selected: false });
+    expect(matches[3]).toStrictEqual({ sheetId: "Sheet1", col: 0, row: 4, selected: false });
 
     //match case
     searchOptions.matchCase = true;
@@ -423,8 +640,8 @@ describe("search options", () => {
     matchIndex = model.getters.getCurrentSelectedMatchIndex();
     expect(matches).toHaveLength(2);
     expect(matchIndex).toStrictEqual(0);
-    expect(matches[0]).toStrictEqual({ col: 0, row: 0, selected: true });
-    expect(matches[1]).toStrictEqual({ col: 0, row: 3, selected: false });
+    expect(matches[0]).toStrictEqual({ sheetId: "Sheet1", col: 0, row: 0, selected: true });
+    expect(matches[1]).toStrictEqual({ sheetId: "Sheet1", col: 0, row: 3, selected: false });
 
     //match case + exact match
     searchOptions.matchCase = true;
@@ -434,7 +651,7 @@ describe("search options", () => {
     matchIndex = model.getters.getCurrentSelectedMatchIndex();
     expect(matches).toHaveLength(1);
     expect(matchIndex).toStrictEqual(0);
-    expect(matches[0]).toStrictEqual({ col: 0, row: 3, selected: true });
+    expect(matches[0]).toStrictEqual({ sheetId: "Sheet1", col: 0, row: 3, selected: true });
 
     //change input and remove match case + exact match and add look in formula
     searchOptions.searchFormulas = true;
@@ -445,8 +662,8 @@ describe("search options", () => {
     matchIndex = model.getters.getCurrentSelectedMatchIndex();
     expect(matches).toHaveLength(2);
     expect(matchIndex).toStrictEqual(0);
-    expect(matches[0]).toStrictEqual({ col: 0, row: 0, selected: true });
-    expect(matches[1]).toStrictEqual({ col: 0, row: 2, selected: false });
+    expect(matches[0]).toStrictEqual({ sheetId: "Sheet1", col: 0, row: 0, selected: true });
+    expect(matches[1]).toStrictEqual({ sheetId: "Sheet1", col: 0, row: 2, selected: false });
 
     //add match case
     searchOptions.matchCase = true;
@@ -455,20 +672,31 @@ describe("search options", () => {
     matchIndex = model.getters.getCurrentSelectedMatchIndex();
     expect(matches).toHaveLength(1);
     expect(matchIndex).toStrictEqual(0);
-    expect(matches[0]).toStrictEqual({ col: 0, row: 2, selected: true });
+    expect(matches[0]).toStrictEqual({ sheetId: "Sheet1", col: 0, row: 2, selected: true });
   });
 });
+
 describe("replace", () => {
   beforeEach(() => {
-    model = new Model();
+    const sheet1 = "s1";
+    model = new Model({ sheets: [{ id: sheet1 }] });
     setCellContent(model, "A1", "hello");
     setCellContent(model, "A2", "=SUM(2,2)");
     setCellContent(model, "A3", "hell");
     setCellContent(model, "A4", "hell");
+    const sheet2 = "s2";
+    createSheet(model, { activate: true, sheetId: sheet2 });
+    setCellContent(model, "A1", "hello");
+    setCellContent(model, "A2", "=SUM(2,2)");
+    setCellContent(model, "A3", "hell");
+    setCellContent(model, "A4", "hell");
+    activateSheet(model, "s1");
     searchOptions = {
       matchCase: false,
       exactMatch: false,
       searchFormulas: false,
+      searchScope: "thisSheet",
+      specificRange: undefined,
     };
   });
 
@@ -503,7 +731,7 @@ describe("replace", () => {
     expect(getCellText(model, "A2")).toBe("=SUM(2,2)");
   });
 
-  test("can replace all", () => {
+  test("can replace all in thisSheet", () => {
     model.dispatch("UPDATE_SEARCH", { toSearch: "hell", searchOptions });
     model.dispatch("REPLACE_ALL_SEARCH", { replaceWith: "kikou" });
     const matches = model.getters.getSearchMatches();
@@ -514,5 +742,51 @@ describe("replace", () => {
     expect(getCellText(model, "A2")).toBe("=SUM(2,2)");
     expect(getCellContent(model, "A3")).toBe("kikou");
     expect(getCellContent(model, "A4")).toBe("kikou");
+    activateSheet(model, "s2");
+    expect(getCellContent(model, "A1")).toBe("hello");
+    expect(getCellText(model, "A2")).toBe("=SUM(2,2)");
+    expect(getCellContent(model, "A3")).toBe("hell");
+    expect(getCellContent(model, "A4")).toBe("hell");
+  });
+
+  test("can replace all in allSheet", () => {
+    searchOptions.searchScope = "allSheets";
+    model.dispatch("UPDATE_SEARCH", { toSearch: "hell", searchOptions });
+    model.dispatch("REPLACE_ALL_SEARCH", { replaceWith: "kikou" });
+    const matches = model.getters.getSearchMatches();
+    const matchIndex = model.getters.getCurrentSelectedMatchIndex();
+    expect(matches).toHaveLength(0);
+    expect(matchIndex).toStrictEqual(null);
+    expect(getCellContent(model, "A1")).toBe("kikouo");
+    expect(getCellText(model, "A2")).toBe("=SUM(2,2)");
+    expect(getCellContent(model, "A3")).toBe("kikou");
+    expect(getCellContent(model, "A4")).toBe("kikou");
+    activateSheet(model, "s2");
+    expect(getCellContent(model, "A1")).toBe("kikouo");
+    expect(getCellText(model, "A2")).toBe("=SUM(2,2)");
+    expect(getCellContent(model, "A3")).toBe("kikou");
+    expect(getCellContent(model, "A4")).toBe("kikou");
+  });
+
+  test("can replace all in specificRange", () => {
+    searchOptions.searchScope = "specificRange";
+    const sheetId = model.getters.getActiveSheetId();
+    searchOptions.specificRange = model.getters.getRangeFromSheetXC(sheetId, "Sheet2!A1:A3");
+    model.dispatch("UPDATE_SEARCH", { toSearch: "hell", searchOptions });
+    model.dispatch("REPLACE_ALL_SEARCH", { replaceWith: "kikou" });
+    const matches = model.getters.getSearchMatches();
+    const matchIndex = model.getters.getCurrentSelectedMatchIndex();
+    expect(matches).toHaveLength(0);
+    expect(matchIndex).toStrictEqual(null);
+    activateSheet(model, "s1");
+    expect(getCellContent(model, "A1")).toBe("hello");
+    expect(getCellText(model, "A2")).toBe("=SUM(2,2)");
+    expect(getCellContent(model, "A3")).toBe("hell");
+    expect(getCellContent(model, "A4")).toBe("hell");
+    activateSheet(model, "s2");
+    expect(getCellContent(model, "A1")).toBe("kikouo");
+    expect(getCellText(model, "A2")).toBe("=SUM(2,2)");
+    expect(getCellContent(model, "A3")).toBe("kikou");
+    expect(getCellContent(model, "A4")).toBe("hell");
   });
 });

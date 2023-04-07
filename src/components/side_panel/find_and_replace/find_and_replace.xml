@@ -12,6 +12,7 @@
             type="text"
             class="o-input o-input-with-count"
             t-on-input="onInput"
+            t-on-focusin="onFocusSearch"
             t-on-keydown="onKeydownSearch"
           />
           <div class="o-input-count" t-if="hasSearchResult">
@@ -20,6 +21,23 @@
             <t t-esc="env.model.getters.getSearchMatches().length"/>
           </div>
           <div t-elif="!pendingSearch and state.toSearch !== ''" class="o-input-count">0 / 0</div>
+        </div>
+        <select
+          class="o-input o-type-selector o-type-range-selector mt-3 mb-3"
+          t-model="state.searchOptions.searchScope"
+          t-on-change="updateSearch">
+          <option value="allSheets">All sheets</option>
+          <option value="thisSheet">This sheet</option>
+          <option value="specificRange">Specific range</option>
+        </select>
+        <div t-if="state.searchOptions.searchScope === 'specificRange'" t-ref="selectionInput">
+          <SelectionInput
+            ranges="dataRange"
+            onSelectionChanged="(ranges) => this.onSearchRangeChanged(ranges)"
+            onSelectionConfirmed="() => this.updateDataRange()"
+            hasSingleRange="true"
+            required="true"
+          />
         </div>
         <div>
           <!-- TODO: go through this css, the group misses a padding and could profit from BootStrap -->
@@ -62,13 +80,15 @@
         <button
           t-att-disabled="!hasSearchResult"
           t-on-click="onSelectPreviousCell"
-          class="o-sidePanelButton">
+          class="o-sidePanelButton"
+          name="prev">
           Previous
         </button>
         <button
           t-att-disabled="!hasSearchResult"
           t-on-click="onSelectNextCell"
-          class="o-sidePanelButton">
+          class="o-sidePanelButton"
+          name="next">
           Next
         </button>
       </div>
@@ -88,7 +108,8 @@
         <button
           t-att-disabled="env.model.getters.getCurrentSelectedMatchIndex() === null"
           t-on-click="replace"
-          class="o-sidePanelButton">
+          class="o-sidePanelButton"
+          name="replace">
           Replace
         </button>
         <button

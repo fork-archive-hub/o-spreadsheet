@@ -1,4 +1,5 @@
-import { escapeRegExp } from "../../helpers";
+import { SPECIFIC_RANGE_BORDER_COLOR } from "../../constants";
+import { escapeRegExp, RangeImpl } from "../../helpers";
 import {
   CellPosition,
   Color,
@@ -6,7 +7,7 @@ import {
   GridRenderingContext,
   HeaderIndex,
   LAYERS,
-  Position,
+  UID,
 } from "../../types/index";
 import { UIPlugin } from "../ui_plugin";
 
@@ -17,6 +18,8 @@ export interface SearchOptions {
   matchCase: boolean;
   exactMatch: boolean;
   searchFormulas: boolean;
+  searchScope: "allSheets" | "thisSheet" | "specificRange";
+  specificRange: RangeImpl | undefined;
 }
 
 enum Direction {
@@ -26,6 +29,7 @@ enum Direction {
 }
 
 interface SearchMatch {
+  sheetId: string;
   selected: boolean;
   col: HeaderIndex;
   row: HeaderIndex;
@@ -51,8 +55,11 @@ export class FindAndReplacePlugin extends UIPlugin {
     matchCase: false,
     exactMatch: false,
     searchFormulas: false,
+    searchScope: "allSheets",
+    specificRange: undefined,
   };
   private toSearch: string = "";
+  private selectedMatchOffset: number = 0;
 
   // ---------------------------------------------------------------------------
   // Command Handling
@@ -84,8 +91,9 @@ export class FindAndReplacePlugin extends UIPlugin {
       case "ADD_COLUMNS_ROWS":
         this.clearSearch();
         break;
-      case "ACTIVATE_SHEET":
-      case "REFRESH_SEARCH":
+      case "UPDATE_CELL":
+      case "HIDE_COLUMNS_ROWS":
+      case "UNHIDE_COLUMNS_ROWS":
         this.refreshSearch();
         break;
     }
@@ -117,7 +125,9 @@ export class FindAndReplacePlugin extends UIPlugin {
     this.toSearch = toSearch;
     this.updateRegex();
     this.refreshSearch();
+    this.selectNextCell(Direction.current);
   }
+
   /**
    * refresh the matches according to the current search options
    */
@@ -126,6 +136,7 @@ export class FindAndReplacePlugin extends UIPlugin {
     this.searchMatches = matches;
     this.selectNextCell(Direction.current);
   }
+
   /**
    * Updates the regex based on the current searchOptions and
    * the value toSearch
@@ -138,35 +149,92 @@ export class FindAndReplacePlugin extends UIPlugin {
     }
     this.currentSearchRegex = RegExp(searchValue, flags);
   }
+
+  private getSearchSheets() {
+    let sheets: UID[] = [];
+    switch (this.searchOptions.searchScope) {
+      case "allSheets":
+        sheets = this.getters.getSheetIds();
+        const activeSheetIndex = sheets.findIndex((id) => id === this.getters.getActiveSheetId());
+        sheets = [
+          sheets[activeSheetIndex],
+          ...sheets.slice(activeSheetIndex + 1),
+          ...sheets.slice(0, activeSheetIndex),
+        ];
+        break;
+      case "thisSheet":
+        sheets = [this.getters.getActiveSheetId()];
+        break;
+      case "specificRange":
+        const specificRange = this.searchOptions.specificRange;
+        if (!specificRange) {
+          return [];
+        }
+        sheets = [specificRange.sheetId];
+        break;
+    }
+    return sheets;
+  }
+
   /**
    * Find matches using the current regex
    */
   private findMatches() {
-    const sheetId = this.getters.getActiveSheetId();
-    const cells = this.getters.getCells(sheetId);
     const matches: SearchMatch[] = [];
+    let sheets: UID[];
+    const specificRange = this.searchOptions.specificRange;
+    if (!this.toSearch) {
+      return matches;
+    }
 
-    if (this.toSearch) {
-      for (const cell of Object.values(cells)) {
-        const { col, row } = this.getters.getCellPosition(cell.id);
-        if (
-          cell &&
-          this.currentSearchRegex &&
-          this.currentSearchRegex.test(this.getSearchableString({ sheetId, col, row }))
-        ) {
-          const match: SearchMatch = { col, row, selected: false };
+    sheets = this.getSearchSheets();
+
+    for (const sheetId of sheets) {
+      matches.push(...this.findMatchesInSheet(sheetId, specificRange));
+    }
+    matches.sort((a, b) => this.sortBySheetinitialStateIndexThenRowThenColumn(a, b));
+
+    const activeMatchIndex = matches.findIndex(
+      (match) => match.sheetId === this.getters.getActiveSheetId()
+    );
+    this.selectedMatchOffset = activeMatchIndex;
+
+    return matches;
+  }
+
+  private findMatchesInSheet(sheetId: string, specificRange?: RangeImpl) {
+    const matches: SearchMatch[] = [];
+    const rangeData =
+      this.searchOptions.searchScope === "specificRange" && specificRange
+        ? specificRange.zone
+        : this.getters.getSheetZone(sheetId);
+
+    if (!this.currentSearchRegex) {
+      return [];
+    }
+
+    for (let row = rangeData.top; row <= rangeData.bottom; row++) {
+      for (let col = rangeData.left; col <= rangeData.right; col++) {
+        const position: CellPosition = { sheetId, col, row };
+        if (this.currentSearchRegex.test(this.getSearchableString(position))) {
+          const match: SearchMatch = { sheetId, col, row, selected: false };
           matches.push(match);
         }
       }
     }
-    return matches.sort(this.sortByRowThenColumn);
+
+    return matches;
   }
 
-  private sortByRowThenColumn(a: Position, b: Position) {
-    if (a.row === b.row) {
-      return a.col - b.col;
-    }
-    return a.row > b.row ? 1 : -1;
+  private sortBySheetinitialStateIndexThenRowThenColumn(a: SearchMatch, b: SearchMatch) {
+    return a.sheetId !== b.sheetId
+      ? this.getters.getSheetIds().indexOf(a.sheetId) -
+          this.getters.getSheetIds().indexOf(b.sheetId)
+      : a.row === b.row
+      ? a.col - b.col
+      : a.row > b.row
+      ? 1
+      : -1;
   }
 
   /**
@@ -185,14 +253,23 @@ export class FindAndReplacePlugin extends UIPlugin {
     }
     let nextIndex: number;
     if (this.selectedMatchIndex === null) {
-      nextIndex = 0;
+      nextIndex = this.selectedMatchOffset;
     } else {
       nextIndex = this.selectedMatchIndex + indexChange;
     }
-    //modulo of negative value to be able to cycle in both directions with previous and next
+    // modulo of negative value to be able to cycle in both directions with previous and next
     nextIndex = ((nextIndex % matches.length) + matches.length) % matches.length;
     this.selectedMatchIndex = nextIndex;
-    this.selection.selectCell(matches[nextIndex].col, matches[nextIndex].row);
+    const selectedMatch = matches[nextIndex];
+
+    // Switch to the sheet where the match is located
+    if (this.getters.getActiveSheetId() !== selectedMatch.sheetId) {
+      this.dispatch("ACTIVATE_SHEET", {
+        sheetIdFrom: this.getters.getActiveSheetId(),
+        sheetIdTo: selectedMatch.sheetId,
+      });
+    }
+    this.selection.selectCell(selectedMatch.col, selectedMatch.row);
     for (let index = 0; index < this.searchMatches.length; index++) {
       this.searchMatches[index].selected = index === this.selectedMatchIndex;
     }
@@ -207,6 +284,8 @@ export class FindAndReplacePlugin extends UIPlugin {
       matchCase: false,
       exactMatch: false,
       searchFormulas: false,
+      searchScope: "allSheets",
+      specificRange: undefined,
     };
   }
 
@@ -217,36 +296,32 @@ export class FindAndReplacePlugin extends UIPlugin {
    * Replace the value of the currently selected match
    */
   private replace(replaceWith: string) {
-    if (this.selectedMatchIndex === null || !this.currentSearchRegex) {
+    if (this.selectedMatchIndex === null || !this.toSearch) {
       return;
     }
     const matches = this.searchMatches;
     const selectedMatch = matches[this.selectedMatchIndex];
-    const sheetId = this.getters.getActiveSheetId();
-    const cell = this.getters.getCell({ sheetId, ...selectedMatch });
+    const cell = this.getters.getCell(selectedMatch);
     if (cell?.isFormula && !this.searchOptions.searchFormulas) {
-      this.selectNextCell(Direction.next);
-    } else {
-      const replaceRegex = new RegExp(
-        this.currentSearchRegex.source,
-        this.currentSearchRegex.flags + "g"
-      );
-      const toReplace: string | null = this.getSearchableString({
-        sheetId,
-        col: selectedMatch.col,
-        row: selectedMatch.row,
-      });
-      const newContent = toReplace.replace(replaceRegex, replaceWith);
-      this.dispatch("UPDATE_CELL", {
-        sheetId: this.getters.getActiveSheetId(),
-        col: selectedMatch.col,
-        row: selectedMatch.row,
-        content: newContent,
-      });
-      this.searchMatches.splice(this.selectedMatchIndex, 1);
-      this.selectNextCell(Direction.current);
+      return this.selectNextCell(Direction.next);
     }
+    const toReplace: string | null = this.getSearchableString(selectedMatch);
+    const newContent = toReplace.replaceAll(this.toSearch, replaceWith);
+    this.dispatch("UPDATE_CELL", {
+      sheetId: selectedMatch.sheetId,
+      col: selectedMatch.col,
+      row: selectedMatch.row,
+      content: newContent,
+    });
+    if (this.selectedMatchIndex !== null) {
+      this.searchMatches.splice(this.selectedMatchIndex, 0);
+    }
+    if (this.searchMatches.length === 0) {
+      this.selectedMatchIndex = null;
+    }
+    this.selectNextCell(Direction.current);
   }
+
   /**
    * Apply the replace function to all the matches one time.
    */
@@ -258,11 +333,23 @@ export class FindAndReplacePlugin extends UIPlugin {
   }
 
   private getSearchableString(position: CellPosition): string {
+    const { sheetId, col, row } = position;
     const cell = this.getters.getCell(position);
-    if (this.searchOptions.searchFormulas && cell?.isFormula) {
-      return cell.content;
+    if (!cell) {
+      return "";
     }
-    return this.getters.getEvaluatedCell(position).formattedValue;
+
+    const isColHidden = this.getters.isColHidden(sheetId, col);
+    const isRowHidden = this.getters.isRowHidden(sheetId, row);
+
+    if (isColHidden || isRowHidden) {
+      return "";
+    }
+
+    if (!this.searchOptions.searchFormulas && cell.isFormula) {
+      return this.getters.getEvaluatedCell(position).formattedValue;
+    }
+    return cell.content;
   }
 
   // ---------------------------------------------------------------------------
@@ -274,6 +361,10 @@ export class FindAndReplacePlugin extends UIPlugin {
     const sheetId = this.getters.getActiveSheetId();
 
     for (const match of this.searchMatches) {
+      if (match.sheetId !== sheetId) {
+        continue; // Skip drawing matches from other sheets
+      }
+
       const merge = this.getters.getMerge({ sheetId, col: match.col, row: match.row });
       const left = merge ? merge.left : match.col;
       const right = merge ? merge.right : match.col;
@@ -287,6 +378,17 @@ export class FindAndReplacePlugin extends UIPlugin {
           ctx.strokeStyle = BORDER_COLOR;
           ctx.strokeRect(x, y, width, height);
         }
+      }
+    }
+    if (this.searchOptions.specificRange && this.searchOptions.specificRange.sheetId === sheetId) {
+      const selectedZone = this.searchOptions.specificRange.zone;
+      if (this.searchOptions.searchScope === "specificRange") {
+        if (!selectedZone) {
+          return;
+        }
+        const { x, y, width, height } = this.getters.getVisibleRect(selectedZone);
+        ctx.strokeStyle = SPECIFIC_RANGE_BORDER_COLOR;
+        ctx.strokeRect(x, y, width, height);
       }
     }
   }

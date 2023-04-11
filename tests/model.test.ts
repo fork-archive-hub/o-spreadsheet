@@ -124,6 +124,20 @@ describe("Model", () => {
     expect(receivedCommands).not.toContain("COPY");
   });
 
+  test("Core plugins allowDispatch don't receive UI commands", () => {
+    const receivedCommands: CommandTypes[] = [];
+    class MyCorePlugin extends CorePlugin {
+      allowDispatch(cmd: CoreCommand): CommandResult {
+        receivedCommands.push(cmd.type);
+        return CommandResult.Success;
+      }
+    }
+    corePluginRegistry.add("myCorePlugin", MyCorePlugin);
+    const model = new Model();
+    model.dispatch("COPY");
+    expect(receivedCommands).not.toContain("COPY");
+  });
+
   test("Can open a model in readonly mode", () => {
     const model = new Model({}, { mode: "readonly" });
     expect(model.getters.isReadonly()).toBe(true);

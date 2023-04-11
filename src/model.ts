@@ -271,8 +271,12 @@ export class Model extends EventBus<any> implements CommandDispatcher {
     return [...this.coreHandlers, ...this.allUIPlugins, this.history];
   }
 
-  get coreHandlers(): CommandHandler<Command>[] {
+  get coreHandlers(): CommandHandler<CoreCommand>[] {
     return [this.range, ...this.corePlugins];
+  }
+
+  get uiHandlers(): CommandHandler<Command>[] {
+    return [...this.allUIPlugins, this.history];
   }
 
   get allUIPlugins(): UIPlugin[] {
@@ -436,7 +440,7 @@ export class Model extends EventBus<any> implements CommandDispatcher {
   }
 
   private checkDispatchAllowedLocalCommand(command: LocalCommand): DispatchResult {
-    const results = this.handlers.map((handler) => handler.allowDispatch(command));
+    const results = this.uiHandlers.map((handler) => handler.allowDispatch(command));
     return new DispatchResult(results.flat());
   }
 

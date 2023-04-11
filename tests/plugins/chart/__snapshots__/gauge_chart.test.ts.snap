@@ -64,16 +64,12 @@ exports[`datasource tests create a gauge chart 1`] = `
         "fontStyle": "normal",
         "text": "Title",
       },
-<<<<<<< HEAD
-      "tooltips": Object {
-        "callbacks": Object {
+      "tooltips": {
+        "callbacks": {
           "label": [Function],
         },
       },
-      "valueLabel": Object {
-=======
       "valueLabel": {
->>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
         "backgroundColor": "#000000",
         "borderRadius": 5,
         "bottomMarginPercentage": 5,
@@ -158,16 +154,12 @@ exports[`datasource tests create empty gauge chart 1`] = `
         "fontStyle": "normal",
         "text": "",
       },
-<<<<<<< HEAD
-      "tooltips": Object {
-        "callbacks": Object {
+      "tooltips": {
+        "callbacks": {
           "label": [Function],
         },
       },
-      "valueLabel": Object {
-=======
       "valueLabel": {
->>>>>>> 4cca20db ([IMP] packages: upgrade jest to version 29)
         "backgroundColor": "#000000",
         "borderRadius": 5,
         "bottomMarginPercentage": 5,

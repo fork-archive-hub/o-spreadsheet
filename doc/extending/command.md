@@ -34,3 +34,18 @@ To declare that a new command should be executed in readonly mode, its type shou
 const { readonlyAllowedCommands } = o_spreadsheet;
 readonlyAllowedCommands.add("MY_COMMAND_NAME");
 ```
+
+## Reserved keywords in commands
+
+Some parameters in command payload are reserved, and should always have the same meaning and type each time they appear in a command. Those are :
+
+- `sheetId` : should be a string that is an id of a valid sheet
+- `col`/`row`: should be numbers describing a valid sheet position
+- `zone` : should be a valid `Zone`
+- `target` : should be a valid array of `Zone`
+- `ranges`: should be a valid array of `RangeData`
+
+The validity of these parameters will be tested in the `allowDispatch` of `SheetPlugin` and `SheetUIPlugin`.
+A `sheetId` is valid if the sheet it refers to exists. The other parameters are valid if they describe a valid position in the sheet. For local commands, if `sheetId` is not in the command, the active sheet id will be used instead to check the validity of a position.
+
+An exception is made for the `sheetId` parameter of the `CREATE_SHEET` command, that isn't checked since the sheet doesn't exist yet.

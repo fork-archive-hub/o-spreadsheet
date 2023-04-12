@@ -8,6 +8,7 @@ type ColorPickerId = undefined | "backgroundColor" | "baselineColorUp" | "baseli
 interface Props {
   figureId: UID;
   definition: ScorecardChartDefinition;
+  canUpdateChart: (definition: Partial<ScorecardChartDefinition>) => DispatchResult;
   updateChart: (definition: Partial<ScorecardChartDefinition>) => DispatchResult;
 }
 
@@ -69,4 +70,5 @@ ScorecardChartDesignPanel.props = {
   figureId: String,
   definition: Object,
   updateChart: Function,
+  canUpdateChart: Function,
 };

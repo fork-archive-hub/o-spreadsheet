@@ -1,4 +1,4 @@
-import { Component, useExternalListener, useState } from "@odoo/owl";
+import { Component, onWillUpdateProps, useExternalListener, useState } from "@odoo/owl";
 import { deepCopy } from "../../../../helpers/index";
 import { GaugeChartDefinition, SectionRule } from "../../../../types/chart/gauge_chart";
 import {
@@ -10,6 +10,7 @@ import {
 } from "../../../../types/index";
 import { css } from "../../../helpers/css";
 import { ChartTerms } from "../../../translations_terms";
+import { SidePanelErrors } from "../../side_panel_errors/side_panel_errors";
 import { ColorPickerWidget } from "./../../../color_picker/color_picker_widget";
 
 css/* scss */ `
@@ -53,25 +54,32 @@ type GaugeMenu =
 interface Props {
   figureId: UID;
   definition: GaugeChartDefinition;
+  canUpdateChart: (definition: Partial<GaugeChartDefinition>) => DispatchResult;
   updateChart: (definition: Partial<GaugeChartDefinition>) => DispatchResult;
 }
 
 interface PanelState {
   openedMenu?: GaugeMenu;
   sectionRuleDispatchResult?: DispatchResult;
+  sectionRule: SectionRule;
 }
 
 export class GaugeChartDesignPanel extends Component<Props, SpreadsheetChildEnv> {
   static template = "o-spreadsheet-GaugeChartDesignPanel";
-  static components = { ColorPickerWidget };
+  static components = { ColorPickerWidget, SidePanelErrors };
 
   private state: PanelState = useState({
     openedMenu: undefined,
     sectionRuleDispatchResult: undefined,
+    sectionRule: deepCopy(this.props.definition.sectionRule),
   });
 
   setup() {
     useExternalListener(window, "click", this.closeMenus);
+    onWillUpdateProps(() => {
+      this.state.sectionRule = deepCopy(this.props.definition.sectionRule);
+      this.canUpdateSectionRule(this.state.sectionRule);
+    });
   }
 
   get designErrorMessages(): string[] {
@@ -146,6 +154,12 @@ export class GaugeChartDesignPanel extends Component<Props, SpreadsheetChildEnv>
     this.updateSectionRule(sectionRule);
   }
 
+  canUpdateInflectionPointValue(attr: string, ev) {
+    const sectionRule = deepCopy(this.props.definition.sectionRule);
+    sectionRule[attr].value = ev.target.value;
+    this.canUpdateSectionRule(sectionRule);
+  }
+
   updateInflectionPointType(attr: string, ev) {
     const sectionRule = deepCopy(this.props.definition.sectionRule);
     sectionRule[attr].type = ev.target.value;
@@ -168,7 +182,25 @@ export class GaugeChartDesignPanel extends Component<Props, SpreadsheetChildEnv>
     this.updateSectionRule(sectionRule);
   }
 
+  canUpdateRangeMin(ev) {
+    let sectionRule = deepCopy(this.props.definition.sectionRule);
+    sectionRule = {
+      ...sectionRule,
+      rangeMin: ev.target.value,
+    };
+    this.canUpdateSectionRule(sectionRule);
+  }
+
   updateRangeMax(ev) {
+    let sectionRule = deepCopy(this.props.definition.sectionRule);
+    sectionRule = {
+      ...sectionRule,
+      rangeMax: ev.target.value,
+    };
+    this.updateSectionRule(sectionRule);
+  }
+
+  canUpdateRangeMax(ev) {
     let sectionRule = deepCopy(this.props.definition.sectionRule);
     sectionRule = {
       ...sectionRule,
@@ -191,6 +223,12 @@ export class GaugeChartDesignPanel extends Component<Props, SpreadsheetChildEnv>
     });
   }
 
+  private canUpdateSectionRule(sectionRule: SectionRule) {
+    this.state.sectionRuleDispatchResult = this.props.canUpdateChart({
+      sectionRule,
+    });
+  }
+
   private closeMenus() {
     this.state.openedMenu = undefined;
   }
@@ -200,4 +238,5 @@ GaugeChartDesignPanel.props = {
   figureId: String,
   definition: Object,
   updateChart: Function,
+  canUpdateChart: Function,
 };

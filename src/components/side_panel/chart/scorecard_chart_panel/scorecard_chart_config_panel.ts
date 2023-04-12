@@ -3,10 +3,12 @@ import { ScorecardChartDefinition } from "../../../../types/chart/scorecard_char
 import { CommandResult, DispatchResult, SpreadsheetChildEnv, UID } from "../../../../types/index";
 import { SelectionInput } from "../../../selection_input/selection_input";
 import { ChartTerms } from "../../../translations_terms";
+import { SidePanelErrors } from "../../side_panel_errors/side_panel_errors";
 
 interface Props {
   figureId: UID;
   definition: ScorecardChartDefinition;
+  canUpdateChart: (definition: Partial<ScorecardChartDefinition>) => DispatchResult;
   updateChart: (definition: Partial<ScorecardChartDefinition>) => DispatchResult;
 }
 
@@ -17,7 +19,7 @@ interface PanelState {
 
 export class ScorecardChartConfigPanel extends Component<Props, SpreadsheetChildEnv> {
   static template = "o-spreadsheet-ScorecardChartConfigPanel";
-  static components = { SelectionInput };
+  static components = { SelectionInput, SidePanelErrors };
 
   private state: PanelState = useState({
     keyValueDispatchResult: undefined,
@@ -51,6 +53,9 @@ export class ScorecardChartConfigPanel extends Component<Props, SpreadsheetChild
 
   onKeyValueRangeChanged(ranges: string[]) {
     this.keyValue = ranges[0];
+    this.state.keyValueDispatchResult = this.props.canUpdateChart({
+      keyValue: this.keyValue,
+    });
   }
 
   updateKeyValueRange() {
@@ -61,6 +66,9 @@ export class ScorecardChartConfigPanel extends Component<Props, SpreadsheetChild
 
   onBaselineRangeChanged(ranges: string[]) {
     this.baseline = ranges[0];
+    this.state.baselineDispatchResult = this.props.canUpdateChart({
+      baseline: this.baseline,
+    });
   }
 
   updateBaselineRange() {
@@ -78,4 +86,5 @@ ScorecardChartConfigPanel.props = {
   figureId: String,
   definition: Object,
   updateChart: Function,
+  canUpdateChart: Function,
 };

@@ -50,7 +50,7 @@ function createTestChart(type: string) {
 }
 
 function errorMessages(): string[] {
-  return textContentAll(".o-sidepanel-error div");
+  return textContentAll(".o-sidepanel-error");
 }
 
 let fixture: HTMLElement;
@@ -555,7 +555,7 @@ describe("charts", () => {
     ]);
   });
 
-  describe("Chart error messages", () => {
+  describe("Chart error messages appear and don't need to click confirm", () => {
     test.each([
       ["basicChart", []],
       ["scorecard", []],
@@ -572,7 +572,6 @@ describe("charts", () => {
         await simulateClick(".o-data-labels input");
         setInputValueAndTrigger(".o-data-labels input", "", "input");
         await nextTick();
-        await simulateClick(".o-data-labels .o-selection-ok");
 
         const expectedErrors = expectedResults.map((result) =>
           ChartTerms.Errors[result].toString()
@@ -598,7 +597,6 @@ describe("charts", () => {
         await simulateClick(".o-data-series input");
         setInputValueAndTrigger(".o-data-series input", "This is not valid", "input");
         await nextTick();
-        await simulateClick(".o-data-series .o-selection-ok");
         expect(errorMessages()).toEqual(
           expectedResults.map((result) => ChartTerms.Errors[result].toString())
         );
@@ -620,7 +618,6 @@ describe("charts", () => {
         await simulateClick(".o-data-labels input");
         setInputValueAndTrigger(".o-data-labels input", "this is not valid", "input");
         await nextTick();
-        await simulateClick(".o-data-labels .o-selection-ok");
         expect(errorMessages()).toEqual(
           expectedResults.map((result) => ChartTerms.Errors[result].toString())
         );
@@ -712,8 +709,8 @@ describe("charts", () => {
       });
     });
 
-    test.each(["scorecard"])("error displayed on input fields", async (chartType: string) => {
-      createTestChart(chartType);
+    test("Scorecard > error displayed on input fields", async () => {
+      createTestChart("scorecard");
       await nextTick();
 
       parent.env.model.dispatch("SELECT_FIGURE", { id: chartId });

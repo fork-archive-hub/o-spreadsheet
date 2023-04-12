@@ -100,6 +100,18 @@ export class ChartPanel extends Component<Props, SpreadsheetChildEnv> {
     });
   }
 
+  canUpdateChart<T extends ChartDefinition>(updateDefinition: Partial<T>) {
+    const definition: T = {
+      ...(this.getChartDefinition() as T),
+      ...updateDefinition,
+    };
+    return this.env.model.canDispatch("UPDATE_CHART", {
+      definition,
+      id: this.figureId,
+      sheetId: this.sheetId,
+    });
+  }
+
   onTypeChange(type: ChartType) {
     const context = this.env.model.getters.getContextCreationChart(this.figureId);
     if (!context) {

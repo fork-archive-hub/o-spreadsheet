@@ -7,10 +7,14 @@ import { PieChartDefinition } from "../../../../types/chart/pie_chart";
 import { CommandResult, DispatchResult, SpreadsheetChildEnv, UID } from "../../../../types/index";
 import { SelectionInput } from "../../../selection_input/selection_input";
 import { ChartTerms } from "../../../translations_terms";
+import { SidePanelErrors } from "../../side_panel_errors/side_panel_errors";
 
 interface Props {
   figureId: UID;
   definition: LineChartDefinition | BarChartDefinition | PieChartDefinition;
+  canUpdateChart: (
+    definition: Partial<LineChartDefinition | BarChartDefinition | PieChartDefinition>
+  ) => DispatchResult;
   updateChart: (
     definition: Partial<LineChartDefinition | BarChartDefinition | PieChartDefinition>
   ) => DispatchResult;
@@ -23,7 +27,7 @@ interface ChartPanelState {
 
 export class LineBarPieConfigPanel extends Component<Props, SpreadsheetChildEnv> {
   static template = "o-spreadsheet-LineBarPieConfigPanel";
-  static components = { SelectionInput };
+  static components = { SelectionInput, SidePanelErrors };
 
   private state: ChartPanelState = useState({
     datasetDispatchResult: undefined,
@@ -68,6 +72,9 @@ export class LineBarPieConfigPanel extends Component<Props, SpreadsheetChildEnv>
    */
   onDataSeriesRangesChanged(ranges: string[]) {
     this.dataSeriesRanges = ranges;
+    this.state.datasetDispatchResult = this.props.canUpdateChart({
+      dataSets: this.dataSeriesRanges,
+    });
   }
 
   onDataSeriesConfirmed() {
@@ -82,6 +89,9 @@ export class LineBarPieConfigPanel extends Component<Props, SpreadsheetChildEnv>
    */
   onLabelRangeChanged(ranges: string[]) {
     this.labelRange = ranges[0];
+    this.state.labelsDispatchResult = this.props.canUpdateChart({
+      labelRange: this.labelRange,
+    });
   }
 
   onLabelRangeConfirmed() {
@@ -122,4 +132,5 @@ LineBarPieConfigPanel.props = {
   figureId: String,
   definition: Object,
   updateChart: Function,
+  canUpdateChart: Function,
 };

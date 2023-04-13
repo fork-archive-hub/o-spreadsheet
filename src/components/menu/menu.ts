@@ -103,6 +103,7 @@ export class Menu extends Component<Props, SpreadsheetChildEnv> {
   });
   private menuRef = useRef("menu");
   private position: DOMCoordinates = useAbsoluteBoundingRect(this.menuRef);
+  private closeTimeoutId!: ReturnType<typeof setTimeout>;
 
   setup() {
     useExternalListener(window, "click", this.onExternalClick, { capture: true });
@@ -112,6 +113,8 @@ export class Menu extends Component<Props, SpreadsheetChildEnv> {
         this.closeSubMenu();
       }
     });
+
+    this.cancelCloseSubMenu = this.cancelCloseSubMenu.bind(this);
   }
 
   get menuItemsAndSeparators(): MenuItemOrSeparator[] {
@@ -210,13 +213,22 @@ export class Menu extends Component<Props, SpreadsheetChildEnv> {
     if (!parentMenuEl) return;
     const y = parentMenuEl.getBoundingClientRect().top;
 
-    this.subMenu.position = {
-      x: this.position.x + this.props.depth * MENU_WIDTH,
-      y: y - (this.subMenu.scrollOffset || 0),
+    const openSubMenuFn = () => {
+      this.subMenu.position = {
+        x: this.position.x + this.props.depth * MENU_WIDTH,
+        y: y - (this.subMenu.scrollOffset || 0),
+      };
+      this.subMenu.menuItems = menu.children(this.env);
+      this.subMenu.isOpen = true;
+      this.subMenu.parentMenu = menu;
     };
-    this.subMenu.menuItems = menu.children(this.env);
-    this.subMenu.isOpen = true;
-    this.subMenu.parentMenu = menu;
+
+    if (this.subMenu.isOpen) {
+      // If a submenu is already open, delay the opening of the new submenu
+      this.closeTimeoutId = setTimeout(openSubMenuFn, 100);
+    } else {
+      openSubMenuFn();
+    }
   }
 
   isParentMenu(subMenu: MenuState, menuItem: MenuItem) {
@@ -224,8 +236,14 @@ export class Menu extends Component<Props, SpreadsheetChildEnv> {
   }
 
   closeSubMenu() {
-    this.subMenu.isOpen = false;
-    this.subMenu.parentMenu = undefined;
+    this.closeTimeoutId = setTimeout(() => {
+      this.subMenu.isOpen = false;
+      this.subMenu.parentMenu = undefined;
+    }, 100);
+  }
+
+  cancelCloseSubMenu() {
+    clearTimeout(this.closeTimeoutId);
   }
 
   onClickMenu(menu: MenuItem, menuIndex: number, ev: MouseEvent) {
@@ -239,12 +257,14 @@ export class Menu extends Component<Props, SpreadsheetChildEnv> {
   }
 
   onMouseOver(menu: MenuItem, position: Pixel, ev: MouseEvent) {
-    if (menu.isEnabled(this.env)) {
-      if (this.isRoot(menu)) {
-        this.openSubMenu(menu, position, ev);
-      } else {
-        this.closeSubMenu();
-      }
+    this.cancelCloseSubMenu();
+
+    if (!menu.isEnabled(this.env)) return;
+
+    if (this.isRoot(menu) && menu.children(this.env).length) {
+      this.openSubMenu(menu, position, ev);
+    } else {
+      this.closeSubMenu();
     }
   }
 }

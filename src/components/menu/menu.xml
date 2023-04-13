@@ -7,7 +7,8 @@
         t-on-scroll="onScroll"
         t-on-wheel.stop=""
         t-on-click.stop=""
-        t-on-contextmenu.prevent="">
+        t-on-contextmenu.prevent=""
+        t-on-mouseleave="(ev) => cancelCloseSubMenu()">
         <t t-foreach="menuItemsAndSeparators" t-as="menuItem" t-key="menuItem_index">
           <div t-if="menuItem === 'separator'" class="o-separator"/>
           <t t-else="">

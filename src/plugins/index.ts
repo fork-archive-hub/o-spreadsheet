@@ -18,8 +18,6 @@ import {
   EvaluationChartPlugin,
   EvaluationConditionalFormatPlugin,
   EvaluationPlugin,
-  FilterEvaluationPlugin,
-  SheetViewPlugin,
 } from "./ui_core_views";
 import {
   AutofillPlugin,
@@ -38,7 +36,12 @@ import {
 } from "./ui_feature";
 import { HistoryPlugin } from "./ui_feature/local_history";
 import { UIPluginConstructor } from "./ui_plugin";
-import { ClipboardPlugin, EditionPlugin, GridSelectionPlugin } from "./ui_stateful";
+import {
+  ClipboardPlugin,
+  EditionPlugin,
+  FilterEvaluationPlugin,
+  SheetViewPlugin,
+} from "./ui_stateful";
 
 export const corePluginRegistry = new Registry<CorePluginConstructor>()
   .add("sheet", SheetPlugin)
@@ -72,15 +75,14 @@ export const featurePluginRegistry = new Registry<UIPluginConstructor>()
 
 // Plugins which have a state, but which should not be shared in collaborative
 export const statefulUIPluginRegistry = new Registry<UIPluginConstructor>()
-  .add("selection", GridSelectionPlugin)
+  .add("evaluation_filter", FilterEvaluationPlugin)
+  .add("viewport", SheetViewPlugin)
   .add("clipboard", ClipboardPlugin)
   .add("edition", EditionPlugin);
 
 // Plugins which have a derived state from core data
 export const coreViewsPluginRegistry = new Registry<UIPluginConstructor>()
   .add("evaluation", EvaluationPlugin)
-  .add("evaluation_filter", FilterEvaluationPlugin)
   .add("evaluation_chart", EvaluationChartPlugin)
   .add("evaluation_cf", EvaluationConditionalFormatPlugin)
-  .add("viewport", SheetViewPlugin)
   .add("custom_colors", CustomColorsPlugin);

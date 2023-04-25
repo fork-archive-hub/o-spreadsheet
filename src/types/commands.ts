@@ -9,7 +9,6 @@ import { Image } from "./image";
 import { BorderCommand, ConditionalFormat, Figure, Format, Style, Zone } from "./index";
 import {
   Border,
-  CellPosition,
   Color,
   Dimension,
   HeaderIndex,
@@ -89,19 +88,17 @@ export function isPositionDependent(cmd: CoreCommand): boolean {
   return "col" in cmd && "row" in cmd && "sheetId" in cmd;
 }
 
-export const invalidateEvaluationCommands = new Set<CommandTypes>([
+export const invalidateEvaluationCommands = new Set<CoreViewCommandTypes>([
   "RENAME_SHEET",
   "DELETE_SHEET",
   "CREATE_SHEET",
   "ADD_COLUMNS_ROWS",
   "REMOVE_COLUMNS_ROWS",
-  "DELETE_CELL",
-  "INSERT_CELL",
   "UNDO",
   "REDO",
 ]);
 
-export const invalidateCFEvaluationCommands = new Set<CommandTypes>([
+export const invalidateCFEvaluationCommands = new Set<CoreViewCommandTypes>([
   ...invalidateEvaluationCommands,
   "DUPLICATE_SHEET",
   "EVALUATE_CELLS",
@@ -858,13 +855,6 @@ export interface InsertCellCommand {
   zone: Zone;
 }
 
-export interface PasteCFCommand {
-  type: "PASTE_CONDITIONAL_FORMAT";
-  origin: CellPosition;
-  target: CellPosition;
-  operation: "CUT" | "COPY";
-}
-
 //#endregion
 
 export interface ActivateNextSheetCommand {
@@ -972,7 +962,6 @@ export type LocalCommand =
   | AutoFillCellCommand
   | PasteFromOSClipboardCommand
   | ActivatePaintFormatCommand
-  | PasteCFCommand
   | AutoresizeColumnsCommand
   | AutoresizeRowsCommand
   | MoveColumnsRowsCommand
@@ -1186,3 +1175,11 @@ export interface CoreCommandDispatcher {
 
 export type CommandTypes = Command["type"];
 export type CoreCommandTypes = CoreCommand["type"];
+
+export type CoreViewCommand =
+  | CoreCommand
+  | EvaluateCellsCommand
+  | UndoCommand
+  | RedoCommand
+  | ActivateSheetCommand;
+export type CoreViewCommandTypes = CoreViewCommand["type"];

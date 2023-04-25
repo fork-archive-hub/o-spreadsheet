@@ -366,6 +366,7 @@ export class Model extends EventBus<any> implements CommandDispatcher {
       this.dispatchFromCorePlugin("REDO", { commands });
       this.finalize();
     });
+    this.session.on("snapshot", this, this.finalize);
     // How could we improve communication between the session and UI?
     // It feels weird to have the model piping specific session events to its own bus.
     this.session.on("unexpected-revision-id", this, () => this.trigger("unexpected-revision-id"));

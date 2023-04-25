@@ -108,7 +108,7 @@ export class EvaluationPlugin extends UIPlugin {
   // Getters
   // ---------------------------------------------------------------------------
 
-  evaluateFormula(formulaString: string, sheetId: UID = this.getters.getActiveSheetId()): any {
+  evaluateFormula(sheetId: UID, formulaString: string): any {
     const compiledFormula = compile(formulaString);
     const params = this.getCompilationParameters((cell) =>
       this.getEvaluatedCell(this.getters.getCellPosition(cell.id))

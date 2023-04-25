@@ -21,7 +21,6 @@ import {
   statefulUIPluginRegistry,
 } from "./plugins/index";
 import { UIPlugin, UIPluginConfig, UIPluginConstructor } from "./plugins/ui_plugin";
-import { GridSelectionPlugin } from "./plugins/ui_stateful";
 import {
   SelectionStreamProcessor,
   SelectionStreamProcessorImpl,
@@ -230,10 +229,6 @@ export class Model extends EventBus<any> implements CommandDispatcher {
       this.setupCorePlugin(Plugin, workbookData);
     }
     Object.assign(this.getters, this.coreGetters);
-
-    const selectionPlugin = this.setupUiPlugin(GridSelectionPlugin);
-    this.statefulUIPlugins.push(selectionPlugin);
-    this.handlers.push(selectionPlugin);
 
     for (let Plugin of coreViewsPluginRegistry.getAll()) {
       const plugin = this.setupUiPlugin(Plugin);

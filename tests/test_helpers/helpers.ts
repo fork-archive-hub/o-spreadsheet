@@ -11,6 +11,7 @@ import { MergePlugin } from "../../src/plugins/core/merge";
 import { topbarMenuRegistry } from "../../src/registries";
 import { MenuItemRegistry } from "../../src/registries/menu_items_registry";
 import {
+  CellPosition,
   ChartDefinition,
   ColorScaleMidPointThreshold,
   ColorScaleThreshold,
@@ -614,4 +615,9 @@ export function getStylePropertyInPx(el: HTMLElement, property: string): number 
   const styleProperty = el.style[property] as string;
   if (!styleProperty) return undefined;
   return Number(styleProperty.replace("px", ""));
+}
+
+export function toCellPosition(sheetId: UID, xc: string): CellPosition {
+  const { col, row } = toCartesian(xc);
+  return { sheetId, col, row };
 }

@@ -187,6 +187,7 @@ export const categoriesFunctionListMenuBuilder: ActionBuilder = () => {
       (key) => functions[key].category === category
     );
     return {
+      id: `insert_function_category_${category}`,
       name: category,
       children: createFormulaFunctions(functionsInCategory),
     };
@@ -208,6 +209,7 @@ export const insertSheet: ActionSpec = {
 function createFormulaFunctions(fnNames: string[]): ActionSpec[] {
   return fnNames.sort().map((fnName, i) => {
     return {
+      id: `function_${fnName}`,
       name: fnName,
       sequence: i * 10,
       execute: (env) => env.startCellEdition(`=${fnName}(`),

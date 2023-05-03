@@ -15,7 +15,6 @@ exports[`TopBar component can set cell format 1`] = `
         <div
           class="o-topbar-topleft d-flex"
         >
-          
           <div
             class="o-topbar-menu o-hoverable-button rounded"
             data-id="edit"
@@ -576,6 +575,7 @@ exports[`TopBar component can set cell format 1`] = `
     >
       <div
         class="o-menu"
+        tabindex="-1"
       >
         
         <div
@@ -879,7 +879,6 @@ exports[`TopBar component simple rendering 1`] = `
     <div
       class="o-topbar-topleft d-flex"
     >
-      
       <div
         class="o-topbar-menu o-hoverable-button rounded"
         data-id="edit"

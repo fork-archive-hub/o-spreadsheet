@@ -437,6 +437,7 @@ export class Composer extends Component<ComposerProps, SpreadsheetChildEnv> {
     if (this.env.model.getters.isReadonly()) {
       return;
     }
+    this.composerRef.el?.focus();
     const newSelection = this.contentHelper.getCurrentSelection();
 
     this.env.model.dispatch("STOP_COMPOSER_RANGE_SELECTION");

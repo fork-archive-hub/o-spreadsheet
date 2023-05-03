@@ -3,6 +3,7 @@ import {
   onWillStart,
   onWillUpdateProps,
   useExternalListener,
+  useRef,
   useState,
 } from "@odoo/owl";
 import { Action, ActionSpec, createAction } from "../../actions/action";
@@ -20,7 +21,7 @@ import {
 import { ComposerSelection } from "../../plugins/ui_stateful/edition";
 import { formatNumberMenuItemSpec, topbarComponentRegistry } from "../../registries/index";
 import { topbarMenuRegistry } from "../../registries/menus/topbar_menu_registry";
-import { Color, Pixel, SpreadsheetChildEnv } from "../../types/index";
+import { Color, Pixel, Ref, SpreadsheetChildEnv } from "../../types/index";
 import { ActionButton } from "../action_button/action_button";
 import { BorderEditorWidget } from "../border_editor/border_editor_widget";
 import { ColorPicker } from "../color_picker/color_picker";
@@ -36,6 +37,7 @@ interface State {
   activeTool: string;
   fillColor: string;
   textColor: string;
+  openedMenuId: string | undefined;
 }
 
 interface Props {
@@ -154,6 +156,7 @@ export class TopBar extends Component<Props, SpreadsheetChildEnv> {
     activeTool: "",
     fillColor: "#ffffff",
     textColor: "#000000",
+    openedMenuId: undefined,
   });
   isSelectingMenu = false;
   openedEl: HTMLElement | null = null;
@@ -163,9 +166,48 @@ export class TopBar extends Component<Props, SpreadsheetChildEnv> {
   VIEW = ACTION_VIEW;
   formatNumberMenuItemSpec = formatNumberMenuItemSpec;
   isntToolbarMenu = false;
+  private keyDownMapping!: { [key: string]: Function };
+  private menuRefs: { [menuId: string]: { ref: Ref<HTMLElement>; action: Action } } = {};
 
   setup() {
+    this.menus = topbarMenuRegistry.getMenuItems().filter((menu) => menu.children.length !== 0);
+    this.menus.forEach((menu) => {
+      this.menuRefs[menu.id] = { ref: useRef(menu.id), action: menu };
+    });
+    this.keyDownMapping = {
+      "ALT+F": () => {
+        if (!this.menuRefs["file"]) return;
+        this.openMenu(this.menuRefs["file"].action, this.menuRefs["file"].ref.el!);
+      },
+      "ALT+E": () => {
+        if (!this.menuRefs["edit"]) return;
+        this.openMenu(this.menuRefs["edit"].action, this.menuRefs["edit"].ref.el!);
+      },
+      "ALT+V": () => {
+        if (!this.menuRefs["view"]) return;
+        this.openMenu(this.menuRefs["view"].action, this.menuRefs["view"].ref.el!);
+      },
+      "ALT+I": () => {
+        if (!this.menuRefs["insert"]) return;
+        this.openMenu(this.menuRefs["insert"].action, this.menuRefs["insert"].ref.el!);
+      },
+      "ALT+O": () => {
+        if (!this.menuRefs["format"]) return;
+        this.openMenu(this.menuRefs["format"].action, this.menuRefs["format"].ref.el!);
+      },
+      "ALT+D": () => {
+        if (!this.menuRefs["data"]) return;
+        this.openMenu(this.menuRefs["data"].action, this.menuRefs["data"].ref.el!);
+      },
+      ARROWRIGHT: () => {
+        this.changeActiveMenu("right");
+      },
+      ARROWLEFT: () => {
+        this.changeActiveMenu("left");
+      },
+    };
     useExternalListener(window, "click", this.onExternalClick);
+    useExternalListener(window, "keydown", this.onKeydown);
     onWillStart(() => this.updateCellState());
     onWillUpdateProps(() => this.updateCellState());
   }
@@ -185,7 +227,22 @@ export class TopBar extends Component<Props, SpreadsheetChildEnv> {
     if (this.openedEl === ev.target) {
       return;
     }
+
     this.closeMenus();
+  }
+
+  onKeydown(ev: KeyboardEvent) {
+    let keyDownString = "";
+    if (ev.altKey) keyDownString += "ALT+";
+    keyDownString += ev.key.toUpperCase();
+
+    let handler = this.keyDownMapping[keyDownString];
+    if (handler) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      handler();
+      return;
+    }
   }
 
   onClick() {
@@ -195,7 +252,7 @@ export class TopBar extends Component<Props, SpreadsheetChildEnv> {
 
   onMenuMouseOver(menu: Action, ev: MouseEvent) {
     if (this.isSelectingMenu && this.isntToolbarMenu) {
-      this.openMenu(menu, ev);
+      this.openMenu(menu, ev.target as HTMLElement);
     }
   }
 
@@ -210,7 +267,7 @@ export class TopBar extends Component<Props, SpreadsheetChildEnv> {
     if (this.state.menuState.isOpen && this.isntToolbarMenu) {
       this.closeMenus();
     } else {
-      this.openMenu(menu, ev);
+      this.openMenu(menu, ev.target as HTMLElement);
       this.isntToolbarMenu = true;
     }
   }
@@ -220,13 +277,33 @@ export class TopBar extends Component<Props, SpreadsheetChildEnv> {
       this.closeMenus();
     } else {
       const menu = createAction(menuSpec);
-      this.openMenu(menu, ev);
+      this.openMenu(menu, ev.target as HTMLElement);
       this.isntToolbarMenu = false;
     }
   }
 
-  private openMenu(menu: Action, ev: MouseEvent) {
-    const { left, top, height } = (ev.currentTarget as HTMLElement).getBoundingClientRect();
+  changeActiveMenu(direction?: string) {
+    switch (direction) {
+      case "left": {
+        let currentMenuIndex = this.menus.findIndex((menu) => menu.id === this.state.openedMenuId);
+        if (currentMenuIndex === 0) currentMenuIndex = this.menus.length;
+        const nextMenuId = this.menus[currentMenuIndex - 1].id;
+        this.openMenu(this.menuRefs[nextMenuId].action, this.menuRefs[nextMenuId].ref.el!);
+        break;
+      }
+      case "right": {
+        let currentMenuIndex = this.menus.findIndex((menu) => menu.id === this.state.openedMenuId);
+        if (currentMenuIndex === this.menus.length - 1) currentMenuIndex = -1;
+        const nextMenuId = this.menus[currentMenuIndex + 1].id;
+        this.openMenu(this.menuRefs[nextMenuId].action, this.menuRefs[nextMenuId].ref.el!);
+        break;
+      }
+    }
+  }
+
+  private openMenu(menu: Action, el: HTMLElement) {
+    const { left, top, height } = el!.getBoundingClientRect();
+    this.state.openedMenuId = menu.id;
     this.state.activeTool = "";
     this.state.menuState.isOpen = true;
     this.state.menuState.position = { x: left, y: top + height };
@@ -235,7 +312,7 @@ export class TopBar extends Component<Props, SpreadsheetChildEnv> {
       .sort((a, b) => a.sequence - b.sequence);
     this.state.menuState.parentMenu = menu;
     this.isSelectingMenu = true;
-    this.openedEl = ev.target as HTMLElement;
+    this.openedEl = el;
     this.env.model.dispatch("STOP_EDITION");
   }
 
@@ -243,15 +320,16 @@ export class TopBar extends Component<Props, SpreadsheetChildEnv> {
     this.state.activeTool = "";
     this.state.menuState.isOpen = false;
     this.state.menuState.parentMenu = undefined;
+    this.state.openedMenuId = undefined;
     this.isSelectingMenu = false;
     this.openedEl = null;
+    this.props.onClick();
   }
 
   updateCellState() {
     const style = this.env.model.getters.getCurrentStyle();
     this.state.fillColor = style.fillColor || "#ffffff";
     this.state.textColor = style.textColor || "#000000";
-    this.menus = topbarMenuRegistry.getMenuItems();
   }
 
   getMenuName(menu: Action) {

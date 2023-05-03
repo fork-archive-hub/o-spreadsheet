@@ -203,8 +203,6 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
       /** TODO: Clean once we introduce proper focus on sub components. Grid should not have to handle all this logic */
       if (this.env.model.getters.hasOpenedPopover()) {
         this.closeOpenedPopover();
-      } else if (this.menuState.isOpen) {
-        this.closeMenu();
       } else {
         this.env.model.dispatch("CLEAN_CLIPBOARD_HIGHLIGHT");
       }
@@ -353,7 +351,8 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
   focus() {
     if (
       !this.env.model.getters.getSelectedFigureId() &&
-      this.env.model.getters.getEditionMode() === "inactive"
+      this.env.model.getters.getEditionMode() === "inactive" &&
+      !this.env.model.getters.hasOpenedPopover()
     ) {
       this.hiddenInput.el?.focus();
     }

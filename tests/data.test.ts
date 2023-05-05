@@ -1,15 +1,18 @@
 import { DEFAULT_REVISION_ID } from "../src/constants";
 import { CURRENT_VERSION, load } from "../src/migrations/data";
+import { DEFAULT_LOCALE } from "../src/types";
 jest.mock("../src/helpers/uuid", () => require("./__mocks__/uuid"));
 
 describe("load data", () => {
   test("create empty workbookdata when loading nothing", () => {
-    expect(load()).toEqual({
+    const emptyWorkbook = load({});
+    expect(emptyWorkbook).toEqual({
       version: CURRENT_VERSION,
       borders: {},
       styles: {},
       formats: {},
       entities: {},
+      settings: { locale: DEFAULT_LOCALE },
       revisionId: DEFAULT_REVISION_ID,
       sheets: [
         {
@@ -30,39 +33,17 @@ describe("load data", () => {
       uniqueFigureIds: true,
     });
 
-    expect(load({})).toEqual({
-      version: CURRENT_VERSION,
-      borders: {},
-      styles: {},
-      formats: {},
-      entities: {},
-      revisionId: DEFAULT_REVISION_ID,
-      sheets: [
-        {
-          id: "Sheet1",
-          name: "Sheet1",
-          cells: {},
-          colNumber: 26,
-          rowNumber: 100,
-          cols: {},
-          rows: {},
-          merges: [],
-          conditionalFormats: [],
-          figures: [],
-          filterTables: [],
-          isVisible: true,
-        },
-      ],
-      uniqueFigureIds: true,
-    });
+    expect(load({})).toEqual(emptyWorkbook);
   });
 
   test("assign sheet name if missing", () => {
     expect(
       load({
-        sheets: [{ id: "asdf", merges: ["A1:B2"] }],
+        data: {
+          sheets: [{ id: "asdf", merges: ["A1:B2"] }],
+        },
       })
-    ).toEqual({
+    ).toMatchObject({
       version: CURRENT_VERSION,
       borders: {},
       styles: {},
@@ -92,9 +73,11 @@ describe("load data", () => {
   test("assign sheet id if missing", () => {
     expect(
       load({
-        sheets: [{ name: "Sheet1", merges: ["A1:B2"] }],
+        data: {
+          sheets: [{ name: "Sheet1", merges: ["A1:B2"] }],
+        },
       })
-    ).toEqual({
+    ).toMatchObject({
       version: CURRENT_VERSION,
       borders: {},
       styles: {},
@@ -124,10 +107,12 @@ describe("load data", () => {
   test("assign two different sheet names if missing", () => {
     expect(
       load({
-        sheets: [
-          { id: "1", merges: ["A1:B2"] },
-          { id: "asdf", merges: ["C3:D4"] },
-        ],
+        data: {
+          sheets: [
+            { id: "1", merges: ["A1:B2"] },
+            { id: "asdf", merges: ["C3:D4"] },
+          ],
+        },
       }).sheets
     ).toEqual([
       {
@@ -164,10 +149,12 @@ describe("load data", () => {
   test("sanitize input data, even if versioned", () => {
     expect(
       load({
-        version: 3,
-        sheets: [{ merges: ["A1:B2"] }],
+        data: {
+          version: 3,
+          sheets: [{ merges: ["A1:B2"] }],
+        },
       })
-    ).toEqual({
+    ).toMatchObject({
       version: CURRENT_VERSION,
       borders: {},
       styles: {},

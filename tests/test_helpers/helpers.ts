@@ -17,6 +17,7 @@ import {
   CommandTypes,
   ConditionalFormat,
   Currency,
+  DEFAULT_LOCALES,
   EvaluatedCell,
   Format,
   RangeData,
@@ -113,6 +114,7 @@ export function makeTestEnv(mockEnv: Partial<SpreadsheetChildEnv> = {}): Spreads
       (async () => {
         return [] as Currency[];
       }),
+    loadLocales: async () => DEFAULT_LOCALES,
   };
 }
 

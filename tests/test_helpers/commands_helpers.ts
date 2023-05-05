@@ -7,6 +7,7 @@ import {
   ClipboardPasteOptions,
   CreateSheetCommand,
   DispatchResult,
+  Locale,
   SortDirection,
   SortOptions,
   SplitTextIntoColumnsCommand,
@@ -855,4 +856,8 @@ export function splitTextToColumns(
     force: options.force || false,
     addNewColumns: options.addNewColumns || false,
   });
+}
+
+export function updateLocale(model: Model, locale: Locale) {
+  return model.dispatch("UPDATE_LOCALE", { locale });
 }

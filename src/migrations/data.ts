@@ -8,9 +8,11 @@ import { getItemId, toXC, toZone, UuidGenerator } from "../helpers/index";
 import { StateUpdateMessage } from "../types/collaborative/transport_service";
 import {
   CoreCommand,
+  DEFAULT_LOCALE,
   ExcelSheetData,
   ExcelWorkbookData,
   Format,
+  Locale,
   SheetData,
   UID,
   WorkbookData,
@@ -23,7 +25,7 @@ import { normalizeV9 } from "./legacy_tools";
  * a breaking change is made in the way the state is handled, and an upgrade
  * function should be defined
  */
-export const CURRENT_VERSION = 13;
+export const CURRENT_VERSION = 14;
 const INITIAL_SHEET_ID = "Sheet1";
 
 /**
@@ -33,9 +35,10 @@ const INITIAL_SHEET_ID = "Sheet1";
  *
  * It also ensures that there is at least one sheet.
  */
-export function load(data?: any, verboseImport?: boolean): WorkbookData {
+export function load(args: { data?: any; verboseImport?: boolean; locale?: Locale }): WorkbookData {
+  let { data, verboseImport, locale } = args;
   if (!data) {
-    return createEmptyWorkbookData();
+    return createEmptyWorkbookData(undefined, locale);
   }
   if (data["[Content_Types].xml"]) {
     const reader = new XlsxReader(data);
@@ -50,10 +53,10 @@ export function load(data?: any, verboseImport?: boolean): WorkbookData {
   // apply migrations, if needed
   if ("version" in data) {
     if (data.version < CURRENT_VERSION) {
-      data = migrate(data);
+      data = migrate(data, locale);
     }
   }
-  data = repairData(data);
+  data = repairData(data, locale);
   return data;
 }
 
@@ -64,14 +67,14 @@ export function load(data?: any, verboseImport?: boolean): WorkbookData {
 interface Migration {
   from: number;
   to: number;
-  applyMigration(data: any): any;
+  applyMigration(data: any, locale: Locale): any;
   description: string;
 }
 
-function migrate(data: any): WorkbookData {
+function migrate(data: any, locale = DEFAULT_LOCALE): WorkbookData {
   const index = MIGRATIONS.findIndex((m) => m.from === data.version);
   for (let i = index; i < MIGRATIONS.length; i++) {
-    data = MIGRATIONS[i].applyMigration(data);
+    data = MIGRATIONS[i].applyMigration(data, locale);
   }
 
   return data;
@@ -323,14 +326,23 @@ const MIGRATIONS: Migration[] = [
       return data;
     },
   },
+  {
+    description: "Add locale to spreadsheet settings",
+    from: 13,
+    to: 14,
+    applyMigration(data: any, locale: Locale): any {
+      data.settings = { locale };
+      return data;
+    },
+  },
 ];
 
 /**
  * This function is used to repair faulty data independently of the migration.
  */
-export function repairData(data: Partial<WorkbookData>): Partial<WorkbookData> {
+export function repairData(data: Partial<WorkbookData>, locale?: Locale): Partial<WorkbookData> {
   data = forceUnicityOfFigure(data);
-  data = setDefaults(data);
+  data = setDefaults(data, locale);
   return data;
 }
 
@@ -360,8 +372,10 @@ function forceUnicityOfFigure(data: Partial<WorkbookData>): Partial<WorkbookData
  * sanity check: try to fix missing fields/corrupted state by providing
  * sensible default values
  */
-function setDefaults(data: Partial<WorkbookData>): Partial<WorkbookData> {
-  data = Object.assign(createEmptyWorkbookData(), data, { version: CURRENT_VERSION });
+function setDefaults(data: Partial<WorkbookData>, locale?: Locale): Partial<WorkbookData> {
+  data = Object.assign(createEmptyWorkbookData(undefined, locale), data, {
+    version: CURRENT_VERSION,
+  });
   data.sheets = data.sheets
     ? data.sheets.map((s, i) =>
         Object.assign(createEmptySheet(`Sheet${i + 1}`, `Sheet${i + 1}`), s)
@@ -510,7 +524,7 @@ export function createEmptySheet(sheetId: UID, name: string): SheetData {
   };
 }
 
-export function createEmptyWorkbookData(sheetName = "Sheet1"): WorkbookData {
+export function createEmptyWorkbookData(sheetName = "Sheet1", locale?: Locale): WorkbookData {
   const data = {
     version: CURRENT_VERSION,
     sheets: [createEmptySheet(INITIAL_SHEET_ID, sheetName)],
@@ -520,6 +534,7 @@ export function createEmptyWorkbookData(sheetName = "Sheet1"): WorkbookData {
     borders: {},
     revisionId: DEFAULT_REVISION_ID,
     uniqueFigureIds: true,
+    settings: { locale: locale || DEFAULT_LOCALE },
   };
   return data;
 }

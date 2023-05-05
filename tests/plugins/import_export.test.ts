@@ -8,7 +8,13 @@ import {
 import { toCartesian } from "../../src/helpers";
 import { CURRENT_VERSION } from "../../src/migrations/data";
 import { Model } from "../../src/model";
-import { BorderDescr, ColorScaleRule, IconSetRule } from "../../src/types/index";
+import {
+  BorderDescr,
+  ColorScaleRule,
+  DEFAULT_LOCALE,
+  DEFAULT_LOCALES,
+  IconSetRule,
+} from "../../src/types/index";
 import {
   activateSheet,
   resizeColumns,
@@ -47,7 +53,7 @@ describe("Migrations", () => {
       ],
     });
     const data = model.exportData();
-    expect(data.version).toBe(13);
+    expect(data.version).toBe(CURRENT_VERSION);
     expect(data.sheets[0].id).toBeDefined();
     expect(data.sheets[0].figures).toBeDefined();
     expect(data.sheets[0].cells.A1!.content).toBe("=A1");
@@ -70,7 +76,7 @@ describe("Migrations", () => {
     });
     const data = model.exportData();
     const cells = data.sheets[0].cells;
-    expect(data.version).toBe(13);
+    expect(data.version).toBe(CURRENT_VERSION);
     // formulas are de-normalized with version 9
     expect(cells.A1?.content).toBe("=A1");
     expect(cells.A2?.content).toBe("=1");
@@ -402,6 +408,33 @@ describe("Migrations", () => {
       },
     });
   });
+
+  test("migrate version 13: set locale of spreadsheet", () => {
+    // Default locale
+    let model = new Model({ version: 12 });
+    let data = model.exportData();
+    expect(data.settings).toEqual({ locale: DEFAULT_LOCALE });
+
+    // Locale given to the model config
+    const frLocale = DEFAULT_LOCALES.find((l) => l.code === "fr-FR");
+    model = new Model({ version: 12 }, { locale: frLocale });
+    data = model.exportData();
+    expect(data.settings).toEqual({ locale: frLocale });
+
+    // Invalid locale object
+    model = new Model({ version: 12 }, { locale: { randomStuff: "go" } as any });
+    data = model.exportData();
+    expect(data.settings).toEqual({ locale: DEFAULT_LOCALE });
+
+    // Invalid locale formats
+    model = new Model({ version: 12 }, { locale: { ...DEFAULT_LOCALE, dateFormat: ":)" } as any });
+    data = model.exportData();
+    expect(data.settings).toEqual({ locale: DEFAULT_LOCALE });
+
+    model = new Model({ version: 12 }, { locale: { ...DEFAULT_LOCALE, timeFormat: ":)" } as any });
+    data = model.exportData();
+    expect(data.settings).toEqual({ locale: DEFAULT_LOCALE });
+  });
 });
 
 describe("Import", () => {
@@ -581,6 +614,7 @@ test("complete import, then export", () => {
         isVisible: true,
       },
     ],
+    settings: { locale: DEFAULT_LOCALE },
     entities: {},
     styles: {
       1: { bold: true, textColor: "#3A3791", fontSize: 12 },
@@ -665,6 +699,7 @@ test("import then export (figures)", () => {
     formats: {},
     borders: {},
     uniqueFigureIds: true,
+    settings: { locale: DEFAULT_LOCALE },
   };
   const model = new Model(modelData);
   expect(model).toExport(modelData);

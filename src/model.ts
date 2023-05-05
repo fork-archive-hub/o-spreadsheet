@@ -41,12 +41,16 @@ import {
   CoreCommand,
   CoreGetters,
   Currency,
+  DEFAULT_LOCALE,
+  DEFAULT_LOCALES,
   DispatchResult,
   Getters,
   GridRenderingContext,
   isCoreCommand,
+  isValidLocale,
   LAYERS,
   LocalCommand,
+  Locale,
   UID,
 } from "./types/index";
 import { NotifyUIEvent } from "./types/ui";
@@ -81,6 +85,11 @@ import { getXLSX } from "./xlsx/xlsx_writer";
 
 export type Mode = "normal" | "readonly" | "dashboard";
 
+export interface ModelExternalConfig {
+  readonly fileStore?: FileStore;
+  readonly loadCurrencies?: () => Promise<Currency[]>;
+  readonly loadLocales?: () => Promise<Locale[]>;
+}
 export interface ModelConfig {
   readonly mode: Mode;
   /**
@@ -95,16 +104,14 @@ export interface ModelConfig {
    * External dependencies required to enable some features
    * such as uploading images.
    */
-  readonly external: Readonly<{
-    readonly fileStore?: FileStore;
-    readonly loadCurrencies?: () => Promise<Currency[]>;
-  }>;
+  readonly external: Readonly<ModelExternalConfig>;
   readonly moveClient: (position: ClientPosition) => void;
   readonly transportService: TransportService;
   readonly client: Client;
   readonly snapshotRequested: boolean;
   readonly notifyUI: (payload: NotifyUIEvent) => void;
   readonly lazyEvaluation: boolean;
+  readonly locale: Locale;
 }
 
 const enum Status {
@@ -188,13 +195,17 @@ export class Model extends EventBus<any> implements CommandDispatcher {
 
     stateUpdateMessages = repairInitialMessages(data, stateUpdateMessages);
 
-    const workbookData = load(data, verboseImport);
-
     this.state = new StateObserver();
 
     this.uuidGenerator = uuidGenerator;
 
     this.config = this.setupConfig(config);
+
+    const workbookData = load({
+      data,
+      verboseImport,
+      locale: this.config.locale,
+    });
 
     this.session = this.setupSession(workbookData.revisionId);
 
@@ -383,13 +394,22 @@ export class Model extends EventBus<any> implements CommandDispatcher {
       ...config,
       mode: config.mode || "normal",
       custom: config.custom || {},
-      external: config.external || {},
+      external: this.setupExternalConfig(config.external || {}),
       transportService,
       client,
       moveClient: () => {},
       snapshotRequested: false,
       notifyUI: (payload: NotifyUIEvent) => this.trigger("notify-ui", payload),
       lazyEvaluation: "lazyEvaluation" in config ? config.lazyEvaluation! : true,
+      locale: config.locale && isValidLocale(config.locale) ? config.locale : DEFAULT_LOCALE,
+    };
+  }
+
+  private setupExternalConfig(external: Partial<ModelExternalConfig>): ModelExternalConfig {
+    const loadLocales = external.loadLocales || (() => Promise.resolve(DEFAULT_LOCALES));
+    return {
+      ...external,
+      loadLocales,
     };
   }
 

@@ -12,6 +12,7 @@ import {
   MergePlugin,
   SheetPlugin,
 } from "./core";
+import { SettingsPlugin } from "./core/settings";
 import { CorePluginConstructor } from "./core_plugin";
 import {
   CustomColorsPlugin,
@@ -52,7 +53,8 @@ export const corePluginRegistry = new Registry<CorePluginConstructor>()
   .add("conditional formatting", ConditionalFormatPlugin)
   .add("figures", FigurePlugin)
   .add("chart", ChartPlugin)
-  .add("image", ImagePlugin);
+  .add("image", ImagePlugin)
+  .add("settings", SettingsPlugin);
 
 // Plugins which handle a specific feature, without handling any core commands
 export const featurePluginRegistry = new Registry<UIPluginConstructor>()

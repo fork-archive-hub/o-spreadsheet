@@ -46,15 +46,13 @@
             </div>
           </div>
         </div>
+        <!-- TEST -->
         <div t-if="state.showGradient" class="o-custom-selector">
-          <div class="o-magnifier-glass" t-att-style="magnifyingGlassStyle"/>
-          <div
-            class="o-gradient"
-            t-on-click.stop="computeCustomColor"
-            t-on-mouseout="hideMagnifier"
-            t-on-mousemove="moveMagnifier"
-            t-on-mouseover="showMagnifier"
-          />
+          <div class="o-gradient-container">
+            <div class="o-gradient" t-on-click.stop="computeCustomColor">
+              <div class="o-gradient-overlay"/>
+            </div>
+          </div>
           <div class="o-custom-input-preview">
             <input
               type="text"
@@ -68,6 +66,7 @@
             <button class="o-add-button" t-on-click="setCustomColor">Add</button>
           </div>
         </div>
+        <!-- TEST -->
         <div class="o-separator"/>
         <div class="o-buttons">
           <button t-on-click="resetColor" class="o-cancel">Reset</button>

@@ -109,26 +109,26 @@ css/* scss */ `
     .o-custom-selector {
       padding: ${LINE_HORIZONTAL_PADDING}px;
       position: relative;
+
       .o-gradient {
-        background: linear-gradient(to bottom, hsl(0 100% 0%), transparent, hsl(0 0% 100%)),
-          linear-gradient(
-            to right,
-            hsl(0 100% 50%) 0%,
-            hsl(0.2turn 100% 50%) 20%,
-            hsl(0.3turn 100% 50%) 30%,
-            hsl(0.4turn 100% 50%) 40%,
-            hsl(0.5turn 100% 50%) 50%,
-            hsl(0.6turn 100% 50%) 60%,
-            hsl(0.7turn 100% 50%) 70%,
-            hsl(0.8turn 100% 50%) 80%,
-            hsl(0.9turn 100% 50%) 90%,
-            hsl(1turn 100% 50%) 100%
-          );
+        position: relative;
+        background: linear-gradient(90deg, #fff 0, hsla(0, 0%, 100%, 0));
+        background-color: red;
         border: ${ITEM_BORDER_WIDTH}px solid #c0c0c0;
         width: ${GRADIENT_WIDTH}px;
         height: ${GRADIENT_HEIGHT}px;
         &:hover {
           cursor: crosshair;
+        }
+        .o-gradient-overlay {
+          background: linear-gradient(180deg, transparent 0, #000);
+          z-index: 2;
+          border-radius: 4px;
+          height: 100%;
+          left: 0;
+          position: absolute;
+          top: 0;
+          width: 100%;
         }
       }
       .o-custom-input-preview {
@@ -145,13 +145,6 @@ css/* scss */ `
         width: 100%;
       }
     }
-  }
-  .o-magnifier-glass {
-    position: absolute;
-    border: ${ITEM_BORDER_WIDTH}px solid #c0c0c0;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
   }
 `;
 
@@ -253,31 +246,6 @@ export class ColorPicker extends Component<ColorPickerProps, SpreadsheetChildEnv
   computeCustomColor(ev: MouseEvent) {
     this.state.isCurrentColorInvalid = false;
     this.state.currentColor = computeCustomColor(ev);
-  }
-
-  hideMagnifier(_ev: MouseEvent) {
-    this.state.style.display = "none";
-  }
-
-  showMagnifier(_ev: MouseEvent) {
-    this.state.style.display = "block";
-  }
-
-  moveMagnifier(ev: MouseEvent) {
-    this.state.style.background = computeCustomColor(ev);
-    const shiftFromCursor = 10;
-    this.state.style.left = `${ev.offsetX + shiftFromCursor}px`;
-    this.state.style.top = `${ev.offsetY + shiftFromCursor}px`;
-  }
-
-  get magnifyingGlassStyle() {
-    const { display, background, left, top } = this.state.style;
-    return cssPropertiesToCss({
-      display,
-      "background-color": display === "block" ? background : undefined,
-      left,
-      top,
-    });
   }
 
   isSameColor(color1: Color, color2: Color): boolean {

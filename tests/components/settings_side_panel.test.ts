@@ -37,6 +37,16 @@ describe("settings sidePanel component", () => {
     await nextTick();
   }
 
+  function getLocalePreview() {
+    const preview = fixture.querySelector<HTMLElement>(".o-locale-preview")!;
+
+    const numberPreview = preview.children[0].children[1].textContent;
+    const datePreview = preview.children[1].children[1].textContent;
+    const dateTimePreview = preview.children[2].children[1].textContent;
+
+    return { numberPreview, datePreview, dateTimePreview };
+  }
+
   describe("Locale", () => {
     test("Locale select is initialized with correct value", async () => {
       model = new Model({ settings: { locale: frLocale } });
@@ -59,6 +69,32 @@ describe("settings sidePanel component", () => {
       await nextTick();
 
       expect(localeInput.value).toEqual(frLocale.code);
+    });
+
+    test("Updating locale updates the preview", async () => {
+      await mountSettingsSidePanel();
+
+      expect(getLocalePreview()).toEqual({
+        numberPreview: "1,234,567.89",
+        datePreview: "12/31/1899",
+        dateTimePreview: "12/31/1899 14:24:00",
+      });
+
+      setInputValueAndTrigger(".o-settings-panel select", "fr-FR", "change");
+      await nextTick();
+      expect(getLocalePreview()).toEqual({
+        numberPreview: "1 234 567,89",
+        datePreview: "31/12/1899",
+        dateTimePreview: "31/12/1899 14:24:00",
+      });
+
+      updateLocale(model, DEFAULT_LOCALE);
+      await nextTick();
+      expect(getLocalePreview()).toEqual({
+        numberPreview: "1,234,567.89",
+        datePreview: "12/31/1899",
+        dateTimePreview: "12/31/1899 14:24:00",
+      });
     });
 
     test("Current locale in loaded model that is not in env.getLocales() is displayed", async () => {

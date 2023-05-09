@@ -15,6 +15,20 @@
             t-att-selected="state.locale.code === locale.code"
           />
         </select>
+        <div class="o-locale-preview mt-2 ms-3">
+          <div>
+            <span class="fw-bold me-1">Number format:</span>
+            <span t-esc="numberFormat"/>
+          </div>
+          <div>
+            <span class="fw-bold me-1">Date format:</span>
+            <span t-esc="dateFormat"/>
+          </div>
+          <div>
+            <span class="fw-bold me-1">DateTime format:</span>
+            <span t-esc="dateTimeFormat"/>
+          </div>
+        </div>
       </div>
     </div>
   </t>

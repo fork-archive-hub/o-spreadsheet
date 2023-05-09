@@ -385,3 +385,14 @@ describe("Composer / selectionInput interactions", () => {
     expect(model.getters.getSelectedZones()).toEqual([toZone("D1")]);
   });
 });
+test("cell popovers to be closed on clicking outside grid", async () => {
+  ({ model, fixture } = await mountSpreadsheet());
+
+  setCellContent(model, "A1", "=SUM(");
+  await nextTick();
+  await hoverCell(model, "A1", 400);
+  expect(fixture.querySelector(".o-popover .o-error-tooltip")).not.toBeNull();
+  await simulateClick(".o-topbar-menu");
+  await nextTick();
+  expect(fixture.querySelector(".o-popover .o-error-tooltip")).toBeNull();
+});

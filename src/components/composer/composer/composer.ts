@@ -302,17 +302,27 @@ export class Composer extends Component<Props, SpreadsheetChildEnv> {
     this.compositionActive = false;
   }
 
+  private updateSelectionIfRequired(ev: KeyboardEvent) {
+    const { start, end } = this.contentHelper.getCurrentSelection();
+    this.env.model.dispatch("CHANGE_COMPOSER_CURSOR_SELECTION", { start, end });
+    this.isKeyStillDown = true;
+  }
+
   onKeydown(ev: KeyboardEvent) {
     let handler = this.keyMapping[ev.key];
     if (handler) {
       handler.call(this, ev);
+      if (
+        this.env.model.getters.getEditionMode() === "editing" &&
+        !(["Enter", "Tab"].includes(ev.key) && !(ev.altKey || ev.ctrlKey))
+      ) {
+        this.updateSelectionIfRequired(ev);
+      }
     } else {
       ev.stopPropagation();
-    }
-    const { start, end } = this.contentHelper.getCurrentSelection();
-    if (!this.env.model.getters.isSelectingForComposer()) {
-      this.env.model.dispatch("CHANGE_COMPOSER_CURSOR_SELECTION", { start, end });
-      this.isKeyStillDown = true;
+      if (this.env.model.getters.getEditionMode() === "editing") {
+        this.updateSelectionIfRequired(ev);
+      }
     }
   }
 

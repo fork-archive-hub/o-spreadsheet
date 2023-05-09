@@ -152,12 +152,15 @@ export class EvaluationPlugin extends UIPlugin {
 
   getEvaluatedCell({ sheetId, col, row }: CellPosition): EvaluatedCell {
     const cell = this.getters.getCell({ sheetId, col, row });
+    const locale = this.getters.getLocale();
     if (cell === undefined) {
-      return createEvaluatedCell("");
+      return createEvaluatedCell("", undefined, locale);
     }
     // the cell might have been created by a command in the current
     // dispatch but the evaluation is not done yet.
-    return this.evaluatedCells[sheetId]?.[col]?.[row]?.() || createEvaluatedCell("");
+    return (
+      this.evaluatedCells[sheetId]?.[col]?.[row]?.() || createEvaluatedCell("", undefined, locale)
+    );
   }
 
   getEvaluatedCells(sheetId: UID): Record<UID, EvaluatedCell> {
@@ -216,6 +219,7 @@ export class EvaluationPlugin extends UIPlugin {
   private evaluate() {
     this.evaluatedCells = {};
     const cellsBeingComputed = new Set<UID>();
+    const locale = this.getters.getLocale();
     const computeCell = (cell: Cell): Lazy<EvaluatedCell> => {
       const cellId = cell.id;
       const { col, row, sheetId } = this.getters.getCellPosition(cellId);
@@ -229,7 +233,7 @@ export class EvaluationPlugin extends UIPlugin {
             case true:
               return computeFormulaCell(cell);
             case false:
-              return evaluateLiteral(cell.content, cell.format);
+              return evaluateLiteral(cell.content, cell.format, locale);
           }
         } catch (e) {
           return handleError(e, cell);
@@ -272,7 +276,11 @@ export class EvaluationPlugin extends UIPlugin {
         // if a value returns an array (like =A1:A3)
         throw new Error(_lt("This formula depends on invalid values"));
       }
-      return createEvaluatedCell(computedCell.value, cellData.format || computedCell.format);
+      return createEvaluatedCell(
+        computedCell.value,
+        cellData.format || computedCell.format,
+        locale
+      );
     };
 
     const compilationParameters = this.getCompilationParameters((cell) => computeCell(cell)());

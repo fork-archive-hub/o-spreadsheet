@@ -518,7 +518,8 @@ export const TEXT: AddFunctionDescription = {
   returns: ["STRING"],
   compute: function (number: PrimitiveArgValue, format: PrimitiveArgValue): string {
     const _number = toNumber(number);
-    return formatValue(_number, toString(format));
+    const locale = this.getters.getLocale();
+    return formatValue(_number, { format: toString(format), locale });
   },
   isExported: true,
 };

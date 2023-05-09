@@ -1,4 +1,5 @@
 import { formatValue } from "../../src/helpers";
+import { DEFAULT_LOCALE } from "../../src/types";
 import { evaluateCell, evaluateCellFormat, evaluateGrid } from "../test_helpers/helpers";
 
 describe("ACCRINTM formula", () => {
@@ -549,7 +550,9 @@ describe("Coupons formulas", () => {
         const cellValue = evaluateCell("A1", {
           A1: `=COUPPCD("${arg0}", "${arg1}", ${arg2}, ${arg3})`,
         });
-        expect(formatValue(cellValue, "mm/dd/yyyy")).toEqual(expectedResult);
+        expect(formatValue(cellValue, { format: "mm/dd/yyyy", locale: DEFAULT_LOCALE })).toEqual(
+          expectedResult
+        );
       }
     );
 
@@ -616,7 +619,9 @@ describe("Coupons formulas", () => {
         const cellValue = evaluateCell("A1", {
           A1: `=COUPNCD("${settlement}", "${maturity}", ${frequency}, ${dayCount})`,
         });
-        expect(formatValue(cellValue, "mm/dd/yyyy")).toEqual(expectedResult);
+        expect(formatValue(cellValue, { format: "mm/dd/yyyy", locale: DEFAULT_LOCALE })).toEqual(
+          expectedResult
+        );
       }
     );
 

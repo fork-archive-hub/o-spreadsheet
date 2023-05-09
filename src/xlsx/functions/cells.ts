@@ -16,6 +16,7 @@ import { XMLAttributes, XMLString } from "../../types/xlsx";
 import { FORCE_DEFAULT_ARGS_FUNCTIONS, NON_RETROCOMPATIBLE_FUNCTIONS } from "../constants";
 import { getCellType, pushElement } from "../helpers/content_helpers";
 import { escapeXml } from "../helpers/xml_helpers";
+import { DEFAULT_LOCALE } from "./../../types/locale";
 
 export function addFormula(cell: ExcelCellData): {
   attrs: XMLAttributes;
@@ -151,7 +152,7 @@ function convertDateFormat(ast: ASTString): ASTString {
     }
     return {
       ...ast,
-      value: formatValue(internalDate.value, format.join(" ")),
+      value: formatValue(internalDate.value, { format: format.join(" "), locale: DEFAULT_LOCALE }),
     };
   } else {
     return { ...ast, value: ast.value.replace(/\\"/g, `""`) };

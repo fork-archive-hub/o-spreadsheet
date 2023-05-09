@@ -476,7 +476,8 @@ export class GridSelectionPlugin extends UIPlugin {
         aggregate += cell.value;
       }
     }
-    return n < 2 ? null : formatValue(aggregate);
+    const locale = this.getters.getLocale();
+    return n < 2 ? null : formatValue(aggregate, { locale });
   }
 
   isSelected(zone: Zone): boolean {

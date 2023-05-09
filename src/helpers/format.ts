@@ -1,5 +1,5 @@
 import { _lt } from "../translation";
-import { CellValue, Format, FormattedValue } from "../types";
+import { CellValue, Format, FormattedValue, Locale, LocaleFormat } from "../types";
 import { INITIAL_1900_DAY, numberToJsDate, parseDateTime } from "./dates";
 import { isDateTime } from "./misc";
 import { isNumber } from "./numbers";
@@ -94,7 +94,7 @@ interface InternalNumberFormat {
 
 const internalFormatByFormatString: { [format: string]: InternalFormat } = {};
 
-function parseFormat(formatString: Format): InternalFormat {
+function parseFormat(formatString: Format, locale: Locale): InternalFormat {
   let internalFormat = internalFormatByFormatString[formatString];
   if (internalFormat === undefined) {
     internalFormat = convertFormatToInternalFormat(formatString);
@@ -110,7 +110,7 @@ function parseFormat(formatString: Format): InternalFormat {
 /**
  * Formats a cell value with its format.
  */
-export function formatValue(value: CellValue, format?: Format): FormattedValue {
+export function formatValue(value: CellValue, { format, locale }: LocaleFormat): FormattedValue {
   switch (typeof value) {
     case "string":
       return value;
@@ -121,14 +121,18 @@ export function formatValue(value: CellValue, format?: Format): FormattedValue {
       if (!format) {
         format = createDefaultFormat(value);
       }
-      const internalFormat = parseFormat(format);
-      return applyInternalFormat(value, internalFormat);
+      const internalFormat = parseFormat(format, locale);
+      return applyInternalFormat(value, internalFormat, locale);
     case "object":
       return "0";
   }
 }
 
-function applyInternalFormat(value: number, internalFormat: InternalFormat): FormattedValue {
+function applyInternalFormat(
+  value: number,
+  internalFormat: InternalFormat,
+  locale: Locale
+): FormattedValue {
   if (internalFormat[0].type === "DATE") {
     return applyDateTimeFormat(value, internalFormat[0].format);
   }
@@ -137,7 +141,7 @@ function applyInternalFormat(value: number, internalFormat: InternalFormat): For
   for (let part of internalFormat) {
     switch (part.type) {
       case "NUMBER":
-        formattedValue += applyInternalNumberFormat(Math.abs(value), part.format);
+        formattedValue += applyInternalNumberFormat(Math.abs(value), part.format, locale);
         break;
       case "STRING":
         formattedValue += part.format;
@@ -147,7 +151,7 @@ function applyInternalFormat(value: number, internalFormat: InternalFormat): For
   return formattedValue;
 }
 
-function applyInternalNumberFormat(value: number, format: InternalNumberFormat) {
+function applyInternalNumberFormat(value: number, format: InternalNumberFormat, locale: Locale) {
   if (format.isPercent) {
     value = value * 100;
   }
@@ -502,9 +506,10 @@ export function detectFormat(content: string): Format | undefined {
 export function createLargeNumberFormat(
   format: Format | undefined,
   magnitude: number,
-  postFix: string
+  postFix: string,
+  locale: Locale
 ): Format {
-  const internalFormat = parseFormat(format || "#,##0");
+  const internalFormat = parseFormat(format || "#,##0", locale);
   const largeNumberFormat = internalFormat
     .map((formatPart) => {
       if (formatPart.type === "NUMBER") {
@@ -529,8 +534,8 @@ export function createLargeNumberFormat(
   return convertInternalFormatToFormat(largeNumberFormat);
 }
 
-export function changeDecimalPlaces(format: Format, step: number) {
-  const internalFormat = parseFormat(format);
+export function changeDecimalPlaces(format: Format, step: number, locale: Locale) {
+  const internalFormat = parseFormat(format, locale);
   const newInternalFormat = internalFormat.map((intFmt) => {
     if (intFmt.type === "NUMBER") {
       return { ...intFmt, format: changeInternalNumberFormatDecimalPlaces(intFmt.format, step) };

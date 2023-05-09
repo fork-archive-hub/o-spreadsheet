@@ -1,69 +1,41 @@
-"<person></person>";
-
-function parseElement(element: string) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(element, "text/xml");
-  const el = doc.firstElementChild;
-  if (el === null) {
-    return undefined;
-  }
-  if (el.attributes.length) {
-    return {
-      tagName: el.tagName,
-      attributes: Array.from(el.attributes).map((attr) => ({
-        name: attr.name,
-        value: attr.value,
-      })),
-    };
-  }
-  return {
-    tagName: el.tagName,
-  };
-}
+import { ElementSchema, parseElement } from "../src/xlsx/xml";
 
 function createBaseElement(schema: ElementSchema) {
   const xmlDocument = document.implementation.createDocument(schema.namespace?.uri || "", "", null);
-  if (schema.namespace) {
-    const tag = schema.namespace.prefix
-      ? `${schema.namespace.prefix}:${schema.tagName}`
-      : schema.tagName;
+  const tag = schema.namespace?.prefix ? `${schema.namespace.prefix}:${schema.name}` : schema.name;
+  if (schema.namespace?.uri) {
     return xmlDocument.createElementNS(schema.namespace.uri, tag);
   }
-  return xmlDocument.createElement(schema.tagName);
+  return xmlDocument.createElement(tag);
 }
 
 function generateElement(schema: ElementSchema, data: object): Element {
-  if (schema.tagName in data === false) {
-    throw new Error(`Expected ${schema.tagName} but found ${Object.keys(data)}`);
+  if (schema.name in data === false) {
+    throw new Error(`Expected ${schema.name} but found ${Object.keys(data)}`);
   }
 
   const element = createBaseElement(schema);
-  if (typeof data[schema.tagName] !== "object") {
-    element.textContent = data[schema.tagName];
+  if (typeof data[schema.name] !== "object") {
+    element.textContent = data[schema.name];
     return element;
   }
-  const properties = new Set(Object.keys(data[schema.tagName]));
+  const properties = new Set(Object.keys(data[schema.name]));
   for (const attribute of schema.attributes || []) {
     if (!properties.has(attribute.name)) {
       throw new Error(
-        `Expected ${schema.tagName}.${attribute.name} but found ${Object.keys(
-          data[schema.tagName]
-        )}`
+        `Expected ${schema.name}.${attribute.name} but found ${Object.keys(data[schema.name])}`
       );
     }
     properties.delete(attribute.name);
-    element.setAttribute(attribute.name, data[schema.tagName][attribute.name]);
+    element.setAttribute(attribute.name, data[schema.name][attribute.name]);
   }
   if (properties.size === 1 && properties) {
     debugger;
     if (schema.children?.length === 1) {
-      element.appendChild(generateElement(schema.children[0], data[schema.tagName]));
+      element.appendChild(generateElement(schema.children[0], data[schema.name]));
+    } else {
+      element.textContent = data[schema.name][properties.values().next().value];
     }
-
-    // const innerValue   = properties.values().next().value;
-    // if (typeof data[schema.tagName][innerValue] === "object" && schema.children?.length === 1) {
-    //   element.appendChild(generateElement(schema.children[0], data[schema.tagName]));
-    // }
   }
   return element;
 }
@@ -73,38 +45,37 @@ function generate(schema: ElementSchema, data: object) {
   return s.serializeToString(generateElement(schema, data));
 }
 
-interface ElementSchema {
-  tagName: string;
-  namespace?: {
-    prefix?: string;
-    uri: string;
-  };
-  attributes?: Array<{ name: string }>;
-  children?: ElementSchema[];
-}
-
 describe("js schema to xml", () => {
-  test("should be able to generate a single element", () => {
+  test("generate a single element", () => {
     const schema = {
-      tagName: "person",
+      name: "person",
     };
     const data = {
       person: {},
     };
     expect(generate(schema, data)).toEqual("<person/>");
   });
-  test("should be able to generate a single element with a value", () => {
+  test("generate a single element with a value", () => {
     const schema = {
-      tagName: "person",
+      name: "person",
     };
     const data = {
       person: "John",
     };
     expect(generate(schema, data)).toEqual("<person>John</person>");
   });
-  test("should be able to generate an element with an attribute", () => {
+  test("escape values", () => {
     const schema = {
-      tagName: "person",
+      name: "person",
+    };
+    const data = {
+      person: "<John/>",
+    };
+    expect(generate(schema, data)).toEqual("<person>&lt;John/&gt;</person>");
+  });
+  test("generate an element with an attribute", () => {
+    const schema = {
+      name: "person",
       attributes: [{ name: "name" }],
     };
     const data = {
@@ -114,9 +85,9 @@ describe("js schema to xml", () => {
     };
     expect(generate(schema, data)).toEqual('<person name="John"/>');
   });
-  test("should be able to generate an element with two attributes", () => {
+  test("generate an element with two attributes", () => {
     const schema = {
-      tagName: "person",
+      name: "person",
       attributes: [{ name: "firstName" }, { name: "lastName" }],
     };
     const data = {
@@ -127,9 +98,9 @@ describe("js schema to xml", () => {
     };
     expect(generate(schema, data)).toEqual('<person firstName="John" lastName="Doe"/>');
   });
-  test("should be able to generate a single element with an attribute and a value", () => {
+  test("generate a single element with an attribute and a value", () => {
     const schema = {
-      tagName: "person",
+      name: "person",
       attributes: [{ name: "age" }],
     };
     const data = {
@@ -142,7 +113,7 @@ describe("js schema to xml", () => {
   });
   test("tag not found", () => {
     const schema = {
-      tagName: "person",
+      name: "person",
     };
     const data = {
       city: "London",
@@ -151,7 +122,7 @@ describe("js schema to xml", () => {
   });
   test("attribute not found", () => {
     const schema = {
-      tagName: "person",
+      name: "person",
       attributes: [{ name: "age" }],
     };
     const data = {
@@ -163,7 +134,7 @@ describe("js schema to xml", () => {
   });
   test("namespace with prefix", () => {
     const schema = {
-      tagName: "person",
+      name: "person",
       namespace: {
         prefix: "ns",
         uri: "http://example.com",
@@ -176,9 +147,32 @@ describe("js schema to xml", () => {
       '<ns:person xmlns:ns="http://example.com">John</ns:person>'
     );
   });
+  test("namespace with prefix on children", () => {
+    const schema = {
+      name: "person",
+      children: [
+        {
+          name: "address",
+          namespace: {
+            prefix: "ns",
+          },
+        },
+      ],
+      namespace: {
+        prefix: "ns",
+        uri: "http://example.com",
+      },
+    };
+    const data = {
+      person: { address: "London" },
+    };
+    expect(generate(schema, data)).toBe(
+      '<ns:person xmlns:ns="http://example.com"><ns:address>London</ns:address></ns:person>'
+    );
+  });
   test("namespace without prefix", () => {
     const schema = {
-      tagName: "person",
+      name: "person",
       namespace: {
         uri: "http://example.com",
       },
@@ -189,12 +183,12 @@ describe("js schema to xml", () => {
     expect(generate(schema, data)).toBe('<person xmlns="http://example.com">John</person>');
   });
 
-  test("should be able to generate a single element with a single child element", () => {
+  test("generate a single element with a single child element", () => {
     const schema = {
-      tagName: "person",
+      name: "person",
       children: [
         {
-          tagName: "address",
+          name: "address",
         },
       ],
     };
@@ -205,12 +199,12 @@ describe("js schema to xml", () => {
     };
     expect(generate(schema, data)).toEqual("<person><address>London</address></person>");
   });
-  test("should be able to generate a single element with a single child wrong element", () => {
+  test("generate a single element with a single child wrong element", () => {
     const schema = {
-      tagName: "person",
+      name: "person",
       children: [
         {
-          tagName: "address",
+          name: "address",
         },
       ],
     };
@@ -223,15 +217,15 @@ describe("js schema to xml", () => {
   });
 });
 
-describe("XML", () => {
-  test("should be able to parse a single XML element", () => {
+describe("XML to js", () => {
+  test("parse a single XML element", () => {
     expect(parseElement("<person></person>")).toEqual({
-      tagName: "person",
+      name: "person",
     });
   });
-  test("should be able to parse a single XML element with an attribute", () => {
+  test("parse a single XML element with an attribute", () => {
     expect(parseElement('<person name="John"></person>')).toEqual({
-      tagName: "person",
+      name: "person",
       attributes: [{ name: "name", value: "John" }],
     });
   });

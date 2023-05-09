@@ -2,7 +2,7 @@ import { Model } from "../../src";
 import { LINK_COLOR } from "../../src/constants";
 import { buildSheetLink } from "../../src/helpers";
 import { urlRepresentation } from "../../src/helpers/links";
-import { CellValueType, CommandResult } from "../../src/types";
+import { CellValueType, CommandResult, DEFAULT_LOCALE } from "../../src/types";
 import {
   copy,
   createSheet,
@@ -12,6 +12,7 @@ import {
   setCellContent,
   setCellFormat,
   undo,
+  updateLocale,
 } from "../test_helpers/commands_helpers";
 import {
   getCell,
@@ -167,6 +168,13 @@ describe("link cell", () => {
     setCellContent(model, "A1", `[3%](odoo.com)`);
     expect(getEvaluatedCell(model, "A1").value).toBe(0.03);
     expect(getEvaluatedCell(model, "A1").format).toBe("0%");
+  });
+
+  test("Localized numbers are detected", () => {
+    const model = new Model();
+    updateLocale(model, { ...DEFAULT_LOCALE, decimalSeparator: "," });
+    setCellContent(model, "A1", `[3,56](odoo.com)`);
+    expect(getEvaluatedCell(model, "A1").value).toBe(3.56);
   });
 
   test("can use link labels in formula", () => {

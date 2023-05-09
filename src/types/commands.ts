@@ -100,6 +100,7 @@ export const invalidateEvaluationCommands = new Set<CommandTypes>([
   "INSERT_CELL",
   "UNDO",
   "REDO",
+  "UPDATE_LOCALE",
 ]);
 
 export const invalidateCFEvaluationCommands = new Set<CommandTypes>([

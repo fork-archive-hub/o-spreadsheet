@@ -165,11 +165,12 @@ function applyInternalNumberFormat(value: number, format: InternalNumberFormat, 
   let formattedValue = applyIntegerFormat(
     integerDigits,
     format.integerPart,
-    format.thousandsSeparator
+    format.thousandsSeparator ? locale.thousandsSeparator : undefined
   );
 
   if (format.decimalPart !== undefined) {
-    formattedValue += "." + applyDecimalFormat(decimalDigits || "", format.decimalPart);
+    formattedValue +=
+      locale.decimalSeparator + applyDecimalFormat(decimalDigits || "", format.decimalPart);
   }
 
   if (format.isPercent) {
@@ -181,7 +182,7 @@ function applyInternalNumberFormat(value: number, format: InternalNumberFormat, 
 function applyIntegerFormat(
   integerDigits: string,
   integerFormat: string,
-  hasSeparator: boolean
+  thousandsSeparator: string | undefined
 ): string {
   const _integerDigits = integerDigits === "0" ? "" : integerDigits;
 
@@ -194,8 +195,9 @@ function applyIntegerFormat(
     formattedInteger = "0".repeat(countZero) + formattedInteger; // return "000123"
   }
 
-  if (hasSeparator) {
-    formattedInteger = formattedInteger.match(thousandsGroupsRegexp)?.join(",") || formattedInteger;
+  if (thousandsSeparator) {
+    formattedInteger =
+      formattedInteger.match(thousandsGroupsRegexp)?.join(thousandsSeparator) || formattedInteger;
   }
 
   return formattedInteger;
@@ -451,6 +453,18 @@ function formatJSTime(jsDate: Date, format: Format): FormattedValue {
   );
 }
 
+const decimalNumberRegexes: { [decimalSeparator: string]: RegExp } = {};
+/** Get a regex matching decimal number based on the locale's thousand separator */
+function getDecimalNumberRegex(locale: Locale) {
+  if (decimalNumberRegexes[locale.decimalSeparator]) {
+    return decimalNumberRegexes[locale.decimalSeparator];
+  }
+  const decimalSeparator = locale.decimalSeparator === "." ? "\\." : locale.decimalSeparator;
+  return (decimalNumberRegexes[locale.decimalSeparator] = new RegExp(
+    `[0-9]+${decimalSeparator}[0-9]`
+  ));
+}
+
 // -----------------------------------------------------------------------------
 // CREATE / MODIFY FORMAT
 // -----------------------------------------------------------------------------
@@ -501,6 +515,19 @@ export function detectFormat(content: string, locale: Locale): Format | undefine
     return digitBase + "%";
   }
   return undefined;
+}
+
+/** Replace localized number in the string by its JS representation */
+export function replaceLocalizedNumber(content: string, locale: Locale): string {
+  if (locale.decimalSeparator === ".") {
+    return content;
+  }
+
+  const decimalNumberRegex = getDecimalNumberRegex(locale);
+  const unLocalized = content.replace(decimalNumberRegex, (match) => {
+    return match.replace(locale.decimalSeparator, ".");
+  });
+  return isNumber(unLocalized) ? unLocalized : content;
 }
 
 export function createLargeNumberFormat(

@@ -1,7 +1,7 @@
 import { functionRegistry } from "../../src/functions";
 import { zoneToXc } from "../../src/helpers";
 import { Model } from "../../src/model";
-import { CommandResult, coreTypes, UID } from "../../src/types";
+import { CellValueType, CommandResult, coreTypes, DEFAULT_LOCALE, UID } from "../../src/types";
 import {
   activateSheet,
   addCellToSelection,
@@ -18,6 +18,7 @@ import {
   setSelection,
   setZoneBorders,
   undo,
+  updateLocale,
 } from "../test_helpers/commands_helpers";
 import {
   getCell,
@@ -278,6 +279,50 @@ describe("core", () => {
         setCellContent(model, "A2", "€12300%");
         expect(getCellContent(model, "A2")).toBe("€123");
         expect(getEvaluatedCell(model, "A2").format).toBe("[$€]#,##0");
+      });
+
+      test("Decimal number detected with decimal separator in locale", () => {
+        const model = new Model();
+        setCellContent(model, "A1", "3,14");
+        expect(getEvaluatedCell(model, "A1").type).toBe(CellValueType.text);
+
+        updateLocale(model, { ...DEFAULT_LOCALE, decimalSeparator: "," });
+        setCellContent(model, "A1", "3,14");
+        expect(getEvaluatedCell(model, "A1").type).toBe(CellValueType.number);
+        expect(getEvaluatedCell(model, "A1").value).toBe(3.14);
+      });
+
+      test("Decimal numbers with dots are still detected in other locales", () => {
+        const model = new Model();
+        updateLocale(model, { ...DEFAULT_LOCALE, decimalSeparator: "," });
+        setCellContent(model, "A1", "3.14");
+        expect(getEvaluatedCell(model, "A1").type).toBe(CellValueType.number);
+        expect(getEvaluatedCell(model, "A1").value).toBe(3.14);
+      });
+
+      test("Decimal separator with percent and currency numbers", () => {
+        const model = new Model();
+        updateLocale(model, { ...DEFAULT_LOCALE, decimalSeparator: "," });
+
+        setCellContent(model, "A1", "$3,14");
+        expect(getEvaluatedCell(model, "A1").value).toBeCloseTo(3.14, 2);
+        expect(getEvaluatedCell(model, "A1").type).toBe(CellValueType.number);
+        expect(getEvaluatedCell(model, "A1").formattedValue).toBe("$3,14");
+
+        setCellContent(model, "A2", "5,9%");
+        expect(getEvaluatedCell(model, "A2").value).toBeCloseTo(0.059, 3);
+        expect(getEvaluatedCell(model, "A2").type).toBe(CellValueType.number);
+        expect(getEvaluatedCell(model, "A2").formattedValue).toBe("5,90%");
+      });
+
+      test("Decimal separator isn't replaced in non-number string", () => {
+        const model = new Model();
+        updateLocale(model, { ...DEFAULT_LOCALE, decimalSeparator: "," });
+        setCellContent(model, "A1", "3,14");
+        expect(getCell(model, "A1")?.content).toBe("3.14");
+
+        setCellContent(model, "A2", "Olà 3,14 :)");
+        expect(getCell(model, "A2")?.content).toBe("Olà 3,14 :)");
       });
     });
     describe("detect format formula automatically", () => {

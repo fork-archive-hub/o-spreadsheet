@@ -1,6 +1,8 @@
 import { Model } from "../../src";
 import { Locale } from "../../src/types";
-import { updateLocale } from "../test_helpers/commands_helpers";
+import { setCellContent, setFormat, updateLocale } from "../test_helpers/commands_helpers";
+import { getCellContent } from "../test_helpers/getters_helpers";
+import { target } from "../test_helpers/helpers";
 
 export const customLocale: Locale = {
   name: "Custom locale",
@@ -31,6 +33,26 @@ describe("Settings plugin", () => {
 
       const newModel = new Model(exported);
       expect(newModel.getters.getLocale()).toEqual(customLocale);
+    });
+
+    test("locale thousand separator", () => {
+      setCellContent(model, "A1", "1000000");
+      setFormat(model, "#,##0", target("A1"));
+      expect(getCellContent(model, "A1")).toEqual("1,000,000");
+
+      const locale = { ...customLocale, thousandsSeparator: "¤" };
+      updateLocale(model, locale);
+      expect(getCellContent(model, "A1")).toEqual("1¤000¤000");
+    });
+
+    test("locale decimal separator", () => {
+      setCellContent(model, "A1", "9.89");
+      setFormat(model, "#,##0.00", target("A1"));
+      expect(getCellContent(model, "A1")).toEqual("9.89");
+
+      const locale = { ...customLocale, decimalSeparator: "♥" };
+      updateLocale(model, locale);
+      expect(getCellContent(model, "A1")).toEqual("9♥89");
     });
   });
 });

@@ -5,6 +5,7 @@ import {
   getItemId,
   isInside,
   range,
+  replaceLocalizedNumber,
   replaceSpecialSpaces,
   toCartesian,
   toXC,
@@ -23,6 +24,7 @@ import {
   FormulaCell,
   HeaderIndex,
   LiteralCell,
+  Locale,
   Range,
   RangePart,
   Style,
@@ -429,14 +431,16 @@ export class CellPlugin extends CorePlugin<CoreState> implements CoreState {
     const hasContent = "content" in after || "formula" in after;
 
     // Compute the new cell properties
-    const afterContent = hasContent ? replaceSpecialSpaces(after?.content) : before?.content || "";
+    const locale = this.getters.getLocale();
+    const afterContent = hasContent
+      ? this.parseNewContent(after.content, locale)
+      : before?.content || "";
     let style: Style | undefined;
     if (after.style !== undefined) {
       style = after.style || undefined;
     } else {
       style = before ? before.style : undefined;
     }
-    const locale = this.getters.getLocale();
     let format =
       ("format" in after ? after.format : before && before.format) ||
       detectFormat(afterContent, locale);
@@ -470,6 +474,13 @@ export class CellPlugin extends CorePlugin<CoreState> implements CoreState {
     const cell = this.createCell(cellId, afterContent, format, style, sheetId);
     this.history.update("cells", sheetId, cell.id, cell);
     this.dispatch("UPDATE_CELL_POSITION", { cellId: cell.id, col, row, sheetId });
+  }
+
+  private parseNewContent(content: string | undefined, locale: Locale): string {
+    if (!content) return "";
+    content = replaceSpecialSpaces(content);
+    content = replaceLocalizedNumber(content, locale);
+    return content;
   }
 
   private createCell(

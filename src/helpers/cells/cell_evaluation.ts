@@ -13,7 +13,7 @@ import {
   NumberCell,
 } from "../../types";
 import { CellErrorType, EvaluationError } from "../../types/errors";
-import { detectFormat, formatValue, isDateTimeFormat } from "../format";
+import { detectFormat, formatValue, isDateTimeFormat, replaceLocalizedNumber } from "../format";
 import { detectLink } from "../links";
 import { isBoolean, isDateTime } from "../misc";
 import { isNumber } from "../numbers";
@@ -45,9 +45,10 @@ export function createEvaluatedCell(
 ): EvaluatedCell {
   const link = detectLink(value);
   if (link) {
+    const label = replaceLocalizedNumber(link.label, locale);
     return {
-      ..._createEvaluatedCell(parseLiteral(link.label, locale), {
-        format: format || detectFormat(link.label, locale),
+      ..._createEvaluatedCell(parseLiteral(label, locale), {
+        format: format || detectFormat(label, locale),
         locale,
       }),
       link,

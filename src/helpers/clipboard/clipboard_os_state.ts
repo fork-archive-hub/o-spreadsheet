@@ -36,13 +36,16 @@ export class ClipboardOsState extends ClipboardCellsAbstractState {
     return CommandResult.Success;
   }
 
-  paste(target: Zone[]) {
+  paste(target: Zone[], clipboardOption?: ClipboardOptions) {
     const values = this.values;
     const pasteZone = this.getPasteZone(target);
     const { left: activeCol, top: activeRow } = pasteZone;
     const { numberOfCols, numberOfRows } = zoneToDimension(pasteZone);
     const sheetId = this.getters.getActiveSheetId();
     this.addMissingDimensions(numberOfCols, numberOfRows, activeCol, activeRow);
+    if (clipboardOption?.pasteOption === "onlyFormat") {
+      return;
+    }
     for (let i = 0; i < values.length; i++) {
       for (let j = 0; j < values[i].length; j++) {
         this.dispatch("UPDATE_CELL", {

@@ -538,6 +538,7 @@ export interface PasteFromOSClipboardCommand {
   type: "PASTE_FROM_OS_CLIPBOARD";
   target: Zone[];
   text: string;
+  pasteOption?: ClipboardPasteOptions;
 }
 
 export interface AutoresizeColumnsCommand {
@@ -1169,6 +1170,7 @@ export const enum CommandResult {
   SplitWillOverwriteContent,
   NoSplitSeparatorInSelection,
   NoActiveSheet,
+  RepeatedPasteAfterCut,
 }
 
 export interface CommandHandler<T> {

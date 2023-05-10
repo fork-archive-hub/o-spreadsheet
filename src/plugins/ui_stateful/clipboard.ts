@@ -16,6 +16,7 @@ import {
   isCoreCommand,
   LAYERS,
   LocalCommand,
+  UID,
   Zone,
 } from "../../types/index";
 import { UIPlugin } from "../ui_plugin";
@@ -43,8 +44,9 @@ export class ClipboardPlugin extends UIPlugin {
   private status: "visible" | "invisible" = "invisible";
   private state?: ClipboardState;
   private lastPasteState?: ClipboardState;
-
+  private allowPaste: boolean = true;
   private _isPaintingFormat: boolean = false;
+  private originSheetId?: UID;
 
   // ---------------------------------------------------------------------------
   // Command Handling
@@ -60,11 +62,16 @@ export class ClipboardPlugin extends UIPlugin {
         if (!this.state) {
           return CommandResult.EmptyClipboard;
         }
+        if (!this.allowPaste) {
+          this.status = "invisible";
+          return CommandResult.RepeatedPasteAfterCut;
+        }
         const pasteOption = cmd.pasteOption || (this._isPaintingFormat ? "onlyFormat" : undefined);
         return this.state.isPasteAllowed(cmd.target, { pasteOption });
       case "PASTE_FROM_OS_CLIPBOARD": {
         const state = new ClipboardOsState(cmd.text, this.getters, this.dispatch, this.selection);
-        return state.isPasteAllowed(cmd.target);
+        const result = state.isPasteAllowed(cmd.target, { pasteOption: cmd.pasteOption });
+        return result;
       }
       case "INSERT_CELL": {
         const { cut, paste } = this.getInsertCellsTargets(cmd.zone, cmd.shiftDimension);
@@ -87,17 +94,19 @@ export class ClipboardPlugin extends UIPlugin {
         const zones = ("cutTarget" in cmd && cmd.cutTarget) || this.getters.getSelectedZones();
         this.state = this.getClipboardState(zones, cmd.type);
         this.status = "visible";
+        this.allowPaste = true;
+        this.originSheetId = this.getters.getActiveSheetId();
         break;
       case "PASTE":
         if (!this.state) {
           break;
         }
+        if (this.state?.operation === "CUT") {
+          this.allowPaste = false;
+        }
         const pasteOption = cmd.pasteOption || (this._isPaintingFormat ? "onlyFormat" : undefined);
         this._isPaintingFormat = false;
         this.state.paste(cmd.target, { pasteOption, shouldPasteCF: true, selectTarget: true });
-        if (this.state.operation === "CUT") {
-          this.state = undefined;
-        }
         this.lastPasteState = this.state;
         this.status = "invisible";
         break;
@@ -156,10 +165,13 @@ export class ClipboardPlugin extends UIPlugin {
         break;
       }
       case "PASTE_FROM_OS_CLIPBOARD":
-        this.state = new ClipboardOsState(cmd.text, this.getters, this.dispatch, this.selection);
-        this.state.paste(cmd.target);
-        this.lastPasteState = this.state;
-        this.status = "invisible";
+        if (this.allowPaste) {
+          this.state = new ClipboardOsState(cmd.text, this.getters, this.dispatch, this.selection);
+          this.state.paste(cmd.target, { pasteOption: cmd.pasteOption });
+          this.lastPasteState = this.state;
+          this.status = "invisible";
+          this.allowPaste = true;
+        }
         break;
       case "REPEAT_PASTE": {
         this.lastPasteState?.paste(cmd.target, {
@@ -176,6 +188,14 @@ export class ClipboardPlugin extends UIPlugin {
         this.status = "visible";
         break;
       }
+      case "DELETE_SHEET":
+        if (this.state?.operation !== "CUT") {
+          return;
+        }
+        if (this.originSheetId === cmd.sheetId) {
+          this.allowPaste = false;
+        }
+        break;
       default:
         if (isCoreCommand(cmd)) {
           this.status = "invisible";

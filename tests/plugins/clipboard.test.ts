@@ -5,6 +5,7 @@ import { Model } from "../../src/model";
 import { ClipboardMIMEType, CommandResult } from "../../src/types/index";
 import { XMLString } from "../../src/types/xlsx";
 import { parseXML, xmlEscape } from "../../src/xlsx/helpers/xml_helpers";
+import { MockClipboardData } from "../test_helpers/clipboard";
 import {
   activateSheet,
   addCellToSelection,
@@ -17,6 +18,7 @@ import {
   cut,
   deleteColumns,
   deleteRows,
+  deleteSheet,
   merge,
   paste,
   pasteFromOSClipboard,
@@ -190,16 +192,54 @@ describe("clipboard", () => {
     expect(getCell(model, "C2")!.style).toEqual({ bold: true });
   });
 
+  test("copying external content & paste-format on a cell will not paste content", async () => {
+    const model = new Model();
+    const clipboardData = new MockClipboardData();
+    clipboardData.setData(ClipboardMIMEType.PlainText, "Excalibur");
+
+    const content = clipboardData.getData(ClipboardMIMEType.PlainText);
+    pasteFromOSClipboard(model, "C2", content);
+    expect(getCellContent(model, "C2")).toBe(content);
+    pasteFromOSClipboard(model, "C3", content, "onlyFormat");
+    expect(getCellContent(model, "C3")).toBe("");
+  });
+
+  test("cannot paste multiple times after cut", () => {
+    const model = new Model();
+    setCellContent(model, "B2", "b2");
+    setStyle(model, "B2", { bold: true });
+
+    cut(model, "B2");
+    paste(model, "C2");
+    expect(getCellContent(model, "C2")).toBe("b2");
+    expect(getCell(model, "C2")!.style).toEqual({ bold: true });
+
+    paste(model, "E5");
+    expect(getCell(model, "E5")).toBe(undefined);
+  });
+
+  test("Clipboard should be invalidated when sheet is deleted", async () => {
+    const model = new Model();
+    const sheet1 = model.getters.getActiveSheetId();
+    const sheet2 = "sheet2";
+    createSheet(model, { sheetId: sheet2 });
+
+    setCellContent(model, "A1", "Apple", sheet1);
+    setStyle(model, "A1", { bold: true });
+    cut(model, "A1");
+
+    activateSheet(model, sheet2);
+    deleteSheet(model, sheet1);
+    pasteFromOSClipboard(model, "A2", "Apple");
+    expect(getCell(model, "A2", sheet2)).toBe(undefined);
+  });
+
   test("can copy into a cell with style", () => {
     const model = new Model();
     // set value and style in B2
     setCellContent(model, "B2", "b2");
     selectCell(model, "B2");
-    model.dispatch("SET_FORMATTING", {
-      sheetId: model.getters.getActiveSheetId(),
-      target: [{ left: 1, right: 1, top: 1, bottom: 1 }],
-      style: { bold: true },
-    });
+    setStyle(model, "B2", { bold: true });
     expect(getCell(model, "B2")!.style).toEqual({ bold: true });
 
     // set value in A1, select and copy it

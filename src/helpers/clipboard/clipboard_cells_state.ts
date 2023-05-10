@@ -481,7 +481,9 @@ export class ClipboardCellsState extends ClipboardCellsAbstractState {
         .map((cells) => {
           return cells
             .map((c) =>
-              c.cell ? this.getters.getCellText(c.position, this.getters.shouldShowFormulas()) : ""
+              this.getters.shouldShowFormulas()
+                ? c.cell?.content
+                : c.evaluatedCell?.formattedValue || ""
             )
             .join("\t");
         })

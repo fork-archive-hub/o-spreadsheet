@@ -59,7 +59,7 @@ export class ClipboardOsState extends ClipboardCellsAbstractState {
       right: activeCol + numberOfCols - 1,
       bottom: activeRow + numberOfRows - 1,
     };
-    this.selection.selectZone({ cell: { col: activeCol, row: activeRow }, zone });
+    this.selection.selectZoneAndKeepViewport({ cell: { col: activeCol, row: activeRow }, zone });
   }
 
   getClipboardContent(): Record<string, string> {

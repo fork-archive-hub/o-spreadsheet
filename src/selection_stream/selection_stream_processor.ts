@@ -41,6 +41,7 @@ type StatefulStream<Event, State> = {
  */
 interface SelectionProcessor {
   selectZone(anchor: AnchorZone): DispatchResult;
+  selectZoneAndKeepViewport(anchor: AnchorZone): DispatchResult;
   selectCell(col: number, row: number): DispatchResult;
   moveAnchorCell(direction: SelectionDirection, step: SelectionStep): DispatchResult;
   setAnchorCorner(col: number, row: number): DispatchResult;
@@ -129,6 +130,10 @@ export class SelectionStreamProcessorImpl implements SelectionStreamProcessor {
    */
   selectZone(anchor: AnchorZone): DispatchResult {
     return this.modifyAnchor(anchor, "overrideSelection", "ZonesSelected");
+  }
+
+  selectZoneAndKeepViewport(anchor: AnchorZone): DispatchResult {
+    return this.modifyAnchor(anchor, "overrideSelection", "AlterZone");
   }
 
   private modifyAnchor(

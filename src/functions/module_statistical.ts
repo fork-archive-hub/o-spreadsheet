@@ -1,7 +1,14 @@
 import { parseDateTime } from "../helpers/dates";
 import { isNumber, percentile } from "../helpers/index";
 import { _lt } from "../translation";
-import { AddFunctionDescription, Arg, ArgValue, MatrixArgValue, PrimitiveArgValue } from "../types";
+import {
+  AddFunctionDescription,
+  Arg,
+  ArgValue,
+  Locale,
+  MatrixArgValue,
+  PrimitiveArgValue,
+} from "../types";
 import { arg } from "./arguments";
 import {
   assert,
@@ -74,7 +81,7 @@ function covariance(dataY: ArgValue, dataX: ArgValue, isSample: boolean): number
   return acc / (count - (isSample ? 1 : 0));
 }
 
-function variance(args: ArgValue[], isSample: boolean, textAs0: boolean): number {
+function variance(args: ArgValue[], isSample: boolean, textAs0: boolean, locale: Locale): number {
   let count = 0;
   let sum = 0;
   const reduceFunction = textAs0 ? reduceNumbersTextAs0 : reduceNumbers;
@@ -85,7 +92,8 @@ function variance(args: ArgValue[], isSample: boolean, textAs0: boolean): number
       count += 1;
       return acc + a;
     },
-    0
+    0,
+    locale
   );
 
   assert(
@@ -95,13 +103,18 @@ function variance(args: ArgValue[], isSample: boolean, textAs0: boolean): number
 
   const average = sum / count;
   return (
-    reduceFunction(args, (acc, a) => acc + Math.pow(a - average, 2), 0) /
+    reduceFunction(args, (acc, a) => acc + Math.pow(a - average, 2), 0, locale) /
     (count - (isSample ? 1 : 0))
   );
 }
 
-function centile(data: ArgValue[], percent: PrimitiveArgValue, isInclusive: boolean): number {
-  const _percent = toNumber(percent);
+function centile(
+  data: ArgValue[],
+  percent: PrimitiveArgValue,
+  isInclusive: boolean,
+  locale: Locale
+): number {
+  const _percent = toNumber(percent, locale);
   assert(
     () => (isInclusive ? 0 <= _percent && _percent <= 1 : 0 < _percent && _percent < 1),
     _lt(`Function [[FUNCTION_NAME]] parameter 2 value is out of range.`)
@@ -157,14 +170,15 @@ export const AVEDEV: AddFunctionDescription = {
         count += 1;
         return acc + a;
       },
-      0
+      0,
+      this.locale
     );
     assert(
       () => count !== 0,
       _lt(`Evaluation of function [[FUNCTION_NAME]] caused a divide by zero error.`)
     );
     const average = sum / count;
-    return reduceNumbers(values, (acc, a) => acc + Math.abs(average - a), 0) / count;
+    return reduceNumbers(values, (acc, a) => acc + Math.abs(average - a), 0, this.locale) / count;
   },
   isExported: true,
 };
@@ -196,7 +210,8 @@ export const AVERAGE: AddFunctionDescription = {
         count += 1;
         return acc + a;
       },
-      0
+      0,
+      this.locale
     );
     assert(
       () => count !== 0,
@@ -273,8 +288,8 @@ export const AVERAGE_WEIGHTED: AddFunctionDescription = {
           }
         }
       } else {
-        weight = toNumber(weight);
-        value = toNumber(value);
+        weight = toNumber(weight, this.locale);
+        value = toNumber(value, this.locale);
         assert(() => weight >= 0, negativeWeightError);
 
         sum += value * weight;
@@ -318,7 +333,8 @@ export const AVERAGEA: AddFunctionDescription = {
         count += 1;
         return acc + a;
       },
-      0
+      0,
+      this.locale
     );
     assert(
       () => count !== 0,
@@ -355,13 +371,17 @@ export const AVERAGEIF: AddFunctionDescription = {
     let count = 0;
     let sum = 0;
 
-    visitMatchingRanges([criteriaRange, criterion], (i, j) => {
-      const value = (averageRange || criteriaRange)[i][j];
-      if (typeof value === "number") {
-        count += 1;
-        sum += value;
-      }
-    });
+    visitMatchingRanges(
+      [criteriaRange, criterion],
+      (i, j) => {
+        const value = (averageRange || criteriaRange)[i][j];
+        if (typeof value === "number") {
+          count += 1;
+          sum += value;
+        }
+      },
+      this.locale
+    );
 
     assert(
       () => count !== 0,
@@ -392,13 +412,17 @@ export const AVERAGEIFS: AddFunctionDescription = {
   compute: function (averageRange: MatrixArgValue, ...values: ArgValue[]): number {
     let count = 0;
     let sum = 0;
-    visitMatchingRanges(values, (i, j) => {
-      const value = averageRange[i][j];
-      if (typeof value === "number") {
-        count += 1;
-        sum += value;
-      }
-    });
+    visitMatchingRanges(
+      values,
+      (i, j) => {
+        const value = averageRange[i][j];
+        if (typeof value === "number") {
+          count += 1;
+          sum += value;
+        }
+      },
+      this.locale
+    );
     assert(
       () => count !== 0,
       _lt(`Evaluation of function [[FUNCTION_NAME]] caused a divide by zero error.`)
@@ -435,7 +459,7 @@ export const COUNT: AddFunctionDescription = {
             }
           }
         }
-      } else if (typeof n !== "string" || isNumber(n) || parseDateTime(n)) {
+      } else if (typeof n !== "string" || isNumber(n) || parseDateTime(n, this.locale)) {
         count += 1;
       }
     }
@@ -546,7 +570,7 @@ export const LARGE: AddFunctionDescription = {
     return Array.isArray(data) ? data[0][0]?.format : data?.format;
   },
   compute: function (data: ArgValue, n: PrimitiveArgValue): number {
-    const _n = Math.trunc(toNumber(n));
+    const _n = Math.trunc(toNumber(n, this.locale));
     let largests: number[] = [];
     let index: number;
     let count = 0;
@@ -599,7 +623,7 @@ export const MAX: AddFunctionDescription = {
     return Array.isArray(value1) ? value1[0][0]?.format : value1?.format;
   },
   compute: function (...values: ArgValue[]): number {
-    const result = reduceNumbers(values, (acc, a) => (acc < a ? a : acc), -Infinity);
+    const result = reduceNumbers(values, (acc, a) => (acc < a ? a : acc), -Infinity, this.locale);
     return result === -Infinity ? 0 : result;
   },
   isExported: true,
@@ -630,7 +654,8 @@ export const MAXA: AddFunctionDescription = {
       (acc, a) => {
         return Math.max(a, acc);
       },
-      -Infinity
+      -Infinity,
+      this.locale
     );
     return maxa === -Infinity ? 0 : maxa;
   },
@@ -662,12 +687,16 @@ export const MAXIFS: AddFunctionDescription = {
   returns: ["NUMBER"],
   compute: function (range: MatrixArgValue, ...args: ArgValue[]): number {
     let result = -Infinity;
-    visitMatchingRanges(args, (i, j) => {
-      const value = range[i][j];
-      if (typeof value === "number") {
-        result = result < value ? value : result;
-      }
-    });
+    visitMatchingRanges(
+      args,
+      (i, j) => {
+        const value = range[i][j];
+        if (typeof value === "number") {
+          result = result < value ? value : result;
+        }
+      },
+      this.locale
+    );
     return result === -Infinity ? 0 : result;
   },
   isExported: true,
@@ -694,10 +723,14 @@ export const MEDIAN: AddFunctionDescription = {
   },
   compute: function (...values: ArgValue[]): number {
     let data: ArgValue[] = [];
-    visitNumbers(values, (arg) => {
-      data.push(arg);
-    });
-    return centile(data, 0.5, true);
+    visitNumbers(
+      values,
+      (arg) => {
+        data.push(arg);
+      },
+      this.locale
+    );
+    return centile(data, 0.5, true, this.locale);
   },
   isExported: true,
 };
@@ -722,7 +755,7 @@ export const MIN: AddFunctionDescription = {
     return Array.isArray(value1) ? value1[0][0]?.format : value1?.format;
   },
   compute: function (...values: ArgValue[]): number {
-    const result = reduceNumbers(values, (acc, a) => (a < acc ? a : acc), Infinity);
+    const result = reduceNumbers(values, (acc, a) => (a < acc ? a : acc), Infinity, this.locale);
     return result === Infinity ? 0 : result;
   },
   isExported: true,
@@ -753,7 +786,8 @@ export const MINA: AddFunctionDescription = {
       (acc, a) => {
         return Math.min(a, acc);
       },
-      Infinity
+      Infinity,
+      this.locale
     );
     return mina === Infinity ? 0 : mina;
   },
@@ -785,12 +819,16 @@ export const MINIFS: AddFunctionDescription = {
   returns: ["NUMBER"],
   compute: function (range: MatrixArgValue, ...args: ArgValue[]): number {
     let result = Infinity;
-    visitMatchingRanges(args, (i, j) => {
-      const value = range[i][j];
-      if (typeof value === "number") {
-        result = result > value ? value : result;
-      }
-    });
+    visitMatchingRanges(
+      args,
+      (i, j) => {
+        const value = range[i][j];
+        if (typeof value === "number") {
+          result = result > value ? value : result;
+        }
+      },
+      this.locale
+    );
     return result === Infinity ? 0 : result;
   },
   isExported: true,
@@ -813,7 +851,7 @@ export const PERCENTILE: AddFunctionDescription = {
     return Array.isArray(data) ? data[0][0]?.format : data?.format;
   },
   compute: function (data: ArgValue, percentile: PrimitiveArgValue): number {
-    return PERCENTILE_INC.compute(data, percentile) as number;
+    return PERCENTILE_INC.compute.bind(this)(data, percentile) as number;
   },
   isExported: true,
 };
@@ -837,7 +875,7 @@ export const PERCENTILE_EXC: AddFunctionDescription = {
     return Array.isArray(data) ? data[0][0]?.format : data?.format;
   },
   compute: function (data: ArgValue, percentile: PrimitiveArgValue): number {
-    return centile([data], percentile, false);
+    return centile([data], percentile, false, this.locale);
   },
   isExported: true,
 };
@@ -859,7 +897,7 @@ export const PERCENTILE_INC: AddFunctionDescription = {
     return Array.isArray(data) ? data[0][0]?.format : data?.format;
   },
   compute: function (data: ArgValue, percentile: PrimitiveArgValue): number {
-    return centile([data], percentile, true);
+    return centile([data], percentile, true, this.locale);
   },
   isExported: true,
 };
@@ -878,7 +916,7 @@ export const QUARTILE: AddFunctionDescription = {
     return Array.isArray(data) ? data[0][0]?.format : data?.format;
   },
   compute: function (data: ArgValue, quartileNumber: PrimitiveArgValue): number {
-    return QUARTILE_INC.compute(data, quartileNumber) as number;
+    return QUARTILE_INC.compute.bind(this)(data, quartileNumber) as number;
   },
   isExported: true,
 };
@@ -897,8 +935,8 @@ export const QUARTILE_EXC: AddFunctionDescription = {
     return Array.isArray(data) ? data[0][0]?.format : data?.format;
   },
   compute: function (data: ArgValue, quartileNumber: PrimitiveArgValue): number {
-    const _quartileNumber = Math.trunc(toNumber(quartileNumber));
-    return centile([data], 0.25 * _quartileNumber, false);
+    const _quartileNumber = Math.trunc(toNumber(quartileNumber, this.locale));
+    return centile([data], 0.25 * _quartileNumber, false, this.locale);
   },
   isExported: true,
 };
@@ -917,8 +955,8 @@ export const QUARTILE_INC: AddFunctionDescription = {
     return Array.isArray(data) ? data[0][0]?.format : data?.format;
   },
   compute: function (data: ArgValue, quartileNumber: PrimitiveArgValue): number {
-    const _quartileNumber = Math.trunc(toNumber(quartileNumber));
-    return centile([data], 0.25 * _quartileNumber, true);
+    const _quartileNumber = Math.trunc(toNumber(quartileNumber, this.locale));
+    return centile([data], 0.25 * _quartileNumber, true, this.locale);
   },
   isExported: true,
 };
@@ -937,7 +975,7 @@ export const SMALL: AddFunctionDescription = {
     return Array.isArray(data) ? data[0][0]?.format : data?.format;
   },
   compute: function (data: ArgValue, n: PrimitiveArgValue): number {
-    const _n = Math.trunc(toNumber(n));
+    const _n = Math.trunc(toNumber(n, this.locale));
     let largests: number[] = [];
     let index: number;
     let count = 0;
@@ -984,7 +1022,7 @@ export const STDEV: AddFunctionDescription = {
   ],
   returns: ["NUMBER"],
   compute: function (...values: ArgValue[]): number {
-    return Math.sqrt(VAR.compute(...values) as number);
+    return Math.sqrt(VAR.compute.bind(this)(...values) as number);
   },
   isExported: true,
 };
@@ -1003,7 +1041,7 @@ export const STDEV_P: AddFunctionDescription = {
   ],
   returns: ["NUMBER"],
   compute: function (...values: ArgValue[]): number {
-    return Math.sqrt(VAR_P.compute(...values) as number);
+    return Math.sqrt(VAR_P.compute.bind(this)(...values) as number);
   },
   isExported: true,
 };
@@ -1022,7 +1060,7 @@ export const STDEV_S: AddFunctionDescription = {
   ],
   returns: ["NUMBER"],
   compute: function (...values: ArgValue[]): number {
-    return Math.sqrt(VAR_S.compute(...values) as number);
+    return Math.sqrt(VAR_S.compute.bind(this)(...values) as number);
   },
   isExported: true,
 };
@@ -1041,7 +1079,7 @@ export const STDEVA: AddFunctionDescription = {
   ],
   returns: ["NUMBER"],
   compute: function (...values: ArgValue[]): number {
-    return Math.sqrt(VARA.compute(...values) as number);
+    return Math.sqrt(VARA.compute.bind(this)(...values) as number);
   },
   isExported: true,
 };
@@ -1060,7 +1098,7 @@ export const STDEVP: AddFunctionDescription = {
   ],
   returns: ["NUMBER"],
   compute: function (...values: ArgValue[]): number {
-    return Math.sqrt(VARP.compute(...values) as number);
+    return Math.sqrt(VARP.compute.bind(this)(...values) as number);
   },
   isExported: true,
 };
@@ -1079,7 +1117,7 @@ export const STDEVPA: AddFunctionDescription = {
   ],
   returns: ["NUMBER"],
   compute: function (...values: ArgValue[]): number {
-    return Math.sqrt(VARPA.compute(...values) as number);
+    return Math.sqrt(VARPA.compute.bind(this)(...values) as number);
   },
   isExported: true,
 };
@@ -1098,7 +1136,7 @@ export const VAR: AddFunctionDescription = {
   ],
   returns: ["NUMBER"],
   compute: function (...values: ArgValue[]): number {
-    return variance(values, true, false);
+    return variance(values, true, false, this.locale);
   },
   isExported: true,
 };
@@ -1117,7 +1155,7 @@ export const VAR_P: AddFunctionDescription = {
   ],
   returns: ["NUMBER"],
   compute: function (...values: ArgValue[]): number {
-    return variance(values, false, false);
+    return variance(values, false, false, this.locale);
   },
   isExported: true,
 };
@@ -1136,7 +1174,7 @@ export const VAR_S: AddFunctionDescription = {
   ],
   returns: ["NUMBER"],
   compute: function (...values: ArgValue[]): number {
-    return variance(values, true, false);
+    return variance(values, true, false, this.locale);
   },
   isExported: true,
 };
@@ -1155,7 +1193,7 @@ export const VARA: AddFunctionDescription = {
   ],
   returns: ["NUMBER"],
   compute: function (...values: ArgValue[]): number {
-    return variance(values, true, true);
+    return variance(values, true, true, this.locale);
   },
   isExported: true,
 };
@@ -1174,7 +1212,7 @@ export const VARP: AddFunctionDescription = {
   ],
   returns: ["NUMBER"],
   compute: function (...values: ArgValue[]): number {
-    return variance(values, false, false);
+    return variance(values, false, false, this.locale);
   },
   isExported: true,
 };
@@ -1193,7 +1231,7 @@ export const VARPA: AddFunctionDescription = {
   ],
   returns: ["NUMBER"],
   compute: function (...values: ArgValue[]): number {
-    return variance(values, false, true);
+    return variance(values, false, true, this.locale);
   },
   isExported: true,
 };

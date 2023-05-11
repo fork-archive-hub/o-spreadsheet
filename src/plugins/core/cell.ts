@@ -436,8 +436,10 @@ export class CellPlugin extends CorePlugin<CoreState> implements CoreState {
     } else {
       style = before ? before.style : undefined;
     }
+    const locale = this.getters.getLocale();
     let format =
-      ("format" in after ? after.format : before && before.format) || detectFormat(afterContent);
+      ("format" in after ? after.format : before && before.format) ||
+      detectFormat(afterContent, locale);
 
     /* Read the following IF as:
      * we need to remove the cell if it is completely empty, but we can know if it completely empty if:

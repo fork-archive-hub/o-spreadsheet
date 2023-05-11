@@ -43,6 +43,7 @@ import { UIPluginConstructor } from "./ui_plugin";
 import { ClipboardPlugin, EditionPlugin, GridSelectionPlugin } from "./ui_stateful";
 
 export const corePluginRegistry = new Registry<CorePluginConstructor>()
+  .add("settings", SettingsPlugin)
   .add("sheet", SheetPlugin)
   .add("header visibility", HeaderVisibilityPlugin)
   .add("filters", FiltersPlugin)
@@ -53,8 +54,7 @@ export const corePluginRegistry = new Registry<CorePluginConstructor>()
   .add("conditional formatting", ConditionalFormatPlugin)
   .add("figures", FigurePlugin)
   .add("chart", ChartPlugin)
-  .add("image", ImagePlugin)
-  .add("settings", SettingsPlugin);
+  .add("image", ImagePlugin);
 
 // Plugins which handle a specific feature, without handling any core commands
 export const featurePluginRegistry = new Registry<UIPluginConstructor>()

@@ -375,7 +375,7 @@ export function createLineChartRuntime(chart: LineChart, getters: Getters): Line
   const labelFormat = getChartLabelFormat(getters, chart.labelRange)!;
   if (axisType === "time") {
     config.options!.scales!.xAxes![0].type = "time";
-    config.options!.scales!.xAxes![0].time = getChartTimeOptions(labels, labelFormat);
+    config.options!.scales!.xAxes![0].time = getChartTimeOptions(labels, labelFormat, locale);
     config.options!.scales!.xAxes![0].ticks!.maxTicksLimit = 15;
   } else if (axisType === "linear") {
     config.options!.scales!.xAxes![0].type = "linear";

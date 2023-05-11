@@ -18,7 +18,7 @@ export const FORMAT_LARGE_NUMBER: AddFunctionDescription = {
   ],
   returns: ["NUMBER"],
   computeFormat: function (arg: PrimitiveArg, unit: PrimitiveArg | undefined) {
-    const value = Math.abs(toNumber(arg.value));
+    const value = Math.abs(toNumber(arg.value, this.locale));
     const format = arg.format;
     const locale = this.getters.getLocale();
     if (unit !== undefined) {
@@ -44,6 +44,6 @@ export const FORMAT_LARGE_NUMBER: AddFunctionDescription = {
     return createLargeNumberFormat(format, 1e9, "b", locale);
   },
   compute: function (value: PrimitiveArgValue): number {
-    return toNumber(value);
+    return toNumber(value, this.locale);
   },
 };

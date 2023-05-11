@@ -53,9 +53,9 @@ export const DATE: AddFunctionDescription = {
     month: PrimitiveArgValue,
     day: PrimitiveArgValue
   ): number {
-    let _year = Math.trunc(toNumber(year));
-    const _month = Math.trunc(toNumber(month));
-    const _day = Math.trunc(toNumber(day));
+    let _year = Math.trunc(toNumber(year, this.locale));
+    const _month = Math.trunc(toNumber(month, this.locale));
+    const _day = Math.trunc(toNumber(day, this.locale));
 
     // For years less than 0 or greater than 10000, return #ERROR.
     assert(
@@ -117,8 +117,8 @@ export const DATEDIF: AddFunctionDescription = {
       () => Object.values(TIME_UNIT).includes(_unit),
       expectStringSetError(Object.values(TIME_UNIT), toString(unit))
     );
-    const _startDate = Math.trunc(toNumber(startDate));
-    const _endDate = Math.trunc(toNumber(endDate));
+    const _startDate = Math.trunc(toNumber(startDate, this.locale));
+    const _endDate = Math.trunc(toNumber(endDate, this.locale));
     const jsStartDate = numberToJsDate(_startDate);
     const jsEndDate = numberToJsDate(_endDate);
     assert(
@@ -187,7 +187,7 @@ export const DATEVALUE: AddFunctionDescription = {
   returns: ["NUMBER"],
   compute: function (dateString: PrimitiveArgValue): number {
     const _dateString = toString(dateString);
-    const internalDate = parseDateTime(_dateString);
+    const internalDate = parseDateTime(_dateString, this.locale);
 
     assert(
       () => internalDate !== null,
@@ -207,7 +207,7 @@ export const DAY: AddFunctionDescription = {
   args: [arg("date (string)", _lt("The date from which to extract the day."))],
   returns: ["NUMBER"],
   compute: function (date: PrimitiveArgValue): number {
-    return toJsDate(date).getDate();
+    return toJsDate(date, this.locale).getDate();
   },
   isExported: true,
 };
@@ -223,8 +223,8 @@ export const DAYS: AddFunctionDescription = {
   ],
   returns: ["NUMBER"],
   compute: function (endDate: PrimitiveArgValue, startDate: PrimitiveArgValue): number {
-    const _endDate = toJsDate(endDate);
-    const _startDate = toJsDate(startDate);
+    const _endDate = toJsDate(endDate, this.locale);
+    const _startDate = toJsDate(startDate, this.locale);
     const dateDif = _endDate.getTime() - _startDate.getTime();
     return Math.round(dateDif / MS_PER_DAY);
   },
@@ -251,11 +251,11 @@ export const DAYS360: AddFunctionDescription = {
     endDate: PrimitiveArgValue,
     method: PrimitiveArgValue = DEFAULT_DAY_COUNT_METHOD
   ): number {
-    const _startDate = toNumber(startDate);
-    const _endDate = toNumber(endDate);
+    const _startDate = toNumber(startDate, this.locale);
+    const _endDate = toNumber(endDate, this.locale);
     const dayCountConvention = toBoolean(method) ? 4 : 0;
 
-    const yearFrac = YEARFRAC.compute(startDate, endDate, dayCountConvention) as number;
+    const yearFrac = YEARFRAC.compute.bind(this)(startDate, endDate, dayCountConvention) as number;
     return Math.sign(_endDate - _startDate) * Math.round(yearFrac * 360);
   },
   isExported: true,
@@ -276,8 +276,8 @@ export const EDATE: AddFunctionDescription = {
   returns: ["DATE"],
   computeFormat: () => "m/d/yyyy",
   compute: function (startDate: PrimitiveArgValue, months: PrimitiveArgValue): number {
-    const _startDate = toJsDate(startDate);
-    const _months = Math.trunc(toNumber(months));
+    const _startDate = toJsDate(startDate, this.locale);
+    const _months = Math.trunc(toNumber(months, this.locale));
 
     const jsDate = addMonthsToDate(_startDate, _months, false);
     return jsDateToRoundNumber(jsDate);
@@ -300,8 +300,8 @@ export const EOMONTH: AddFunctionDescription = {
   returns: ["DATE"],
   computeFormat: () => "m/d/yyyy",
   compute: function (startDate: PrimitiveArgValue, months: PrimitiveArgValue): number {
-    const _startDate = toJsDate(startDate);
-    const _months = Math.trunc(toNumber(months));
+    const _startDate = toJsDate(startDate, this.locale);
+    const _months = Math.trunc(toNumber(months, this.locale));
 
     const yStart = _startDate.getFullYear();
     const mStart = _startDate.getMonth();
@@ -319,7 +319,7 @@ export const HOUR: AddFunctionDescription = {
   args: [arg("time (date)", _lt("The time from which to calculate the hour component."))],
   returns: ["NUMBER"],
   compute: function (date: PrimitiveArgValue): number {
-    return toJsDate(date).getHours();
+    return toJsDate(date, this.locale).getHours();
   },
   isExported: true,
 };
@@ -339,7 +339,7 @@ export const ISOWEEKNUM: AddFunctionDescription = {
   ],
   returns: ["NUMBER"],
   compute: function (date: PrimitiveArgValue): number {
-    const _date = toJsDate(date);
+    const _date = toJsDate(date, this.locale);
     const y = _date.getFullYear();
 
     // 1 - As the 1st week of a year can start the previous year or after the 1st
@@ -421,7 +421,7 @@ export const MINUTE: AddFunctionDescription = {
   args: [arg("time (date)", _lt("The time from which to calculate the minute component."))],
   returns: ["NUMBER"],
   compute: function (date: PrimitiveArgValue): number {
-    return toJsDate(date).getMinutes();
+    return toJsDate(date, this.locale).getMinutes();
   },
   isExported: true,
 };
@@ -434,7 +434,7 @@ export const MONTH: AddFunctionDescription = {
   args: [arg("date (date)", _lt("The date from which to extract the month."))],
   returns: ["NUMBER"],
   compute: function (date: PrimitiveArgValue): number {
-    return toJsDate(date).getMonth() + 1;
+    return toJsDate(date, this.locale).getMonth() + 1;
   },
   isExported: true,
 };
@@ -464,7 +464,7 @@ export const NETWORKDAYS: AddFunctionDescription = {
     endDate: PrimitiveArgValue,
     holidays: ArgValue
   ): number {
-    return NETWORKDAYS_INTL.compute(startDate, endDate, 1, holidays) as number;
+    return NETWORKDAYS_INTL.compute.bind(this)(startDate, endDate, 1, holidays) as number;
   },
   isExported: true,
 };
@@ -576,13 +576,13 @@ export const NETWORKDAYS_INTL: AddFunctionDescription = {
     weekend: PrimitiveArgValue = DEFAULT_WEEKEND,
     holidays: ArgValue
   ): number {
-    const _startDate = toJsDate(startDate);
-    const _endDate = toJsDate(endDate);
+    const _startDate = toJsDate(startDate, this.locale);
+    const _endDate = toJsDate(endDate, this.locale);
     const daysWeekend = weekendToDayNumber(weekend);
     let timesHoliday = new Set();
     if (holidays !== undefined) {
       visitAny([holidays], (h) => {
-        const holiday = toJsDate(h);
+        const holiday = toJsDate(h, this.locale);
         timesHoliday.add(holiday.getTime());
       });
     }
@@ -635,7 +635,7 @@ export const SECOND: AddFunctionDescription = {
   args: [arg("time (date)", _lt("The time from which to calculate the second component."))],
   returns: ["NUMBER"],
   compute: function (date: PrimitiveArgValue): number {
-    return toJsDate(date).getSeconds();
+    return toJsDate(date, this.locale).getSeconds();
   },
   isExported: true,
 };
@@ -657,9 +657,9 @@ export const TIME: AddFunctionDescription = {
     minute: PrimitiveArgValue,
     second: PrimitiveArgValue
   ): number {
-    let _hour = Math.trunc(toNumber(hour));
-    let _minute = Math.trunc(toNumber(minute));
-    let _second = Math.trunc(toNumber(second));
+    let _hour = Math.trunc(toNumber(hour, this.locale));
+    let _minute = Math.trunc(toNumber(minute, this.locale));
+    let _second = Math.trunc(toNumber(second, this.locale));
 
     _minute += Math.floor(_second / 60);
     _second = (_second % 60) + (_second < 0 ? 60 : 0);
@@ -685,7 +685,7 @@ export const TIMEVALUE: AddFunctionDescription = {
   returns: ["NUMBER"],
   compute: function (timeString: PrimitiveArgValue): number {
     const _timeString = toString(timeString);
-    const internalDate = parseDateTime(_timeString);
+    const internalDate = parseDateTime(_timeString, this.locale);
 
     assert(
       () => internalDate !== null,
@@ -735,8 +735,8 @@ export const WEEKDAY: AddFunctionDescription = {
   ],
   returns: ["NUMBER"],
   compute: function (date: PrimitiveArgValue, type: PrimitiveArgValue = DEFAULT_TYPE): number {
-    const _date = toJsDate(date);
-    const _type = Math.round(toNumber(type));
+    const _date = toJsDate(date, this.locale);
+    const _type = Math.round(toNumber(type, this.locale));
     const m = _date.getDay();
     assert(
       () => [1, 2, 3].includes(_type),
@@ -769,15 +769,15 @@ export const WEEKNUM: AddFunctionDescription = {
   ],
   returns: ["NUMBER"],
   compute: function (date: PrimitiveArgValue, type: PrimitiveArgValue = DEFAULT_TYPE): number {
-    const _date = toJsDate(date);
-    const _type = Math.round(toNumber(type));
+    const _date = toJsDate(date, this.locale);
+    const _type = Math.round(toNumber(type, this.locale));
     assert(
       () => _type === 1 || _type === 2 || (11 <= _type && _type <= 17) || _type === 21,
       _lt("The type (%s) is out of range.", _type.toString())
     );
 
     if (_type === 21) {
-      return ISOWEEKNUM.compute(date) as number;
+      return ISOWEEKNUM.compute.bind(this)(date) as number;
     }
 
     let startDayOfWeek: number;
@@ -831,7 +831,7 @@ export const WORKDAY: AddFunctionDescription = {
     numDays: PrimitiveArgValue,
     holidays: ArgValue | undefined = undefined
   ): number {
-    return WORKDAY_INTL.compute(startDate, numDays, 1, holidays) as number;
+    return WORKDAY_INTL.compute.bind(this)(startDate, numDays, 1, holidays) as number;
   },
   isExported: true,
 };
@@ -864,8 +864,8 @@ export const WORKDAY_INTL: AddFunctionDescription = {
     weekend: PrimitiveArgValue = DEFAULT_WEEKEND,
     holidays: ArgValue
   ): number {
-    let _startDate = toJsDate(startDate);
-    let _numDays = Math.trunc(toNumber(numDays));
+    let _startDate = toJsDate(startDate, this.locale);
+    let _numDays = Math.trunc(toNumber(numDays, this.locale));
     if (typeof weekend === "string") {
       assert(
         () => weekend !== "1111111",
@@ -878,7 +878,7 @@ export const WORKDAY_INTL: AddFunctionDescription = {
     let timesHoliday = new Set();
     if (holidays !== undefined) {
       visitAny([holidays], (h) => {
-        const holiday = toJsDate(h);
+        const holiday = toJsDate(h, this.locale);
         timesHoliday.add(holiday.getTime());
       });
     }
@@ -912,7 +912,7 @@ export const YEAR: AddFunctionDescription = {
   args: [arg("date (date)", _lt("The date from which to extract the year."))],
   returns: ["NUMBER"],
   compute: function (date: PrimitiveArgValue): number {
-    return toJsDate(date).getFullYear();
+    return toJsDate(date, this.locale).getFullYear();
   },
   isExported: true,
 };
@@ -947,9 +947,9 @@ export const YEARFRAC: AddFunctionDescription = {
     endDate: PrimitiveArgValue,
     dayCountConvention: PrimitiveArgValue = DEFAULT_DAY_COUNT_CONVENTION
   ): number {
-    let _startDate = Math.trunc(toNumber(startDate));
-    let _endDate = Math.trunc(toNumber(endDate));
-    const _dayCountConvention = Math.trunc(toNumber(dayCountConvention));
+    let _startDate = Math.trunc(toNumber(startDate, this.locale));
+    let _endDate = Math.trunc(toNumber(endDate, this.locale));
+    const _dayCountConvention = Math.trunc(toNumber(dayCountConvention, this.locale));
 
     assert(
       () => _startDate >= 0,
@@ -980,7 +980,7 @@ export const MONTH_START: AddFunctionDescription = {
   returns: ["DATE"],
   computeFormat: () => "m/d/yyyy",
   compute: function (date: PrimitiveArgValue): number {
-    const _startDate = toJsDate(date);
+    const _startDate = toJsDate(date, this.locale);
     const yStart = _startDate.getFullYear();
     const mStart = _startDate.getMonth();
     const jsDate = new Date(yStart, mStart, 1);
@@ -997,7 +997,7 @@ export const MONTH_END: AddFunctionDescription = {
   returns: ["DATE"],
   computeFormat: () => "m/d/yyyy",
   compute: function (date: PrimitiveArgValue): number {
-    return EOMONTH.compute(date, 0) as number;
+    return EOMONTH.compute.bind(this)(date, 0) as number;
   },
 };
 
@@ -1009,7 +1009,7 @@ export const QUARTER: AddFunctionDescription = {
   args: [arg("date (date)", _lt("The date from which to extract the quarter."))],
   returns: ["NUMBER"],
   compute: function (date: PrimitiveArgValue): number {
-    return Math.ceil((toJsDate(date).getMonth() + 1) / 3);
+    return Math.ceil((toJsDate(date, this.locale).getMonth() + 1) / 3);
   },
 };
 
@@ -1022,8 +1022,8 @@ export const QUARTER_START: AddFunctionDescription = {
   returns: ["DATE"],
   computeFormat: () => "m/d/yyyy",
   compute: function (date: PrimitiveArgValue): number {
-    const quarter = QUARTER.compute(date) as number;
-    const year = YEAR.compute(date) as number;
+    const quarter = QUARTER.compute.bind(this)(date) as number;
+    const year = YEAR.compute.bind(this)(date) as number;
     const jsDate = new Date(year, (quarter - 1) * 3, 1);
     return jsDateToRoundNumber(jsDate);
   },
@@ -1038,8 +1038,8 @@ export const QUARTER_END: AddFunctionDescription = {
   returns: ["DATE"],
   computeFormat: () => "m/d/yyyy",
   compute: function (date: PrimitiveArgValue): number {
-    const quarter = QUARTER.compute(date) as number;
-    const year = YEAR.compute(date) as number;
+    const quarter = QUARTER.compute.bind(this)(date) as number;
+    const year = YEAR.compute.bind(this)(date) as number;
     const jsDate = new Date(year, quarter * 3, 0);
     return jsDateToRoundNumber(jsDate);
   },
@@ -1054,7 +1054,7 @@ export const YEAR_START: AddFunctionDescription = {
   returns: ["DATE"],
   computeFormat: () => "m/d/yyyy",
   compute: function (date: PrimitiveArgValue): number {
-    const year = YEAR.compute(date) as number;
+    const year = YEAR.compute.bind(this)(date) as number;
     const jsDate = new Date(year, 0, 1);
     return jsDateToRoundNumber(jsDate);
   },
@@ -1069,7 +1069,7 @@ export const YEAR_END: AddFunctionDescription = {
   returns: ["DATE"],
   computeFormat: () => "m/d/yyyy",
   compute: function (date: PrimitiveArgValue): number {
-    const year = YEAR.compute(date) as number;
+    const year = YEAR.compute.bind(this)(date) as number;
     const jsDate = new Date(year + 1, 0, 0);
     return jsDateToRoundNumber(jsDate);
   },

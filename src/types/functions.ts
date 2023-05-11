@@ -1,4 +1,5 @@
 import { Format } from "./format";
+import { Locale } from "./locale";
 import { Arg, ArgValue, FunctionReturnValue } from "./misc";
 
 export type ArgType =
@@ -49,5 +50,6 @@ export interface FunctionDescription extends AddFunctionDescription {
 export type EvalContext = {
   __lastFnCalled?: string;
   __originCellXC?: () => string;
+  locale: Locale;
   [key: string]: any;
 };

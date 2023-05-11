@@ -1,5 +1,6 @@
 import { toNumber } from "../../src/functions/helpers";
 import { evaluateCell, evaluateCellFormat, evaluateGrid } from "../test_helpers/helpers";
+import { DEFAULT_LOCALE } from "./../../src/types/locale";
 
 describe("ABS formula", () => {
   test("take 1 argument", () => {
@@ -1830,10 +1831,10 @@ describe("RANDBETWEEN formula", () => {
     ["-42", "-24"],
   ])("take 2 parameters, return a number", (a, b) => {
     expect(evaluateCell("A1", { A1: "=RANDBETWEEN(A2, A3)", A2: a, A3: b })).toBeGreaterThanOrEqual(
-      toNumber(a)
+      toNumber(a, DEFAULT_LOCALE)
     );
     expect(evaluateCell("A1", { A1: "=RANDBETWEEN(A2, A3)", A2: a, A3: b })).toBeLessThanOrEqual(
-      toNumber(b)
+      toNumber(b, DEFAULT_LOCALE)
     );
   });
 

@@ -479,9 +479,9 @@ export function createDefaultFormat(value: number): Format {
   return decimalDigits ? "0." + "0".repeat(decimalDigits.length) : "0";
 }
 
-export function detectFormat(content: string): Format | undefined {
-  if (isDateTime(content)) {
-    const internalDate = parseDateTime(content)!;
+export function detectFormat(content: string, locale: Locale): Format | undefined {
+  if (isDateTime(content, locale)) {
+    const internalDate = parseDateTime(content, locale)!;
     return internalDate.format;
   }
   if (!isNumber(content)) {

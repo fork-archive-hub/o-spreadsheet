@@ -141,7 +141,7 @@ function prependNonRetrocompatibleFunction(ast: ASTFuncall): ASTFuncall {
  */
 function convertDateFormat(ast: ASTString): ASTString {
   const value = ast.value.replace(new RegExp('"', "g"), "");
-  const internalDate = parseDateTime(value);
+  const internalDate = parseDateTime(value, DEFAULT_LOCALE);
   if (internalDate) {
     let format: Format[] = [];
     if (mdyDateRegexp.test(value) || ymdDateRegexp.test(value)) {

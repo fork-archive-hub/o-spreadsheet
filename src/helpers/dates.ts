@@ -2,7 +2,7 @@
 // Date Type
 // -----------------------------------------------------------------------------
 
-import { Format } from "../types";
+import { Format, Locale } from "../types";
 
 /**
  * All Spreadsheet dates are internally stored as an object with two values:
@@ -30,7 +30,7 @@ export const mdyDateRegexp = /^\d{1,2}(\/|-|\s)\d{1,2}((\/|-|\s)\d{1,4})?$/;
 export const ymdDateRegexp = /^\d{3,4}(\/|-|\s)\d{1,2}(\/|-|\s)\d{1,2}$/;
 export const timeRegexp = /((\d+(:\d+)?(:\d+)?\s*(AM|PM))|(\d+:\d+(:\d+)?))$/;
 
-export function parseDateTime(str: string): InternalDate | null {
+export function parseDateTime(str: string, locale: Locale): InternalDate | null {
   str = str.trim();
 
   let time;

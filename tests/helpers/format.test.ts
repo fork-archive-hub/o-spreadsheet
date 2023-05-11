@@ -388,7 +388,7 @@ describe("formatValue on date and time", () => {
       ["12:00000009", "12:09"],
       ["11:69", "12:09"],
     ])("hours minutes 'hh:mm'", (value, result) => {
-      const parsedDateTime = parseDateTime(value)!;
+      const parsedDateTime = parseDateTime(value, locale)!;
       expect(formatValue(parsedDateTime.value, { format: parsedDateTime.format, locale })).toBe(
         result
       );
@@ -400,7 +400,7 @@ describe("formatValue on date and time", () => {
       ["0012:008:006", "12:08:06"],
       ["11:59:546", "12:08:06"],
     ])("hours minutes seconds 'hh:mm:ss'", (value, result) => {
-      const parsedDateTime = parseDateTime(value)!;
+      const parsedDateTime = parseDateTime(value, locale)!;
       expect(formatValue(parsedDateTime.value, { format: parsedDateTime.format, locale })).toBe(
         result
       );
@@ -424,7 +424,7 @@ describe("formatValue on date and time", () => {
       ["11:69 AM", "12:09 PM"],
       ["18:00 AM", "06:00 AM"],
     ])("hours minutes meridian 'hh:mm a'", (value, result) => {
-      const parsedDateTime = parseDateTime(value)!;
+      const parsedDateTime = parseDateTime(value, locale)!;
       expect(formatValue(parsedDateTime.value, { format: parsedDateTime.format, locale })).toBe(
         result
       );
@@ -437,7 +437,7 @@ describe("formatValue on date and time", () => {
       ["012:008:006 AM", "12:08:06 AM"],
       ["11:59:546   AM", "12:08:06 PM"],
     ])("hours minutes seconds meridian 'hh:mm:ss a'", (value, result) => {
-      const parsedDateTime = parseDateTime(value)!;
+      const parsedDateTime = parseDateTime(value, locale)!;
       expect(formatValue(parsedDateTime.value, { format: parsedDateTime.format, locale })).toBe(
         result
       );
@@ -450,7 +450,7 @@ describe("formatValue on date and time", () => {
       ["24 PM", "24:00:00"], // @compatibility: on google sheets, parsing impposible
       ["11:59:546   PM", "24:08:06"],
     ])("duration 'hhhh:mm:ss'", (value, result) => {
-      const parsedDateTime = parseDateTime(value)!;
+      const parsedDateTime = parseDateTime(value, locale)!;
       expect(formatValue(parsedDateTime.value, { format: parsedDateTime.format, locale })).toBe(
         result
       );
@@ -463,7 +463,7 @@ describe("formatValue on date and time", () => {
         ["12/5/2020 25 AM", "12/5/2020 01:00 PM"],
         ["12/5/2020 25:70 PM", "12/6/2020 02:10:00"],
       ])("increment time test with 'm/d/yyyy'", (value, result) => {
-        const parsedDateTime = parseDateTime(value)!;
+        const parsedDateTime = parseDateTime(value, locale)!;
         expect(
           formatValue(parsedDateTime.value, {
             format: parsedDateTime.format,
@@ -478,7 +478,7 @@ describe("formatValue on date and time", () => {
         ["2020/12/5 25 AM", "2020/12/5 01:00 PM"],
         ["2020/12/5 25:70 PM", "2020/12/6 02:10:00"],
       ])("increment time test with 'yyyy/m/d'", (value, result) => {
-        const parsedDateTime = parseDateTime(value)!;
+        const parsedDateTime = parseDateTime(value, locale)!;
         expect(
           formatValue(parsedDateTime.value, {
             format: parsedDateTime.format,
@@ -493,7 +493,7 @@ describe("formatValue on date and time", () => {
         ["12/05/2020 25 AM", "12/05/2020 01:00 PM"],
         ["12/05/2020 25:70 PM", "12/06/2020 02:10:00"],
       ])("increment time test with 'mm/dd/yyyy'", (value, result) => {
-        const parsedDateTime = parseDateTime(value)!;
+        const parsedDateTime = parseDateTime(value, locale)!;
         expect(
           formatValue(parsedDateTime.value, {
             format: parsedDateTime.format,
@@ -508,7 +508,7 @@ describe("formatValue on date and time", () => {
         ["2020/12/05 25 AM", "2020/12/05 01:00 PM"],
         ["2020/12/05 25:70 PM", "2020/12/06 02:10:00"],
       ])("increment time test with 'yyyy/mm/dd'", (value, result) => {
-        const parsedDateTime = parseDateTime(value)!;
+        const parsedDateTime = parseDateTime(value, locale)!;
         expect(
           formatValue(parsedDateTime.value, {
             format: parsedDateTime.format,
@@ -523,7 +523,7 @@ describe("formatValue on date and time", () => {
         ["12/5 25 AM", "12/5 01:00 PM"],
         ["12/5 25:70 PM", "12/6 02:10:00"],
       ])("increment time test with 'm/d'", (value, result) => {
-        const parsedDateTime = parseDateTime(value)!;
+        const parsedDateTime = parseDateTime(value, locale)!;
         expect(
           formatValue(parsedDateTime.value, {
             format: parsedDateTime.format,
@@ -538,7 +538,7 @@ describe("formatValue on date and time", () => {
         ["12/05 25 AM", "12/05 01:00 PM"],
         ["12/05 25:70 PM", "12/06 02:10:00"],
       ])("increment time test with 'mm/dd'", (value, result) => {
-        const parsedDateTime = parseDateTime(value)!;
+        const parsedDateTime = parseDateTime(value, locale)!;
         expect(
           formatValue(parsedDateTime.value, {
             format: parsedDateTime.format,
@@ -553,7 +553,7 @@ describe("formatValue on date and time", () => {
         ["12 5 2020 25 AM", "12 5 2020 01:00 PM"],
         ["12 5 2020 25:70 PM", "12 6 2020 02:10:00"],
       ])("increment time test with 'm d yyyy'", (value, result) => {
-        const parsedDateTime = parseDateTime(value)!;
+        const parsedDateTime = parseDateTime(value, locale)!;
         expect(
           formatValue(parsedDateTime.value, {
             format: parsedDateTime.format,
@@ -568,7 +568,7 @@ describe("formatValue on date and time", () => {
         ["2020 12 5 25 AM", "2020 12 5 01:00 PM"],
         ["2020 12 5 25:70 PM", "2020 12 6 02:10:00"],
       ])("increment time test with 'yyyy m d'", (value, result) => {
-        const parsedDateTime = parseDateTime(value)!;
+        const parsedDateTime = parseDateTime(value, locale)!;
         expect(
           formatValue(parsedDateTime.value, {
             format: parsedDateTime.format,
@@ -583,7 +583,7 @@ describe("formatValue on date and time", () => {
         ["12 05 2020 25 AM", "12 05 2020 01:00 PM"],
         ["12 05 2020 25:70 PM", "12 06 2020 02:10:00"],
       ])("increment time test with 'mm dd yyyy'", (value, result) => {
-        const parsedDateTime = parseDateTime(value)!;
+        const parsedDateTime = parseDateTime(value, locale)!;
         expect(
           formatValue(parsedDateTime.value, {
             format: parsedDateTime.format,
@@ -598,7 +598,7 @@ describe("formatValue on date and time", () => {
         ["2020 12 05 25 AM", "2020 12 05 01:00 PM"],
         ["2020 12 05 25:70 PM", "2020 12 06 02:10:00"],
       ])("increment time test with 'yyyy mm dd'", (value, result) => {
-        const parsedDateTime = parseDateTime(value)!;
+        const parsedDateTime = parseDateTime(value, locale)!;
         expect(
           formatValue(parsedDateTime.value, {
             format: parsedDateTime.format,
@@ -613,7 +613,7 @@ describe("formatValue on date and time", () => {
         ["12 5 25 AM", "12 5 01:00 PM"],
         ["12 5 25:70 PM", "12 6 02:10:00"],
       ])("increment time test with 'm d'", (value, result) => {
-        const parsedDateTime = parseDateTime(value)!;
+        const parsedDateTime = parseDateTime(value, locale)!;
         expect(
           formatValue(parsedDateTime.value, {
             format: parsedDateTime.format,
@@ -628,7 +628,7 @@ describe("formatValue on date and time", () => {
         ["12 05 25 AM", "12 05 01:00 PM"],
         ["12 05 25:70 PM", "12 06 02:10:00"],
       ])("increment time test with 'mm dd'", (value, result) => {
-        const parsedDateTime = parseDateTime(value)!;
+        const parsedDateTime = parseDateTime(value, locale)!;
         expect(
           formatValue(parsedDateTime.value, {
             format: parsedDateTime.format,
@@ -640,7 +640,7 @@ describe("formatValue on date and time", () => {
   });
 
   describe("formatValue on date", () => {
-    const internalDate = parseDateTime("01/02/1954")!;
+    const internalDate = parseDateTime("01/02/1954", locale)!;
     const value = internalDate.value;
 
     test.each([
@@ -701,9 +701,9 @@ describe("formatValue on date and time", () => {
       ["01/06/2023", "Fri-01-2023"],
       ["01/07/2023", "Sat-01-2023"],
     ])("three letter day of the week (ddd) %s", (value, result) => {
-      expect(formatValue(parseDateTime(value)!.value, { format: "ddd-mm-yyyy", locale })).toBe(
-        result
-      );
+      expect(
+        formatValue(parseDateTime(value, locale)!.value, { format: "ddd-mm-yyyy", locale })
+      ).toBe(result);
     });
 
     test.each([
@@ -715,9 +715,9 @@ describe("formatValue on date and time", () => {
       ["2023/01/06", "Friday-01-2023"],
       ["2023/01/07", "Saturday-01-2023"],
     ])("Full letter day of the week (dddd) %s", (value, result) => {
-      expect(formatValue(parseDateTime(value)!.value, { format: "dddd-mm-yyyy", locale })).toBe(
-        result
-      );
+      expect(
+        formatValue(parseDateTime(value, locale)!.value, { format: "dddd-mm-yyyy", locale })
+      ).toBe(result);
     });
 
     test.each([
@@ -734,7 +734,9 @@ describe("formatValue on date and time", () => {
       ["2023/11/01", "Nov-2023"],
       ["2023/12/01", "Dec-2023"],
     ])("Three letter day of month (mmm) %s", (value, result) => {
-      expect(formatValue(parseDateTime(value)!.value, { format: "mmm-yyyy", locale })).toBe(result);
+      expect(formatValue(parseDateTime(value, locale)!.value, { format: "mmm-yyyy", locale })).toBe(
+        result
+      );
     });
 
     test.each([
@@ -751,9 +753,9 @@ describe("formatValue on date and time", () => {
       ["2023/11/01", "November-2023"],
       ["2023/12/01", "December-2023"],
     ])("Full letter day of month (mmmm) %s", (value, result) => {
-      expect(formatValue(parseDateTime(value)!.value, { format: "mmmm-yyyy", locale })).toBe(
-        result
-      );
+      expect(
+        formatValue(parseDateTime(value, locale)!.value, { format: "mmmm-yyyy", locale })
+      ).toBe(result);
     });
 
     test.each([
@@ -770,9 +772,9 @@ describe("formatValue on date and time", () => {
       ["2023/11/01", "N-2023"],
       ["2023/12/01", "D-2023"],
     ])("One letter day of month (mmmmm) %s", (value, result) => {
-      expect(formatValue(parseDateTime(value)!.value, { format: "mmmmm-yyyy", locale })).toBe(
-        result
-      );
+      expect(
+        formatValue(parseDateTime(value, locale)!.value, { format: "mmmmm-yyyy", locale })
+      ).toBe(result);
     });
 
     test.each([
@@ -800,9 +802,9 @@ describe("formatValue on date and time", () => {
       ["yy", "23"],
       ["yyyy", "2023"],
     ])("Format without separators %s", (format, result) => {
-      expect(formatValue(parseDateTime("01/01/2023")!.value, { format: format, locale })).toBe(
-        result
-      );
+      expect(
+        formatValue(parseDateTime("01/01/2023", locale)!.value, { format: format, locale })
+      ).toBe(result);
     });
   });
 
@@ -813,7 +815,7 @@ describe("formatValue on date and time", () => {
       ["012:008:006 AM", "00:08"],
       ["30:00:00", "06:00"],
     ])("hours minutes 'hh:mm', with format", (date, result) => {
-      const value = parseDateTime(date)!.value;
+      const value = parseDateTime(date, locale)!.value;
       expect(formatValue(value, { format: "hh:mm", locale })).toBe(result);
     });
 
@@ -823,7 +825,7 @@ describe("formatValue on date and time", () => {
       ["012:008:006 AM", "00:08:06"],
       ["30:00:00", "06:00:00"],
     ])("hours minutes seconds 'hh:mm:ss', with format", (date, result) => {
-      const value = parseDateTime(date)!.value;
+      const value = parseDateTime(date, locale)!.value;
       expect(formatValue(value, { format: "hh:mm:ss", locale })).toBe(result);
     });
 
@@ -833,7 +835,7 @@ describe("formatValue on date and time", () => {
       ["012:008:006 AM", "12:08 AM"],
       ["30:00:00", "06:00 AM"],
     ])("hours minutes meridian 'hh:mm a', with format", (date, result) => {
-      const value = parseDateTime(date)!.value;
+      const value = parseDateTime(date, locale)!.value;
       expect(formatValue(value, { format: "hh:mm a", locale })).toBe(result);
     });
 
@@ -843,7 +845,7 @@ describe("formatValue on date and time", () => {
       ["05:09 PM", "05:09:00 PM"],
       ["30:00:00", "06:00:00 AM"],
     ])("hours minutes meridian 'hh:mm:ss a', with format", (date, result) => {
-      const value = parseDateTime(date)!.value;
+      const value = parseDateTime(date, locale)!.value;
       expect(formatValue(value, { format: "hh:mm:ss a", locale })).toBe(result);
     });
 
@@ -853,7 +855,7 @@ describe("formatValue on date and time", () => {
       ["05:09 PM", "17:09:00"],
       ["012:008:006 AM", "0:08:06"],
     ])("hours minutes meridian 'hh:mm:ss a', with format", (date, result) => {
-      const value = parseDateTime(date)!.value;
+      const value = parseDateTime(date, locale)!.value;
       expect(formatValue(value, { format: "hhhh:mm:ss", locale })).toBe(result);
     });
   });

@@ -11,7 +11,7 @@ import {
   NEWLINE,
   PADDING_AUTORESIZE_VERTICAL,
 } from "../constants";
-import { Cell, ConsecutiveIndexes, Lazy, Style, UID } from "../types";
+import { Cell, ConsecutiveIndexes, Lazy, Locale, Style, UID } from "../types";
 import { Cloneable, Pixel } from "./../types/misc";
 import { parseDateTime } from "./dates";
 /**
@@ -265,8 +265,8 @@ export function isBoolean(str: string): boolean {
   return upperCased === "TRUE" || upperCased === "FALSE";
 }
 
-export function isDateTime(str: string): boolean {
-  return parseDateTime(str) !== null;
+export function isDateTime(str: string, locale: Locale): boolean {
+  return parseDateTime(str, locale) !== null;
 }
 
 const MARKDOWN_LINK_REGEX = /^\[([^\[]+)\]\((.+)\)$/;

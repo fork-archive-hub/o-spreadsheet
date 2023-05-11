@@ -23,15 +23,15 @@ export function evaluateLiteral(
   format: Format | undefined,
   locale: Locale
 ): EvaluatedCell {
-  return createEvaluatedCell(parseLiteral(content || ""), format, locale);
+  return createEvaluatedCell(parseLiteral(content || "", locale), format, locale);
 }
 
-export function parseLiteral(content: string): CellValue {
+export function parseLiteral(content: string, locale: Locale): CellValue {
   if (content.startsWith("=")) {
     throw new Error(`Cannot parse "${content}" because it's not a literal value. It's a formula`);
   }
-  if (isNumber(content) || isDateTime(content)) {
-    return toNumber(content);
+  if (isNumber(content) || isDateTime(content, locale)) {
+    return toNumber(content, locale);
   } else if (isBoolean(content)) {
     return content.toUpperCase() === "TRUE" ? true : false;
   }
@@ -46,8 +46,8 @@ export function createEvaluatedCell(
   const link = detectLink(value);
   if (link) {
     return {
-      ..._createEvaluatedCell(parseLiteral(link.label), {
-        format: format || detectFormat(link.label),
+      ..._createEvaluatedCell(parseLiteral(link.label, locale), {
+        format: format || detectFormat(link.label, locale),
         locale,
       }),
       link,

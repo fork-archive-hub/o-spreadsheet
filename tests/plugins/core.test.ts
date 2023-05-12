@@ -324,6 +324,23 @@ describe("core", () => {
         setCellContent(model, "A2", "Olà 3,14 :)");
         expect(getCell(model, "A2")?.content).toBe("Olà 3,14 :)");
       });
+
+      test("detect date formats with various locales", () => {
+        const model = new Model();
+        setCellContent(model, "A1", "2/2/2");
+        expect(getCellContent(model, "A1")).toBe("2/2/2002");
+        expect(getEvaluatedCell(model, "A1").format).toBe("m/d/yyyy");
+
+        updateLocale(model, { ...model.getters.getLocale(), dateFormat: "dd/mm/yyyy" });
+        setCellContent(model, "A2", "2 2 2");
+        expect(getCellContent(model, "A2")).toBe("2 2 2002");
+        expect(getEvaluatedCell(model, "A2").format).toBe("d m yyyy");
+
+        updateLocale(model, { ...model.getters.getLocale(), dateFormat: "yyyy/mm/dd" });
+        setCellContent(model, "A3", "2-2-2");
+        expect(getCellContent(model, "A3")).toBe("2002-2-2");
+        expect(getEvaluatedCell(model, "A3").format).toBe("yyyy-m-d");
+      });
     });
     describe("detect format formula automatically", () => {
       test("from formula without return format", () => {

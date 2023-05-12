@@ -1,7 +1,7 @@
 import { Model } from "../../src";
 import { Locale } from "../../src/types";
 import { setCellContent, setFormat, updateLocale } from "../test_helpers/commands_helpers";
-import { getCellContent } from "../test_helpers/getters_helpers";
+import { getCellContent, getEvaluatedCell } from "../test_helpers/getters_helpers";
 import { target } from "../test_helpers/helpers";
 
 export const customLocale: Locale = {
@@ -53,6 +53,15 @@ describe("Settings plugin", () => {
       const locale = { ...customLocale, decimalSeparator: "♥" };
       updateLocale(model, locale);
       expect(getCellContent(model, "A1")).toEqual("9♥89");
+    });
+
+    test("locale date format", () => {
+      setCellContent(model, "A1", "2-2-2");
+      expect(getEvaluatedCell(model, "A1").format).toEqual("m-d-yyyy");
+
+      updateLocale(model, customLocale);
+      setCellContent(model, "A2", "2-2-2");
+      expect(getEvaluatedCell(model, "A2").format).toEqual("d-m-yyyy");
     });
   });
 });

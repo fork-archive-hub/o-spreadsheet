@@ -877,3 +877,129 @@ describe("date helpers: can detect and parse various datetime (with ' ' separato
     expect(d.format).toBe("mm dd hh:mm:ss a");
   });
 });
+
+describe("Date formats with various locales", () => {
+  const mdyLocale = DEFAULT_LOCALE;
+  const dmyLocale = { ...DEFAULT_LOCALE, dateFormat: "dd/mm/yyyy" };
+  const ymdLocale = { ...DEFAULT_LOCALE, dateFormat: "yyyy/mm/dd" };
+
+  test("4 digits year at start of string in date with various locale", () => {
+    for (const locale of [mdyLocale, dmyLocale, ymdLocale]) {
+      expect(parseDateTime("2012 03 01", locale)).toMatchObject({
+        format: "yyyy mm dd",
+        jsDate: new Date(2012, 2, 1),
+      });
+    }
+  });
+
+  test("4 digits year at start of string and 2 parts in date with various locale", () => {
+    for (const locale of [mdyLocale, dmyLocale, ymdLocale]) {
+      expect(parseDateTime("2012 03", locale)).toMatchObject({
+        format: "yyyy mm",
+        jsDate: new Date(2012, 2, 1),
+      });
+    }
+  });
+
+  test("4 digits year at end of string in date with various locale", () => {
+    for (const locale of [dmyLocale, ymdLocale]) {
+      expect(parseDateTime("01 03 2012", locale)).toMatchObject({
+        format: "dd mm yyyy",
+        jsDate: new Date(2012, 2, 1),
+      });
+    }
+    expect(parseDateTime("01 03 2012", mdyLocale)).toMatchObject({
+      format: "mm dd yyyy",
+      jsDate: new Date(2012, 0, 3),
+    });
+  });
+
+  test("2 digits year in date string with various locale", () => {
+    expect(parseDateTime("01 03 12", mdyLocale)).toMatchObject({
+      format: "mm dd yy",
+      jsDate: new Date(2012, 0, 3),
+    });
+    expect(parseDateTime("01 03 12", dmyLocale)).toMatchObject({
+      format: "dd mm yy",
+      jsDate: new Date(2012, 2, 1),
+    });
+    expect(parseDateTime("01 03 12", ymdLocale)).toMatchObject({
+      format: "yy mm dd",
+      jsDate: new Date(2001, 2, 12),
+    });
+  });
+
+  test("2 digits year at end of string in date with various locale", () => {
+    for (const locale of [dmyLocale, ymdLocale]) {
+      expect(parseDateTime("01/03/2012", locale)).toMatchObject({
+        format: "dd/mm/yyyy",
+        jsDate: new Date(2012, 2, 1),
+      });
+    }
+    expect(parseDateTime("01/03/2012", mdyLocale)).toMatchObject({
+      format: "mm/dd/yyyy",
+      jsDate: new Date(2012, 0, 3),
+    });
+  });
+
+  test("date strings with only 2 parts in date with various locale", () => {
+    expect(parseDateTime("2-3", dmyLocale)).toMatchObject({
+      format: "d-m",
+      jsDate: new Date(CURRENT_YEAR, 2, 2),
+    });
+    for (const locale of [mdyLocale, ymdLocale]) {
+      expect(parseDateTime("2-3", locale)).toMatchObject({
+        format: "m-d",
+        jsDate: new Date(CURRENT_YEAR, 1, 3),
+      });
+    }
+  });
+
+  test("No date detected if month > 12 or day > daysInMonth", () => {
+    // DMY locale
+    expect(parseDateTime("01 13 01", dmyLocale)).toBeNull();
+    expect(parseDateTime("31 01 01", dmyLocale)).not.toBeNull();
+    expect(parseDateTime("32 01 01", dmyLocale)).toBeNull();
+    expect(parseDateTime("29 02 01", dmyLocale)).toBeNull();
+    expect(parseDateTime("29 02 04", dmyLocale)).not.toBeNull();
+    expect(parseDateTime("30 02 04", dmyLocale)).toBeNull();
+
+    // MDY locale
+    expect(parseDateTime("13 01 01", mdyLocale)).toBeNull();
+    expect(parseDateTime("01 31 01", mdyLocale)).not.toBeNull();
+    expect(parseDateTime("01 32 01", mdyLocale)).toBeNull();
+    expect(parseDateTime("02 29 01", mdyLocale)).toBeNull();
+    expect(parseDateTime("02 29 04", mdyLocale)).not.toBeNull();
+    expect(parseDateTime("02 30 04", mdyLocale)).toBeNull();
+
+    // YMD locale
+    expect(parseDateTime("01 13 01", ymdLocale)).toBeNull();
+    expect(parseDateTime("01 01 31", ymdLocale)).not.toBeNull();
+    expect(parseDateTime("01 01 32", ymdLocale)).toBeNull();
+    expect(parseDateTime("01 02 29", ymdLocale)).toBeNull();
+    expect(parseDateTime("04 02 29", ymdLocale)).not.toBeNull();
+    expect(parseDateTime("04 02 30", ymdLocale)).toBeNull();
+  });
+});
+
+describe("Number of digits in year/month/days in format", () => {
+  test("leading zeroes in days", () => {
+    expect(parseDateTime("1-3-2002", locale)).toMatchObject({ format: "m-d-yyyy" });
+    expect(parseDateTime("1-30-2002", locale)).toMatchObject({ format: "m-d-yyyy" });
+    expect(parseDateTime("1-03-2002", locale)).toMatchObject({ format: "mm-dd-yyyy" });
+  });
+
+  test("leading zeroes in months", () => {
+    expect(parseDateTime("1-3-2002", locale)).toMatchObject({ format: "m-d-yyyy" });
+    expect(parseDateTime("10-3-2002", locale)).toMatchObject({ format: "m-d-yyyy" });
+    expect(parseDateTime("01-3-2002", locale)).toMatchObject({ format: "mm-dd-yyyy" });
+  });
+
+  test("yy or yyyy format depending on the number of year digits in the string", () => {
+    // This is GSheet behaviour. Excel always outputs "yyyy" and doesn't recognize "1-3-002"
+    expect(parseDateTime("1-3-2", locale)).toMatchObject({ format: "m-d-yyyy" });
+    expect(parseDateTime("1-3-02", locale)).toMatchObject({ format: "m-d-yy" });
+    expect(parseDateTime("1-3-002", locale)).toMatchObject({ format: "m-d-yyyy" });
+    expect(parseDateTime("1-3-2002", locale)).toMatchObject({ format: "m-d-yyyy" });
+  });
+});

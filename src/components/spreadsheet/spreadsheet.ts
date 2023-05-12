@@ -264,6 +264,9 @@ export class Spreadsheet extends Component<SpreadsheetProps, SpreadsheetChildEnv
     const { xRatio, yRatio } = this.env.model.getters.getFrozenSheetViewRatio(
       this.env.model.getters.getActiveSheetId()
     );
+
+    if (!isFinite(xRatio) || !isFinite(yRatio)) return; // Returning NaN and Infinity before mounted causing warning does not disappear
+
     if (yRatio > MAXIMAL_FREEZABLE_RATIO || xRatio > MAXIMAL_FREEZABLE_RATIO) {
       if (this.isViewportTooSmall) {
         return;

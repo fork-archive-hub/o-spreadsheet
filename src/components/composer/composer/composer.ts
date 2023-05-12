@@ -447,6 +447,32 @@ export class Composer extends Component<ComposerProps, SpreadsheetChildEnv> {
     this.processTokenAtCursor();
   }
 
+  onDblClick() {
+    if (this.env.model.getters.isReadonly()) {
+      return;
+    }
+    const composerContent = this.env.model.getters.getCurrentContent();
+    const isValidFormula =
+      composerContent.startsWith("=") && this.env.model.getters.getCurrentTokens().length > 0;
+
+    if (isValidFormula) {
+      const tokens = this.getColoredTokens();
+      const currentSelection = this.contentHelper.getCurrentSelection();
+      if (currentSelection.start === currentSelection.end) return;
+
+      const currentSelectedText = composerContent.substring(
+        currentSelection.start,
+        currentSelection.end
+      );
+      const rangeValue = tokens.filter((line) => line.value.includes(currentSelectedText))[0].value;
+      const start = composerContent.indexOf(rangeValue);
+      this.env.model.dispatch("CHANGE_COMPOSER_CURSOR_SELECTION", {
+        start,
+        end: start + rangeValue.length,
+      });
+    }
+  }
+
   onBlur() {
     this.isKeyStillDown = false;
   }

@@ -2,6 +2,7 @@ import { Component, xml } from "@odoo/owl";
 import { Spreadsheet } from "../../src";
 import { sidePanelRegistry } from "../../src/registries/index";
 import { SidePanelContent } from "../../src/registries/side_panel_registry";
+import { createSheet } from "../test_helpers/commands_helpers";
 import { simulateClick } from "../test_helpers/dom_helper";
 import { mountSpreadsheet, nextTick } from "../test_helpers/helpers";
 
@@ -14,6 +15,7 @@ class Body extends Component<any, any> {
     <div>
       <div class="main_body">test</div>
       <div class="props_body" t-if="props.text"><t t-esc="props.text"/></div>
+      <input type="text" class="input" t-if="props.input" />
     </div>`;
 }
 
@@ -151,20 +153,21 @@ describe("Side Panel", () => {
     expect(onCloseSidePanel).toHaveBeenCalled();
   });
 
-  test("Switching from one sidepanel to another executes the onCloseSidePanel callback", async () => {
-    const onCloseSidePanel = jest.fn();
+  test("side panel does not lose focus upon sheet change", async () => {
+    createSheet(parent.env.model, { activate: true });
     sidePanelRegistry.add("CUSTOM_PANEL_1", {
       title: "Custom Panel 1",
       Body: Body,
     });
-    sidePanelRegistry.add("CUSTOM_PANEL_2", {
-      title: "Custom Panel 2",
-      Body: Body,
-    });
-    parent.env.openSidePanel("CUSTOM_PANEL_1", { onCloseSidePanel });
+    parent.env.openSidePanel("CUSTOM_PANEL_1", { input: true });
     await nextTick();
-    parent.env.openSidePanel("CUSTOM_PANEL_2");
+    const inputTarget = document.querySelector(".o-sidePanel input")! as HTMLInputElement;
+    inputTarget.focus();
+    expect(document.activeElement).toBe(inputTarget);
+    const sheetId = parent.env.model.getters.getActiveSheetId();
+    parent.env.model.dispatch("ACTIVATE_NEXT_SHEET");
     await nextTick();
-    expect(onCloseSidePanel).toHaveBeenCalled();
+    expect(document.activeElement).toBe(inputTarget);
+    expect(parent.env.model.getters.getActiveSheetId()).not.toBe(sheetId);
   });
 });

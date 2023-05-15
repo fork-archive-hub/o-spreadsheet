@@ -3,7 +3,9 @@ import {
   onMounted,
   onPatched,
   onWillUnmount,
+  useEffect,
   useExternalListener,
+  useRef,
   useState,
   useSubEnv,
 } from "@odoo/owl";
@@ -184,6 +186,7 @@ export class Spreadsheet extends Component<SpreadsheetProps, SpreadsheetChildEnv
 
   sidePanel!: SidePanelState;
   composer!: ComposerState;
+  spreadsheetRef = useRef("spreadsheet");
 
   private _focusGrid?: () => void;
 
@@ -224,6 +227,23 @@ export class Spreadsheet extends Component<SpreadsheetProps, SpreadsheetChildEnv
       clipboard: this.env.clipboard || instantiateClipboard(),
       startCellEdition: (content: string) => this.onGridComposerCellFocused(content),
     });
+
+    useEffect(
+      () => {
+        /**
+         * Only refocus the grid if the active element is not a child of the spreadsheet
+         * and spreadsheet is a child of that element. Anything else means that the focus
+         * is on an element that needs to keep it.
+         */
+        if (
+          !this.spreadsheetRef.el!.contains(document.activeElement) &&
+          document.activeElement?.contains(this.spreadsheetRef.el!)
+        ) {
+          this.focusGrid();
+        }
+      },
+      () => [this.env.model.getters.getActiveSheetId()]
+    );
 
     useExternalListener(window as any, "resize", () => this.render(true));
     useExternalListener(window, "beforeunload", this.unbindModelEvents.bind(this));

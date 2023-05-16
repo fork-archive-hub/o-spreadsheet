@@ -49,7 +49,7 @@ describe("basic search", () => {
     expect(matches[2]).toStrictEqual({ sheetId: "s1", col: 0, row: 3, selected: false });
   });
 
-  test("simple search for search scope thisSheet", () => {
+  test("simple search for search scope allSheet", () => {
     searchOptions.searchScope = "allSheets";
     model.dispatch("UPDATE_SEARCH", { toSearch: "1", searchOptions });
     const matches = model.getters.getSearchMatches();
@@ -404,7 +404,7 @@ describe("next/previous cycle", () => {
     expect(matches[0]).toStrictEqual({ sheetId: "s2", col: 0, row: 2, selected: true });
   });
 
-  test("search will cycle with previous for %s search scope", () => {
+  test("search will cycle with previous for thisSheet search scope", () => {
     model.dispatch("UPDATE_SEARCH", { toSearch: "1", searchOptions });
     let matches = model.getters.getSearchMatches();
     let matchIndex = model.getters.getCurrentSelectedMatchIndex();
@@ -442,7 +442,7 @@ describe("next/previous cycle", () => {
     expect(matches[1]).toStrictEqual({ sheetId: "s1", col: 0, row: 1, selected: true });
   });
 
-  test("search will cycle with previous for %s search scope", () => {
+  test("search will cycle with previous for allSheets search scope", () => {
     searchOptions.searchScope = "allSheets";
     model.dispatch("UPDATE_SEARCH", { toSearch: "1", searchOptions });
     let matches = model.getters.getSearchMatches();
@@ -485,7 +485,7 @@ describe("next/previous cycle", () => {
     expect(matches[2]).toStrictEqual({ sheetId: "s2", col: 0, row: 2, selected: false });
   });
 
-  test("search will cycle with previous for %s search scope", () => {
+  test("search will cycle with previous for specificRange search scope", () => {
     searchOptions.searchScope = "specificRange";
     model.dispatch("UPDATE_SEARCH", { toSearch: "1", searchOptions });
     let matches = model.getters.getSearchMatches();

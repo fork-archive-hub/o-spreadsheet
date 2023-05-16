@@ -1,5 +1,5 @@
 import { SPECIFIC_RANGE_BORDER_COLOR } from "../../constants";
-import { escapeRegExp, RangeImpl } from "../../helpers";
+import { escapeRegExp } from "../../helpers";
 import {
   CellPosition,
   Color,
@@ -7,6 +7,7 @@ import {
   GridRenderingContext,
   HeaderIndex,
   LAYERS,
+  Range,
   UID,
 } from "../../types/index";
 import { UIPlugin } from "../ui_plugin";
@@ -19,7 +20,7 @@ export interface SearchOptions {
   exactMatch: boolean;
   searchFormulas: boolean;
   searchScope: "allSheets" | "thisSheet" | "specificRange";
-  specificRange: RangeImpl | undefined;
+  specificRange: Range | undefined;
 }
 
 enum Direction {
@@ -202,7 +203,7 @@ export class FindAndReplacePlugin extends UIPlugin {
     return matches;
   }
 
-  private findMatchesInSheet(sheetId: string, specificRange?: RangeImpl) {
+  private findMatchesInSheet(sheetId: string, specificRange?: Range) {
     const matches: SearchMatch[] = [];
     const rangeData =
       this.searchOptions.searchScope === "specificRange" && specificRange
@@ -296,7 +297,7 @@ export class FindAndReplacePlugin extends UIPlugin {
    * Replace the value of the currently selected match
    */
   private replace(replaceWith: string) {
-    if (this.selectedMatchIndex === null || !this.toSearch) {
+    if (this.selectedMatchIndex === null || !this.currentSearchRegex) {
       return;
     }
     const matches = this.searchMatches;
@@ -305,8 +306,12 @@ export class FindAndReplacePlugin extends UIPlugin {
     if (cell?.isFormula && !this.searchOptions.searchFormulas) {
       return this.selectNextCell(Direction.next);
     }
+    const replaceRegex = new RegExp(
+      this.currentSearchRegex.source,
+      this.currentSearchRegex.flags + "g"
+    );
     const toReplace: string | null = this.getSearchableString(selectedMatch);
-    const newContent = toReplace.replaceAll(this.toSearch, replaceWith);
+    const newContent = toReplace.replaceAll(replaceRegex, replaceWith);
     this.dispatch("UPDATE_CELL", {
       sheetId: selectedMatch.sheetId,
       col: selectedMatch.col,

@@ -1,6 +1,5 @@
-import { Component, onMounted, onWillUnmount, useEffect, useRef, useState } from "@odoo/owl";
-import { RangeImpl } from "../../../helpers";
-import { SpreadsheetChildEnv } from "../../../types/index";
+import { Component, onMounted, onWillUnmount, useRef, useState } from "@odoo/owl";
+import { Range, SpreadsheetChildEnv } from "../../../types/index";
 import { css } from "../../helpers/css";
 import { SelectionInput } from "../../selection_input/selection_input";
 
@@ -51,7 +50,7 @@ interface FindAndReplaceState {
     exactMatch: boolean;
     searchFormulas: boolean;
     searchScope: "allSheets" | "thisSheet" | "specificRange";
-    specificRange: RangeImpl | undefined;
+    specificRange: Range | undefined;
   };
 }
 
@@ -63,10 +62,7 @@ export class FindAndReplacePanel extends Component<Props, SpreadsheetChildEnv> {
   static components = { SelectionInput };
 
   private findAndReplaceRef = useRef("findAndReplace");
-  private selectionInputref = useRef("selectionInput");
   private dataRange: string[] = [];
-  private lastSpecificRange: RangeImpl | undefined = undefined;
-  private lastClickedButton: string = "next";
 
   get hasSearchResult() {
     return this.env.model.getters.getCurrentSelectedMatchIndex() !== null;
@@ -81,56 +77,15 @@ export class FindAndReplacePanel extends Component<Props, SpreadsheetChildEnv> {
 
     onMounted(() => this.focusInput());
 
-    useEffect(
-      () => {
-        this.focusButton(this.lastClickedButton);
-      },
-      () => [this.env.model.getters.getActiveSheetId()]
-    );
-
-    useEffect(
-      () => {
-        if (
-          this.state.searchOptions.searchScope === "specificRange" &&
-          !this.state.searchOptions.specificRange
-        ) {
-          this.state.searchOptions.specificRange = this.lastSpecificRange;
-        } else if (
-          this.state.searchOptions.searchScope !== "specificRange" &&
-          this.state.searchOptions.specificRange
-        ) {
-          this.lastSpecificRange = this.state.searchOptions.specificRange;
-          this.state.searchOptions.specificRange = undefined;
-        }
-        this.updateSearch();
-      },
-      () => [this.state.searchOptions.searchScope]
-    );
-
     onWillUnmount(() => {
       this.env.model.dispatch("CLEAR_SEARCH");
       this.env.model.dispatch("SET_FORMULA_VISIBILITY", { show: this.showFormulaState });
     });
   }
 
-  private focusButton(buttonName: string) {
-    setTimeout(() => {
-      const el = this.selectionInputref.el!;
-      if (el) {
-        const buttonElement = this.findAndReplaceRef.el!.querySelector(
-          `button[name=${buttonName}]`
-        ) as HTMLButtonElement;
-        buttonElement.focus();
-      }
-    }, 0);
-  }
-
   onFocusSearch() {
-    const el = this.selectionInputref.el!;
-    if (el) {
-      const confirmButton = el.querySelector(".o-btn-action.o-selection-ok") as HTMLButtonElement;
-      confirmButton.click();
-    }
+    this.env.model.dispatch("UNFOCUS_SELECTION_INPUT");
+    this.updateDataRange();
   }
 
   onInput(ev) {
@@ -189,11 +144,9 @@ export class FindAndReplacePanel extends Component<Props, SpreadsheetChildEnv> {
 
   onSelectPreviousCell() {
     this.env.model.dispatch("SELECT_SEARCH_PREVIOUS_MATCH");
-    this.lastClickedButton = "prev";
   }
   onSelectNextCell() {
     this.env.model.dispatch("SELECT_SEARCH_NEXT_MATCH");
-    this.lastClickedButton = "next";
   }
   updateSearch() {
     this.env.model.dispatch("UPDATE_SEARCH", {
@@ -213,7 +166,6 @@ export class FindAndReplacePanel extends Component<Props, SpreadsheetChildEnv> {
     this.env.model.dispatch("REPLACE_SEARCH", {
       replaceWith: this.state.replaceWith,
     });
-    this.lastClickedButton = "replace";
   }
 
   replaceAll() {

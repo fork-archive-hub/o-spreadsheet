@@ -39,7 +39,7 @@ export function fuzzyMatch(pattern: string, str: string) {
  * example, consecutive letters are considered a better match.
  */
 export function fuzzyLookup<T>(pattern: string, list: T[], fn: (t: T) => string): T[] {
-  const results: { score: number; elem: T }[] = [];
+  let results: { score: number; elem: T }[] = [];
   list.forEach((data) => {
     const score = fuzzyMatch(pattern, fn(data));
     if (score > 0) {
@@ -49,6 +49,16 @@ export function fuzzyLookup<T>(pattern: string, list: T[], fn: (t: T) => string)
 
   // we want better matches first
   results.sort((a, b) => b.score - a.score);
-
+  if (results.length > 5) {
+    let score = 0;
+    results.map((r) => (score += r.score));
+    score = score / results.length;
+    results = results.filter((r) => r.score > score);
+  }
+  if (results.length < 5) {
+    results = results.filter((r) =>
+      r.elem["text"].startsWith(pattern) ? r.score > 350 : r.score > 600
+    );
+  }
   return results.map((r) => r.elem);
 }

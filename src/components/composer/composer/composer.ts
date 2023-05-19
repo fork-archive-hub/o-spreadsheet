@@ -1,4 +1,12 @@
-import { Component, onMounted, onPatched, onWillUnmount, useRef, useState } from "@odoo/owl";
+import {
+  Component,
+  onMounted,
+  onPatched,
+  onWillUnmount,
+  useEffect,
+  useRef,
+  useState,
+} from "@odoo/owl";
 import { DEFAULT_FONT, NEWLINE } from "../../../constants";
 import { EnrichedToken } from "../../../formulas/index";
 import { functionRegistry } from "../../../functions/index";
@@ -63,7 +71,6 @@ css/* scss */ `
       overflow-x: hidden;
       word-break: break-all;
       padding-right: 2px;
-
       box-sizing: border-box;
       font-family: ${DEFAULT_FONT};
 
@@ -121,6 +128,9 @@ interface AutoCompleteState {
   selectedIndex: number;
   values: AutocompleteValue[];
 }
+interface mystate {
+  direction: string | undefined;
+}
 
 interface FunctionDescriptionState {
   showDescription: boolean;
@@ -135,6 +145,9 @@ export class Composer extends Component<ComposerProps, SpreadsheetChildEnv> {
   static defaultProps = {
     inputStyle: "",
   };
+  state: mystate = useState({
+    direction: "ltr",
+  });
 
   composerRef = useRef("o_composer");
 
@@ -159,6 +172,13 @@ export class Composer extends Component<ComposerProps, SpreadsheetChildEnv> {
   });
   private isKeyStillDown: boolean = false;
   private compositionActive: boolean = false;
+
+  get getDirection() {
+    return cssPropertiesToCss({
+      direction: this.state.direction === "ltr" ? "ltr" : "rtl",
+      "text-align": this.state.direction === "ltr" ? "left !important" : "right !important",
+    });
+  }
 
   get assistantStyle(): string {
     if (this.props.delimitation && this.props.rect) {
@@ -205,12 +225,30 @@ export class Composer extends Component<ComposerProps, SpreadsheetChildEnv> {
       this.processContent();
       this.contentHelper.scrollSelectionIntoView();
     });
-
+    useEffect(
+      () => {
+        this.state.direction === "rtl"
+          ? this.env.model.dispatch("SET_FORMATTING", {
+              sheetId: this.env.model.getters.getActiveSheetId(),
+              target: this.env.model.getters.getSelectedZones(),
+              style: { align: "right" },
+            })
+          : this.env.model.dispatch("SET_FORMATTING", {
+              sheetId: this.env.model.getters.getActiveSheetId(),
+              target: this.env.model.getters.getSelectedZones(),
+              style: { align: "left" },
+            });
+      },
+      () => [this.state.direction]
+    );
     onWillUnmount(() => {
       this.props.onComposerUnmounted?.();
     });
 
     onPatched(() => {
+      this.state.direction =
+        this.env.model.getters.getCellComputedStyle(this.env.model.getters.getActivePosition())
+          .direction || "ltr";
       if (!this.isKeyStillDown) {
         this.processContent();
       }

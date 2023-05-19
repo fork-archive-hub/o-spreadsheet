@@ -226,6 +226,35 @@ export const formatWrappingClip: ActionSpec = {
   icon: "o-spreadsheet-Icon.WRAPPING_CLIP",
 };
 
+export const formatDirection: ActionSpec = {
+  name: _lt("Direction"),
+  icon: "o-spreadsheet-Icon.ALIGN_LEFT",
+};
+
+export const formatDirectionLeft: ActionSpec = {
+  name: _lt("Cell left to right"),
+  description: "Ctrl+Shift+L",
+  execute: (env) => ACTIONS.setStyle(env, { direction: "ltr" }),
+  isActive: (env) => getHorizontalAlign(env) === "left",
+  icon: "o-spreadsheet-Icon.ALIGN_LEFT",
+};
+
+export const formatDirectionRight: ActionSpec = {
+  name: _lt("Cell right to left"),
+  description: "Ctrl+Shift+L",
+  execute: (env) => ACTIONS.setStyle(env, { direction: "rtl" }),
+  isActive: (env) => getHorizontalAlign(env) === "right",
+  icon: "o-spreadsheet-Icon.ALIGN_RIGHT",
+};
+
+export const formatDirectionSheetLeft: ActionSpec = {
+  name: _lt("Sheet Right to Left"),
+  description: "Ctrl+Shift+L",
+  execute: (env) => ACTIONS.setStyle(env, { align: "left" }),
+  isActive: (env) => getHorizontalAlign(env) === "left",
+  icon: "o-spreadsheet-Icon.ALIGN_LEFT",
+};
+
 export const textColor: ActionSpec = {
   name: _lt("Text Color"),
   icon: "o-spreadsheet-Icon.TEXT_COLOR",

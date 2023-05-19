@@ -118,6 +118,7 @@ export class RendererPlugin extends UIPlugin {
     switch (layer) {
       case LAYERS.Background:
         this.boxes = this.getGridBoxes();
+        // this.flipBoxesHorizontally(); // Call the new method to flip the boxes
         this.drawBackground(renderingContext);
         this.drawOverflowingCellBackground(renderingContext);
         this.drawCellBackground(renderingContext);
@@ -134,7 +135,15 @@ export class RendererPlugin extends UIPlugin {
         break;
     }
   }
+  // flipBoxesHorizontally() {
+  //   const sheetId = this.getters.getActiveSheetId();
+  //   const numberOfCols = this.getters.getNumberCols(sheetId);
 
+  //   for (let box of this.boxes) {
+  //     // Flip the x-coordinate of the box
+  //     box.x = (numberOfCols - 1 - box.x) - box.width + 1;
+  //   }
+  // }
   private drawBackground(renderingContext: GridRenderingContext) {
     const { ctx, thinLineWidth } = renderingContext;
     const { width, height } = this.getters.getSheetViewDimensionWithHeaders();
@@ -284,7 +293,13 @@ export class RendererPlugin extends UIPlugin {
         // use the horizontal and the vertical start points to:
         // fill text / fill strikethrough / fill underline
         for (let brokenLine of box.content.textLines) {
-          ctx.fillText(brokenLine, Math.round(x), Math.round(y));
+          ctx.save();
+          ctx.scale(-1, 1); // Flip horizontally
+          // ctx.translate(-3 * (Math.round(x)),0);
+          // const textWidth = ctx.measureText(brokenLine).width;
+          ctx.fillText(brokenLine, -(Math.round(x) + box.width - 8), Math.round(y));
+          ctx.restore();
+
           if (style.strikethrough || style.underline) {
             const lineWidth = computeTextWidth(ctx, brokenLine, style);
             let _x = x;
@@ -435,9 +450,14 @@ export class RendererPlugin extends UIPlugin {
       const colName = numberToLetters(i);
       ctx.fillStyle = activeCols.has(i) ? "#fff" : TEXT_HEADER_COLOR;
       let colStart = this.getHeaderOffset("COL", left, i);
-      ctx.fillText(colName, colStart + colSize / 2, HEADER_HEIGHT / 2);
+      // ctx.fillText(colName, colStart + colSize / 2, HEADER_HEIGHT / 2);
       ctx.moveTo(colStart + colSize, 0);
       ctx.lineTo(colStart + colSize, HEADER_HEIGHT);
+      ctx.save();
+      ctx.translate(colStart + colSize / 2, HEADER_HEIGHT / 2);
+      ctx.scale(-1, 1); // Flip horizontally
+      ctx.fillText(colName, 0, 0);
+      ctx.restore();
     }
     // row text + separator
     for (const i of visibleRows) {
@@ -445,7 +465,19 @@ export class RendererPlugin extends UIPlugin {
       ctx.fillStyle = activeRows.has(i) ? "#fff" : TEXT_HEADER_COLOR;
 
       let rowStart = this.getHeaderOffset("ROW", top, i);
-      ctx.fillText(String(i + 1), HEADER_WIDTH / 2, rowStart + rowSize / 2);
+      ctx.save();
+      ctx.translate(HEADER_WIDTH / 2, rowStart + rowSize / 2);
+      ctx.scale(-1, 1); // Flip vertically
+      ctx.fillText(String(i + 1), 0, 0);
+      ctx.restore();
+    }
+
+    // row separator
+    for (const i of visibleRows) {
+      const rowSize = this.getters.getRowSize(sheetId, i);
+      let rowStart = this.getHeaderOffset("ROW", top, i);
+      // rowStart = height - rowStart;
+
       ctx.moveTo(0, rowStart + rowSize);
       ctx.lineTo(HEADER_WIDTH, rowStart + rowSize);
     }

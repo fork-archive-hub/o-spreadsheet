@@ -103,6 +103,7 @@ css/* scss */ `
     position: relative;
     overflow: hidden;
     background-color: ${BACKGROUND_GRAY_COLOR};
+    transform: scaleX(-1);
     &:focus {
       outline: none;
     }

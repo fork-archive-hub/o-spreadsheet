@@ -459,12 +459,38 @@ exports[`Color Picker buttons Full component rendering 1`] = `
     class="o-custom-selector"
   >
     <div
-      class="o-magnifier-glass"
-      style="display:none; left:0; top:0;"
-    />
-    <div
       class="o-gradient"
-    />
+      style="background:hsl(0 100% 50%);"
+    >
+      <div
+        class="saturation w-100 h-100 position-absolute pe-none"
+      />
+      <div
+        class="lightness w-100 h-100 position-absolute pe-none"
+      />
+      <div
+        class="magnifier pe-none"
+        style="left:-9px; top:173px; background:#000000;"
+      />
+    </div>
+    <div
+      class="hue mt-1 mb-3"
+    >
+      <div
+        class="position-absolute mt-2 slider"
+        style="left:-8px;"
+      >
+        <svg
+          class="o-icon"
+        >
+          <polygon
+            fill="currentColor"
+            points="4 0 0 4 8 4"
+            transform="translate(5 7)"
+          />
+        </svg>
+      </div>
+    </div>
     <div
       class="o-custom-input-preview"
     >
@@ -473,7 +499,7 @@ exports[`Color Picker buttons Full component rendering 1`] = `
       />
       <div
         class="o-color-preview"
-        style="background-color:#000000"
+        style="background-color:#000000;"
       />
     </div>
     <div

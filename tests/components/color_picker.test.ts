@@ -97,7 +97,9 @@ describe("Color Picker buttons", () => {
     setInputValueAndTrigger(".o-custom-input-preview input", color, "input");
     await nextTick();
     const previewColor = toHex(getElComputedStyle(".o-color-preview", "backgroundColor"));
-    expect(previewColor).toEqual(color);
+    // hex <-> hsla is not a bijection, this specific color
+    // is not exactly the same when processed
+    expect(previewColor).toBeSameColorAs(color, 1);
     await simulateClick(".o-add-button");
     expect(onColorPicked).toHaveBeenCalledWith(color);
   });
@@ -120,7 +122,7 @@ describe("Color Picker buttons", () => {
     await simulateClick(".o-color-picker-toggler");
     setInputValueAndTrigger(".o-custom-input-preview input", "this is not a color", "input");
     await nextTick();
-    expect(fixture.querySelector(".o-wrong-color")).toBeNull();
+    expect(fixture.querySelector(".o-wrong-color")).not.toBeNull();
     await simulateClick(".o-add-button");
     expect(fixture.querySelector(".o-wrong-color")).not.toBeNull();
     expect(onColorPicked).not.toHaveBeenCalled();

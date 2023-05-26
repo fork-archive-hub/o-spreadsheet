@@ -16,7 +16,7 @@ import {
 import { _lt } from "../translation";
 import { ClipboardPasteOptions } from "../types/clipboard";
 import { Image } from "../types/image";
-import { Format, SpreadsheetChildEnv, Style } from "../types/index";
+import { Format, HeaderIndex, SpreadsheetChildEnv, Style } from "../types/index";
 
 //------------------------------------------------------------------------------
 // Helpers
@@ -223,13 +223,16 @@ export const REMOVE_ROWS_NAME = (env: SpreadsheetChildEnv) => {
 };
 
 export const REMOVE_ROWS_ACTION = (env: SpreadsheetChildEnv) => {
-  let rows = [...env.model.getters.getActiveRows()];
-  if (!rows.length) {
-    const zone = env.model.getters.getSelectedZones()[0];
-    for (let i = zone.top; i <= zone.bottom; i++) {
+  const rows: HeaderIndex[] = [];
+  const zone = env.model.getters.getSelectedZones()[0];
+  const sheetId = env.model.getters.getActiveSheetId();
+
+  for (let i = zone.top; i <= zone.bottom; i++) {
+    if (!env.model.getters.isRowHidden(sheetId, i)) {
       rows.push(i);
     }
   }
+
   env.model.dispatch("REMOVE_COLUMNS_ROWS", {
     sheetId: env.model.getters.getActiveSheetId(),
     dimension: "ROW",
